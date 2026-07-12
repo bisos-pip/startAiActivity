@@ -38,7 +38,7 @@
 ####+BEGIN: b:prog:file/particulars :authors ("./inserts/authors-mb.org")
 """ #+begin_org
 * *[[elisp:(org-cycle)][| Particulars |]]* :: Authors, version
-** This File: /bisos/apps/defaults/ai-templates/startAiAt.cs/startAiAt.cs
+** This File: /bisos/git/auth/bxRepos/bisos-pip/startAiActivity/py3/bin/startAiActivity.cs
 ** Authors: Mohsen BANAN, http://mohsen.banan.1.byname.net/contact
 #+end_org """
 ####+END:
@@ -48,10 +48,10 @@
 * *[[elisp:(org-cycle)][| Particulars-csInfo |]]*
 #+end_org """
 import typing
-csInfo: typing.Dict[str, typing.Any] = { 'moduleName': ['startAiAt'], }
-csInfo['version'] = '202507091200'
+csInfo: typing.Dict[str, typing.Any] = { 'moduleName': ['startAiActivity'], }
+csInfo['version'] = '202507111200'
 csInfo['status']  = 'inUse'
-csInfo['panel'] = 'startAiAt-Panel.org'
+csInfo['panel'] = 'startAiActivity-Panel.org'
 csInfo['groupingType'] = 'IcmGroupingType-pkged'
 csInfo['cmndParts'] = 'IcmCmndParts[common] IcmCmndParts[param]'
 ####+END:
@@ -87,6 +87,9 @@ import pathlib
 import shutil
 import subprocess
 import typing
+
+from bisos.startAiActivity import userConfigFileParam_csu
+from bisos.startAiActivity import updateDblock
 
 ####+BEGIN: b:py3:cs:framework/csuListProc :pyImports t :csuImports t :csuParams t :csxuParams nil
 """ #+begin_org
@@ -125,16 +128,22 @@ def commonParamsSpecify(
     )
     csParams.parDictAdd(
         parName='activity',
-        parDescription="Template activity type matching a directory under ai-templates/.",
+        parDescription="Template activity type matching a directory under <templatesBase>/.",
         parDataType=None,
         parDefault=None,
         parChoices=[],
         argparseShortOpt=None,
         argparseLongOpt='--activity',
     )
-
-
-g_templatesBase = pathlib.Path('/bisos/apps/defaults/ai-templates')
+    csParams.parDictAdd(
+        parName='templates',
+        parDescription="Override templatesBase file parameter for this run.",
+        parDataType=None,
+        parDefault=None,
+        parChoices=[],
+        argparseShortOpt=None,
+        argparseLongOpt='--templates',
+    )
 
 
 ####+BEGIN: b:py3:cs:main/outcomeReportControl :disabled? nil :cmnd t :ro nil
@@ -182,9 +191,14 @@ class examples(cs.Cmnd):
         od = collections.OrderedDict
         cmnd = cs.examples.cmndEnter
 
-        excludedDirs = {'bystar', 'startAiAt.cs', 'test'}
+        templatesBase = userConfigFileParam_csu.templatesBaseGet()
+        if templatesBase is None:
+            b_io.ann.note("templatesBase not configured. Run: startAiActivity.cs -i setup --templates=/path/to/templates")
+            return cmndOutcome.set(opError=b.op.OpError.Success, opResults="No templatesBase configured.")
+
+        excludedDirs = {'mother', 'startAiAt.cs', 'test'}
         activities = sorted([
-            d.name for d in g_templatesBase.iterdir()
+            d.name for d in templatesBase.iterdir()
             if d.is_dir() and d.name not in excludedDirs
         ])
 
@@ -200,40 +214,95 @@ class examples(cs.Cmnd):
                  pars=od([('root', 'repo'), ('activity', activity)]),
                  comment=f"# Install {activity} templates at repo base")
 
+        cs.examples.menuChapter('=setup= -- configure templatesBase')
+        cmnd('setup',
+             pars=od([('templates', '/path/to/ai-templates')]),
+             comment="# Set the templates base directory")
+
         return(cmndOutcome)
 
 
-####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "initiate" :comment "Install AI templates via symlinks and safe-copy" :extent "verify" :ro "cli" :parsMand "activity" :parsOpt "root" :argsMin 0 :argsMax 0 :pyInv ""
+####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "setup" :comment "Configure the templatesBase file parameter" :extent "verify" :ro "cli" :parsMand "templates" :parsOpt "" :argsMin 0 :argsMax 0 :pyInv ""
 """ #+begin_org
-*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<initiate>>  =verify= parsMand=activity parsOpt=root ro=cli   [[elisp:(org-cycle)][| ]]
+*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<setup>>  =verify= parsMand=templates ro=cli   [[elisp:(org-cycle)][| ]]
 #+end_org """
-class initiate(cs.Cmnd):
-    cmndParamsMandatory = [ 'activity', ]
-    cmndParamsOptional = [ 'root', ]
+class setup(cs.Cmnd):
+    cmndParamsMandatory = [ 'templates', ]
+    cmndParamsOptional = [ ]
     cmndArgsLen = {'Min': 0, 'Max': 0,}
 
     @cs.track(fnLoc=True, fnEntry=True, fnExit=True)
     def cmnd(self,
              rtInv: cs.RtInvoker,
              cmndOutcome: b.op.Outcome,
-             activity: typing.Optional[str]=None,  # Cs Mandatory Param
-             root: typing.Optional[str]=None,       # Cs Optional Param
+             templates: typing.Optional[str]=None,  # Cs Mandatory Param
     ) -> b.op.Outcome:
 
         failed = b_io.eh.badOutcome
-        callParamsDict = {'activity': activity, 'root': root, }
+        callParamsDict = {'templates': templates, }
+        if self.invocationValidate(rtInv, cmndOutcome, callParamsDict, None).isProblematic():
+            return failed(cmndOutcome)
+        templates = csParam.mappedValue('templates', templates)
+####+END:
+        self.cmndDocStr(f""" #+begin_org
+** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Configure the templatesBase file parameter.
+Writes the given path to ~/.config/bisos/startAiActivity/templatesBase/value.
+        #+end_org """)
+
+        templatesPath = pathlib.Path(templates)
+        if not templatesPath.is_dir():
+            b_io.eh.problem_usageError(f"Templates directory not found: {templatesPath}")
+            return failed(cmndOutcome)
+
+        userConfigFileParam_csu.templatesBaseSet(str(templatesPath))
+        b_io.ann.note(f"templatesBase set to: {templatesPath}")
+
+        return cmndOutcome.set(
+            opError=b.op.OpError.Success,
+            opResults=f"templatesBase configured: {templatesPath}",
+        )
+
+
+####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "initiate" :comment "Install AI templates via symlinks and safe-copy" :extent "verify" :ro "cli" :parsMand "activity" :parsOpt "root templates" :argsMin 0 :argsMax 0 :pyInv ""
+""" #+begin_org
+*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<initiate>>  =verify= parsMand=activity parsOpt="root templates" ro=cli   [[elisp:(org-cycle)][| ]]
+#+end_org """
+class initiate(cs.Cmnd):
+    cmndParamsMandatory = [ 'activity', ]
+    cmndParamsOptional = [ 'root', 'templates', ]
+    cmndArgsLen = {'Min': 0, 'Max': 0,}
+
+    @cs.track(fnLoc=True, fnEntry=True, fnExit=True)
+    def cmnd(self,
+             rtInv: cs.RtInvoker,
+             cmndOutcome: b.op.Outcome,
+             activity: typing.Optional[str]=None,   # Cs Mandatory Param
+             root: typing.Optional[str]=None,        # Cs Optional Param
+             templates: typing.Optional[str]=None,   # Cs Optional Param
+    ) -> b.op.Outcome:
+
+        failed = b_io.eh.badOutcome
+        callParamsDict = {'activity': activity, 'root': root, 'templates': templates, }
         if self.invocationValidate(rtInv, cmndOutcome, callParamsDict, None).isProblematic():
             return failed(cmndOutcome)
         activity = csParam.mappedValue('activity', activity)
         root = csParam.mappedValue('root', root)
+        templates = csParam.mappedValue('templates', templates)
 ####+END:
         self.cmndDocStr(f""" #+begin_org
 ** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Install AI collaborative development templates.
-Symlinks constant files from bystar/. Symlinks AI-Activity.org from <activity>/.
-Safe-copies AI-DevStatus.org and AI-WorkPlan.org from <activity>/.
+Symlinks constant files from mother/. Symlinks AI-Activity.org from <activity>/.
+Safe-copies AI-DevStatus.org and AI-WorkPlan.org from <activity>/ (falling back to mother/).
+Expands b:ai:file/particulars dblock in copied files using pure Python.
         #+end_org """)
 
-        activityDir = g_templatesBase / activity
+        templatesBase = userConfigFileParam_csu.templatesBaseGet(templates)
+        if templatesBase is None:
+            b_io.eh.problem_usageError(
+                "templatesBase not configured. Run: startAiActivity.cs -i setup --templates=/path/to/templates")
+            return failed(cmndOutcome)
+
+        activityDir = templatesBase / activity
         if not activityDir.is_dir():
             b_io.eh.problem_usageError(f"Activity directory not found: {activityDir}")
             return failed(cmndOutcome)
@@ -250,12 +319,12 @@ Safe-copies AI-DevStatus.org and AI-WorkPlan.org from <activity>/.
         else:
             targetDir = pathlib.Path.cwd()
 
-        bystarDir = g_templatesBase / 'bystar'
+        motherDir = templatesBase / 'mother'
 
-        # Constant files — always symlinked to bystar/
+        # Constant files — always symlinked to mother/
         constantFiles = ['CLAUDE.md', 'AI-AGENTS.org', 'AI-WORKFLOW.org']
         for fname in constantFiles:
-            src = bystarDir / fname
+            src = motherDir / fname
             dst = targetDir / fname
             if dst.exists() or dst.is_symlink():
                 b_io.ann.note(f"SKIP (exists): {dst}")
@@ -272,33 +341,27 @@ Safe-copies AI-DevStatus.org and AI-WorkPlan.org from <activity>/.
             generalDst.symlink_to(generalSrc)
             b_io.ann.note(f"SYMLINKED: {generalDst} -> {generalSrc}")
 
-        # Initial files — safe-copied from activity/, falling back to bystar/
+        # Initial files — safe-copied from activity/, falling back to mother/
         initialFiles = ['AI-DevStatus.org', 'AI-WorkPlan.org']
         for fname in initialFiles:
             activitySrc = activityDir / fname
-            bystarSrc = bystarDir / fname
-            src = activitySrc if activitySrc.exists() else bystarSrc
+            motherSrc = motherDir / fname
+            src = activitySrc if activitySrc.exists() else motherSrc
             dst = targetDir / fname
             if dst.exists():
                 b_io.ann.note(f"SKIP (exists): {dst}")
             else:
                 shutil.copy2(src, dst)
                 b_io.ann.note(f"COPIED: {src} -> {dst}")
-                result = subprocess.run(
-                    ['bx-dblock', '-i', 'dblockUpdateFiles', str(dst)],
-                    capture_output=True, text=True,
-                )
-                if result.returncode == 0:
-                    b_io.ann.note(f"DBLOCK-UPDATED: {dst}")
-                else:
-                    b_io.ann.note(f"DBLOCK-UPDATE FAILED: {dst}: {result.stderr.strip()}")
+                updateDblock.expandParticulars(dst, targetDir, activity)
+                b_io.ann.note(f"DBLOCK-UPDATED: {dst}")
 
         # .claude/ — install settings.json and commands/
         # Source is _claude/ in templates (visible); installed as .claude/ in target
-        # Use activity-specific _claude/ if it exists, else fall back to bystar/_claude/
+        # Use activity-specific _claude/ if it exists, else fall back to mother/_claude/
         activityClaudeDir = activityDir / '_claude'
-        bystarClaudeDir = g_templatesBase / 'bystar' / '_claude'
-        claudeSrcDir = activityClaudeDir if activityClaudeDir.is_dir() else bystarClaudeDir
+        motherClaudeDir = motherDir / '_claude'
+        claudeSrcDir = activityClaudeDir if activityClaudeDir.is_dir() else motherClaudeDir
 
         for claudeSrcFile in claudeSrcDir.rglob('*'):
             if not claudeSrcFile.is_file():
