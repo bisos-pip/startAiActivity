@@ -6,12 +6,11 @@
 
 ####+BEGIN: b:ai:file/particulars
 * AI Working Context
-  Working Directory: /bisos/git/bxRepos/bisos-pip/startAiActivity
+  Working Directory: ../..
   File: /bisos/git/auth/bxRepos/bisos-pip/startAiActivity/AI-WorkPlan.org
   Activity: bisos-pip
   Companion Docs: AI-AGENTS.org, AI-WORKFLOW.org, AI-Activity.org, AI-DevStatus.org, README.org
-
-####+END:
+###+END:
 
 This Work Plan file drives the AI collaborative development.
 Interactions are broken down into "Stages". Each Stage has a set
@@ -87,7 +86,7 @@ Key decisions:
   =commonParamsSpecify=; mandatory only for =setup=. =examples= command now calls
   =templatesBaseGet()= at runtime and handles =None= gracefully instead of crashing.
   =excludedDirs= updated to =mother= (was =bystar=).
-** TODO [#A] <<Improve Towards py-dblock>> -- make py imitate :ai:
+** DONE [#A] <<Improve Towards py-dblock>> -- make py imitate :ai:
 SCHEDULED: <2026-06-09 Tue>
 - updateDblock.expandParticulars(dst, targetDir, activity)  is the specific approach.
 - The general approach is to mimic org-mode's model for dblocks.
@@ -96,7 +95,28 @@ SCHEDULED: <2026-06-09 Tue>
 - then ./py3/bisos/startAiActivity/updateDblock.py looks for the signatures and applies the function to each.
 - Re-read the "Modularization" section of startAiActivity.org to see my intent from the beginning
 ----- AI Results: ------
-** TODO [#A] <<Improve Towards Persistent Parameters>> -- make py imitate :ai:
+Generalized the dblock engine across three files:
+
+- =updateDblock.py= :: Rewritten as a general dispatch engine. Handlers register under a
+  signature string via =registerHandler(sig, fn)=. =expandAll(filePath)= does a single-pass
+  =re.sub= over the file, parsing each =####+BEGIN: <signature> [:key value ...]= line into
+  signature + keyword-arg dict, looking up the handler, and replacing the block body with
+  the handler's return value. Unregistered signatures are left untouched. =targetDir= removed
+  from public API — derived internally as =filePath.parent=.
+
+- =dblock_particulars.py= :: Rewritten as a self-registering handler. Calls
+  =updateDblock.registerHandler('b:ai:file/particulars', _handler)= at import time.
+  Derives =activity= from the =AI-Activity.org= symlink and builds companion-docs list
+  by scanning the directory. Accepts =args= dict for future parameterised dblocks.
+
+- =py-dblock.cs= :: New CS executable with =updateDblocks= command. Takes one or more
+  file paths as positional args (=argsMin=1 argsMax=9999=), calls =updateDblock.expandAll=
+  on each. Imports =dblock_particulars= to self-register the handler.
+
+Also: added =chmod +x *= to =.claude/settings.json=; added "Claude Permissions" section
+to =mother/AI-WORKFLOW.org= directing Claude to always offer to persist new permissions
+to =.claude/settings.json= at the time of asking.
+** DONE [#A] <<Improve Towards Persistent Parameters>> -- make py imitate :ai:
 SCHEDULED: <2026-06-09 Tue>
 - Add parPermanence="userConfig" (or an emum) to this. Default is None.
   csParams.parDictAdd(
@@ -114,6 +134,20 @@ SCHEDULED: <2026-06-09 Tue>
 - The  userConfig_set etc Cmnds will be in a general purpose file which is imported.
 - The ~/.config/bisos/csxu/param/value should become generic. So startAiActivity should become startAiActivity.cs
 ----- AI Results: ------
+Merged =userConfigFileParam_csu.py= (deleted) into a single new =userConfig_csu.py=:
+
+- =parGet(parName, override)= / =parSet(parName, value)= :: generic read/write helpers using
+  =bisos.b fp=. Config root is =~/.config/bisos/<csxu-name>/= where =<csxu-name>= comes from
+  =pathlib.Path(sys.argv[0]).name= — so =startAiActivity.cs= → =~/.config/bisos/startAiActivity.cs/=.
+- =userConfig_get= / =userConfig_set= :: CS command classes taking =--parName= and =--parValue=.
+  Available on the CLI for any parameter, not just =templatesBase=.
+
+In =startAiActivity.cs=:
+- =userConfig_csu= added to =csuList= so its commands are imported automatically.
+- =parName= / =parValue= added to =commonParamsSpecify=.
+- =setup= command removed; replaced by =userConfig_set= / =userConfig_get= in =examples=.
+- =initiate= uses =userConfig_csu.parGet('templatesBase', templates)= with the =--templates=
+  override still working as before.
 ** -
 
 * Stage 3: Documentation and pypi upload and pipx testing
@@ -123,11 +157,24 @@ Goal: Update README for pypi, Update Blee-Panels documentation, upload to pypi a
 
 * Stage 3 TODOs
 ** +
-** TODO [#A] Based on this ai context, Write ./README.org
+** DONE [#A] Based on this ai context, Write ./README.org
+CLOSED: [2026-07-12 Sat]
 SCHEDULED: <2026-06-09 Tue>
 ----- AI Results: ------
-** TODO [#A] Based on this ai context, Write ./py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org
+Wrote =README.org= at repo root covering: Overview, Part of BISOS, Command-Only
+PyCS Facility, Post-Installation Setup, Installation (pip + pipx), Usage
+(userConfig_set, initiate, py-dblock), Key Files, Documentation/Blee-Panels,
+Support, Planned Improvements. Also wrote =py3/README.rst= as the converted
+PyPI form, following RST conventions matching pandoc/ox-rst output.
+** DONE [#A] Based on this ai context, Write ./py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org
+CLOSED: [2026-07-12 Sat]
 SCHEDULED: <2026-06-09 Tue>
+----- AI Results: ------
+Wrote the full Blee panel at =py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org=
+with standard header dblocks, Overview, Pip/Pipx Installation (runResult dblocks),
+startAiActivity.cs intro, User Config section (userConfig_get/set), initiate section
+(bisos-pip, repo, xu-single, blee-panels, lcnt activities), py-dblock.cs section,
+and Design/Evolution TODOs. No RO/service sections (command-only package).
 ** TODO [#A] After upload to pypi, test it as a pipx install
 SCHEDULED: <2026-06-09 Tue>
 ----- AI Results: ------

@@ -17,23 +17,126 @@ architecture, what works, what is untested and the design decisions made so far.
 This file is maintained by Claude. Updates are typically triggered by the
 =/bx-update-status= slash command, after major interactions, or before a release.
 
-Note to a fresh Claude: this file is intentionally sparse at project start.
-Fill in the sections below when asked to update, following the structure provided.
-
 * Current State
-  [To be filled in by Claude after first substantive interaction]
+
+As of 2026-07-12, Stages 1–3 (documentation) are complete. The package is
+functionally working. The sole remaining task is PyPI upload and pipx testing.
+
+Key changes since last status:
+
+- =userConfig_csu.py= moved from =bisos.startAiActivity= to =bisos.b= — it is
+  now a general-purpose CSU importable as =from bisos.b import userConfig_csu=.
+- =parPermanence="userConfig"= added to the =templates= param in =startAiActivity.cs=.
+- =parDictAdd= in =bisos.b/cs/param.py= now has a hook: when
+  =parPermanence="userConfig"= and =parDefault= is not None, it auto-writes the
+  default to the user-config store at runtime (if the store is empty). This fires
+  via =g_extraParams= — not at import time.
+- =parDefault= for =templates= is set conditionally:
+  ='/bisos/apps/defaults/ai-templates' if that directory exists, else None=.
+- =README.org= written (repo root) and =py3/README.rst= written (PyPI source).
+- =py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org= written.
+- =bisos-pip/AI-Activity.org= updated with:
+  - "bisos-pip Packages Are Local pip-Installed" section
+  - "The csuListProc Dblock Pattern" section
+  - "README.org Authorship and Conversion to README.rst" section
+  - "Blee-Panel Authorship for bisos-pip Packages" section
 
 * Architecture
-  [Key components, file structure, entry points]
+
+#+begin_example
+py3/
+  bin/
+    startAiActivity.cs      — main csxu; initiate, userConfig_get/set, examples
+    py-dblock.cs            — csxu; updateDblocks command (processes org files)
+  bisos/
+    startAiActivity/
+      updateDblock.py       — general dblock dispatch engine (registerHandler / expandAll)
+      dblock_particulars.py — self-registering handler for b:ai:file/particulars
+panels/
+  bisos.startAiActivity/
+    _nodeBase_/
+      fullUsagePanel-en.org — primary Blee panel
+README.org                  — human-oriented repo README (org-mode source)
+py3/README.rst              — PyPI README (converted from README.org)
+#+end_example
+
+Key external dependencies (not bundled):
+
+- =bisos.b= — PyCS-Core; provides =cs=, =b_io=, =fp=, =b.op= APIs and now also
+  =userConfig_csu= (moved here from this package)
+- =bisos.b.cs.param= — =CmndParamDict.parDictAdd= with =parPermanence= hook
+- AI templates repo: =https://github.com/bisos/defaults/tree/master/ai-templates=
+  (not bundled; path configured via user-config)
+
+Entry points (=setup.py= console_scripts):
+
+- =startAiActivity.cs= → =py3/bin/startAiActivity.cs=
+- =py-dblock.cs= → =py3/bin/py-dblock.cs=
 
 * What Works
-  [Verified functionality]
+
+- =startAiActivity.cs -i examples= — shows all available activities when
+  templates base is configured; shows placeholder when not yet set.
+- =startAiActivity.cs -i userConfig_set --parName=templates --parValue=<path>=
+  — persists templates base to =~/.config/bisos/startAiActivity.cs/templates/value=.
+- =startAiActivity.cs -i userConfig_get --parName=templates= — reads and
+  displays current value.
+- =startAiActivity.cs -i initiate --activity=bisos-pip= — installs templates
+  into current directory.
+- =startAiActivity.cs -i initiate --root=repo --activity=bisos-pip= — installs
+  at git repo root.
+- =py-dblock.cs -i updateDblocks <file...>= — expands =b:ai:file/particulars=
+  dblocks in listed org files (pure Python, no Emacs needed).
+- Auto-default for templates: if =/bisos/apps/defaults/ai-templates= exists,
+  it is written to the user-config store on first run (via =parDictAdd= hook).
+- =userConfig_csu= is general-purpose in =bisos.b=; any pycs package can use it
+  by adding ='bisos.b.userConfig_csu'= to its =csuList= and tagging params with
+  =parPermanence="userConfig"=.
 
 * What Is Untested
-  [Known gaps]
+
+- PyPI upload and =pipx install bisos.startAiActivity= end-to-end test.
+- =py3/README.rst= rendering on PyPI (RST formatting not yet verified in PyPI
+  preview).
+- Behavior of auto-default hook when =/bisos/apps/defaults/ai-templates= does
+  not exist on a fresh machine (parDefault=None → hook is a no-op, user must
+  run =userConfig_set= manually).
+- All template activities other than =bisos-pip= (=xu-single=, =blee-panels=,
+  =lcnt=, =bisos-core=) — =initiate= logic is generic but only =bisos-pip= was
+  exercised interactively.
+- =py-dblock.cs= on a file with multiple dblocks of different signatures
+  (only =b:ai:file/particulars= handler is registered).
 
 * Key Design Decisions
-  [Non-obvious choices and their rationale]
+
+- *=userConfig_csu= in =bisos.b=, not this package* — the persistent user-config
+  CSU is general-purpose and belongs in the PyCS-Core library. Any bisos-pip
+  package that needs persistent config can reuse it without copying.
+
+- *=parDictAdd= hook for auto-defaults* — rather than a separate =initUserConfig=
+  command, the default is written to the store inside =parDictAdd= itself when
+  =parPermanence="userConfig"= and the store is empty. This fires at runtime via
+  =g_extraParams=, not at import time. The hook is in =bisos.b/cs/param.py= so
+  it is available to all PyCS packages.
+
+- *Conditional parDefault* — =parDefault= for =templates= is set to the well-known
+  path only if that directory actually exists on the machine. On a machine without
+  =/bisos/apps/defaults/ai-templates=, =parDefault= is =None= and the user must
+  configure manually. This avoids silently storing a non-existent path.
+
+- *=csuListProc= pattern: elisp block is mandatory* — the
+  =b:py3:cs:framework/csuListProc= dblock reads =b:py:cs:csuList= from the
+  elisp =#+BEGIN_SRC emacs-lisp= block immediately above it. The generated
+  =g_extraParams= calls only =cs.csuList_commonParamsSpecify= — not the csxu's
+  own =commonParamsSpecify=, which is wired separately by the framework.
+
+- *=README.org= is the authoritative source* — =py3/README.rst= is derived from
+  it. The RST is written to match pandoc/ox-rst output conventions. When both
+  need updating, edit =README.org= first, then regenerate or manually sync RST.
+
+- *=mother/= not =bystar/=* — the baseline templates directory is named =mother/=
+  in the current templates repo layout. The =excludedDirs= set in =examples=
+  uses =mother= accordingly.
 
 # Local Variables:
 # eval: (setq-local toc-org-max-depth 4)

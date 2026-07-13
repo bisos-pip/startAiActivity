@@ -13,7 +13,8 @@
       "Bash(grep*)",
       "Bash(/bisos/venv/py3/bisos3/bin/python*)",
       "Bash(/bisos/pipx/bin/pyflakes*)",
-      "Bash(/bisos/pipx/bin/flake8*)"
+      "Bash(/bisos/pipx/bin/flake8*)",
+      "Bash(chmod +x *)"
     ]
   }
 }

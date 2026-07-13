@@ -88,25 +88,39 @@ import shutil
 import subprocess
 import typing
 
-from bisos.startAiActivity import userConfigFileParam_csu
 from bisos.startAiActivity import updateDblock
+import bisos.startAiActivity.dblock_particulars  # registers b:ai:file/particulars handler
+
+""" #+begin_org
+*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CsFrmWrk   [[elisp:(outline-show-subtree+toggle)][||]] ~csuList emacs-list Specifications~  [[elisp:(blee:org:code-block/above-run)][ /Eval Below/ ]] [[elisp:(org-cycle)][| ]]
+#+BEGIN_SRC emacs-lisp
+(setq  b:py:cs:csuList
+  (list
+   "bisos.b.userConfig_csu"
+ ))
+#+END_SRC
+#+RESULTS:
+| bisos.b.userConfig_csu |
+#+end_org """
 
 ####+BEGIN: b:py3:cs:framework/csuListProc :pyImports t :csuImports t :csuParams t :csxuParams nil
 """ #+begin_org
-*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CsFrmWrk   [[elisp:(outline-show-subtree+toggle)][||]] ~Process CSU List~ with /0/ in csuList pyImports=t csuImports=t csuParams=t
+*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CsFrmWrk   [[elisp:(outline-show-subtree+toggle)][||]] ~Process CSU List~ with /1/ in csuList pyImports=t csuImports=t csuParams=t
 #+end_org """
 
-csuList = [ ]
+from bisos.b import userConfig_csu
+
+csuList = [ 'bisos.b.userConfig_csu', ]
 
 g_importedCmndsModules = cs.csuList_importedModules(csuList)
 
 def g_extraParams():
     csParams = cs.param.CmndParamDict()
-    commonParamsSpecify(csParams)
     cs.csuList_commonParamsSpecify(csuList, csParams)
     cs.argsparseBasedOnCsParams(csParams)
 
 ####+END:
+
 
 ####+BEGIN: b:py3:cs:orgItem/section :title "Common Parameters Specification"
 """ #+begin_org
@@ -117,6 +131,7 @@ def g_extraParams():
 def commonParamsSpecify(
         csParams: cs.param.CmndParamDict,
 ) -> None:
+
     csParams.parDictAdd(
         parName='root',
         parDescription="Target root: 'repo' for repo base, 'curDir' for current project directory.",
@@ -139,10 +154,11 @@ def commonParamsSpecify(
         parName='templates',
         parDescription="Override templatesBase file parameter for this run.",
         parDataType=None,
-        parDefault=None,
+        parDefault='/bisos/apps/defaults/ai-templates' if pathlib.Path('/bisos/apps/defaults/ai-templates').is_dir() else None,
         parChoices=[],
         argparseShortOpt=None,
         argparseLongOpt='--templates',
+        parPermanence="userConfig",
     )
 
 
@@ -188,79 +204,39 @@ class examples(cs.Cmnd):
         cs.examples.myName(cs.G.icmMyName(), cs.G.icmMyFullName())
         cs.examples.commonBrief()
 
+        userConfig_csu.examples_csu().pyCmnd()
+
         od = collections.OrderedDict
         cmnd = cs.examples.cmndEnter
 
-        templatesBase = userConfigFileParam_csu.templatesBaseGet()
-        if templatesBase is None:
-            b_io.ann.note("templatesBase not configured. Run: startAiActivity.cs -i setup --templates=/path/to/templates")
-            return cmndOutcome.set(opError=b.op.OpError.Success, opResults="No templatesBase configured.")
-
-        excludedDirs = {'mother', 'startAiAt.cs', 'test'}
-        activities = sorted([
-            d.name for d in templatesBase.iterdir()
-            if d.is_dir() and d.name not in excludedDirs
-        ])
+        templatesBaseStr = userConfig_csu.parGet('templates')
 
         cs.examples.menuChapter('=initiate= *root=curDir* (default) -- install into current directory')
-        for activity in activities:
+        if templatesBaseStr is None:
             cmnd('initiate',
-                 pars=od([('root', 'curDir'), ('activity', activity)]),
-                 comment=f"# Install {activity} templates into current directory")
+                 pars=od([('root', 'curDir'), ('activity', '<activity>')]),
+                 comment="# templates not set — run userConfig_set --parName=templates first")
+        else:
+            templatesBase = pathlib.Path(templatesBaseStr)
+            excludedDirs = {'mother', 'startAiAt.cs', 'test'}
+            activities = sorted([
+                d.name for d in templatesBase.iterdir()
+                if d.is_dir() and d.name not in excludedDirs
+            ])
+            for activity in activities:
+                cmnd('initiate',
+                     pars=od([('root', 'curDir'), ('activity', activity)]),
+                     comment=f"# Install {activity} templates into current directory")
 
         cs.examples.menuChapter('=initiate= *root=repo* -- install at git repo base')
-        for activity in activities:
-            cmnd('initiate',
-                 pars=od([('root', 'repo'), ('activity', activity)]),
-                 comment=f"# Install {activity} templates at repo base")
-
-        cs.examples.menuChapter('=setup= -- configure templatesBase')
-        cmnd('setup',
-             pars=od([('templates', '/path/to/ai-templates')]),
-             comment="# Set the templates base directory")
+        if templatesBaseStr is not None:
+            for activity in activities:
+                cmnd('initiate',
+                     pars=od([('root', 'repo'), ('activity', activity)]),
+                     comment=f"# Install {activity} templates at repo base")
 
         return(cmndOutcome)
 
-
-####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "setup" :comment "Configure the templatesBase file parameter" :extent "verify" :ro "cli" :parsMand "templates" :parsOpt "" :argsMin 0 :argsMax 0 :pyInv ""
-""" #+begin_org
-*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<setup>>  =verify= parsMand=templates ro=cli   [[elisp:(org-cycle)][| ]]
-#+end_org """
-class setup(cs.Cmnd):
-    cmndParamsMandatory = [ 'templates', ]
-    cmndParamsOptional = [ ]
-    cmndArgsLen = {'Min': 0, 'Max': 0,}
-
-    @cs.track(fnLoc=True, fnEntry=True, fnExit=True)
-    def cmnd(self,
-             rtInv: cs.RtInvoker,
-             cmndOutcome: b.op.Outcome,
-             templates: typing.Optional[str]=None,  # Cs Mandatory Param
-    ) -> b.op.Outcome:
-
-        failed = b_io.eh.badOutcome
-        callParamsDict = {'templates': templates, }
-        if self.invocationValidate(rtInv, cmndOutcome, callParamsDict, None).isProblematic():
-            return failed(cmndOutcome)
-        templates = csParam.mappedValue('templates', templates)
-####+END:
-        self.cmndDocStr(f""" #+begin_org
-** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Configure the templatesBase file parameter.
-Writes the given path to ~/.config/bisos/startAiActivity/templatesBase/value.
-        #+end_org """)
-
-        templatesPath = pathlib.Path(templates)
-        if not templatesPath.is_dir():
-            b_io.eh.problem_usageError(f"Templates directory not found: {templatesPath}")
-            return failed(cmndOutcome)
-
-        userConfigFileParam_csu.templatesBaseSet(str(templatesPath))
-        b_io.ann.note(f"templatesBase set to: {templatesPath}")
-
-        return cmndOutcome.set(
-            opError=b.op.OpError.Success,
-            opResults=f"templatesBase configured: {templatesPath}",
-        )
 
 
 ####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "initiate" :comment "Install AI templates via symlinks and safe-copy" :extent "verify" :ro "cli" :parsMand "activity" :parsOpt "root templates" :argsMin 0 :argsMax 0 :pyInv ""
@@ -296,11 +272,12 @@ Safe-copies AI-DevStatus.org and AI-WorkPlan.org from <activity>/ (falling back 
 Expands b:ai:file/particulars dblock in copied files using pure Python.
         #+end_org """)
 
-        templatesBase = userConfigFileParam_csu.templatesBaseGet(templates)
-        if templatesBase is None:
+        templatesBaseStr = userConfig_csu.parGet('templates', templates)
+        if templatesBaseStr is None:
             b_io.eh.problem_usageError(
-                "templatesBase not configured. Run: startAiActivity.cs -i setup --templates=/path/to/templates")
+                "templates not configured. Run: startAiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/templates")
             return failed(cmndOutcome)
+        templatesBase = pathlib.Path(templatesBaseStr)
 
         activityDir = templatesBase / activity
         if not activityDir.is_dir():
@@ -353,7 +330,7 @@ Expands b:ai:file/particulars dblock in copied files using pure Python.
             else:
                 shutil.copy2(src, dst)
                 b_io.ann.note(f"COPIED: {src} -> {dst}")
-                updateDblock.expandParticulars(dst, targetDir, activity)
+                updateDblock.expandAll(dst)
                 b_io.ann.note(f"DBLOCK-UPDATED: {dst}")
 
         # .claude/ — install settings.json and commands/

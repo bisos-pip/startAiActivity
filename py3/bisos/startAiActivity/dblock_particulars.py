@@ -2,35 +2,50 @@
 # -*- coding: utf-8 -*-
 
 """ #+begin_org
-* ~[Summary]~ :: Pure-Python expander for the =b:ai:file/particulars= dblock.
+* ~[Summary]~ :: Handler for the =b:ai:file/particulars= dblock.
+
+Registers itself with =updateDblock= under the signature =b:ai:file/particulars=.
+This dblock takes no parameters; the handler derives all content from the file
+path, the target directory, and the =AI-Activity.org= symlink present there.
 #+end_org """
 
 import pathlib
-import re
 import typing
 
-_DBLOCK_RE = re.compile(
-    r'(###\+BEGIN: b:ai:file/particulars[^\n]*\n).*?(###\+END:)',
-    re.DOTALL,
-)
+from bisos.startAiActivity import updateDblock
+
+_SIGNATURE = 'b:ai:file/particulars'
+
+_COMPANION_CANDIDATES = [
+    'AI-AGENTS.org',
+    'AI-WORKFLOW.org',
+    'AI-Activity.org',
+    'AI-DevStatus.org',
+    'README.org',
+]
 
 
-def expand(
+def _handler(
         filePath: pathlib.Path,
-        workingDir: pathlib.Path,
-        activity: str,
-        companionDocs: typing.List[str],
-) -> None:
-    text = filePath.read_text()
-    body = (
-        f"* AI Working Context\n"
-        f"  Working Directory: {workingDir}\n"
-        f"  File: {filePath.resolve()}\n"
-        f"  Activity: {activity}\n"
-        f"  Companion Docs: {', '.join(companionDocs)}\n"
-    )
-    new_text = _DBLOCK_RE.sub(
-        lambda m: m.group(1) + body + m.group(2),
-        text,
-    )
-    filePath.write_text(new_text)
+        targetDir: pathlib.Path,
+        args: typing.Dict[str, str],
+) -> str:
+    activityLink = targetDir / 'AI-Activity.org'
+    if activityLink.is_symlink():
+        activity = activityLink.resolve().parent.name
+    else:
+        activity = ''
+
+    companionDocs = [f for f in _COMPANION_CANDIDATES if (targetDir / f).exists()]
+
+    lines = ['* AI Working Context\n']
+    lines.append(f'  Working Directory: {targetDir}\n')
+    lines.append(f'  File: {filePath.resolve()}\n')
+    if activity:
+        lines.append(f'  Activity: {activity}\n')
+    if companionDocs:
+        lines.append(f"  Companion Docs: {', '.join(companionDocs)}\n")
+    return ''.join(lines)
+
+
+updateDblock.registerHandler(_SIGNATURE, _handler)

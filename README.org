@@ -1,126 +1,226 @@
-#+title: bisos.gitist:  Git Mass Cloning and More
-#+DATE: <2026-06-05 Fri 16:59>
+#+title: bisos.startAiActivity: Install AI Collaborative Development Templates
+#+DATE: <2026-07-12 Sat>
 #+AUTHOR: Mohsen BANAN
 #+OPTIONS: toc:4
 
-#+BEGIN: b:org:pypi:readme/topControls :pkgName "gitist" :comment "basic"
+#+BEGIN: b:org:pypi:readme/topControls :pkgName "startAiActivity" :comment "basic"
 
-|----------------------+------------------------------------------------------------------|
+|----------------------+--------------------------------------------------------------------------------|
 | ~Blee Panel Controls~: | [[elisp:(show-all)][Show-All]] : [[elisp:(org-shifttab)][Overview]] : [[elisp:(progn (org-shifttab) (org-content))][Content]] : [[elisp:(delete-other-windows)][(1)]] : [[elisp:(progn (save-buffer) (kill-buffer))][S&Q]] : [[elisp:(save-buffer)][Save]]  : [[elisp:(kill-buffer)][Quit]]  : [[elisp:(bury-buffer)][Bury]] |
-| ~Panel Links~:         | [[file:./py3/panels/bisos.gitist/_nodeBase_/fullUsagePanel-en.org][Repo Blee Panel]] --  [[file:/bisos/git/bxRepos/bisos-pip/gitist/py3/panels/bisos.gitist/_nodeBase_/fullUsagePanel-en.org][Blee Panel]]                                   |
-| ~See Also~:            | [[https://pypi.org/project/bisos.gitist][At PYPI]] : [[https://github.com/bisos-pip/pycs][bisos.PyCS]]                                             |
-|----------------------+------------------------------------------------------------------|
+| ~Panel Links~:         | [[file:./py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org][Repo Blee Panel]] --  [[file:/bisos/git/bxRepos/bisos-pip/startAiActivity/py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org][Blee Panel]]                         |
+| ~See Also~:            | [[https://pypi.org/project/bisos.startAiActivity][At PYPI]] : [[https://github.com/bisos-pip/pycs][bisos.PyCS]]                                                         |
+|----------------------+--------------------------------------------------------------------------------|
 
 #+END:
 
 * Overview
 
-/bisos.gitist/ provides general facilities for mass cloning of public github and gitlab
-and also private gitlab instances.
+/bisos.startAiActivity/ installs the ByStar AI collaborative development
+template set (=CLAUDE.md=, =AI-AGENTS.org=, =AI-WORKFLOW.org=,
+=AI-Activity.org=, =AI-DevStatus.org=, =AI-WorkPlan.org=) into any project
+directory or git repo root, wiring it for collaborative development with
+Claude Code.
 
-bisos.gitist is a python package that uses the  [[https://github.com/bisos-pip/pycs][PyCS-Framework]].
-
-gitist.cs is a seed. Common usages of gitist take the form of a gitistProc.pcs.
-
-
+bisos.startAiActivity is a python package that uses the
+[[https://github.com/bisos-pip/pycs][PyCS-Framework]]. It provides the
+=startAiActivity.cs= command and a pure-Python dblock expansion engine
+(=py-dblock.cs=) for updating org-mode dynamic blocks without Emacs.
 
 * Table of Contents     :TOC:
 - [[#overview][Overview]]
-- [[#gitist-layers][Gitist Layers]]
+- [[#part-of-bisos----bystar-internet-services-operating-system][Part of BISOS — ByStar Internet Services Operating System]]
+- [[#bisostartaiactivity-is-a-command-only-pycs-facility][bisos.startAiActivity is a Command-Only PyCS Facility]]
 - [[#post-installation-setup][Post-Installation Setup]]
 - [[#installation][Installation]]
   - [[#installation-with-pip][Installation With pip]]
   - [[#installation-with-pipx][Installation With pipx]]
+  - [[#post-installation-basic-testing][Post-Installation Basic Testing]]
 - [[#usage][Usage]]
-  - [[#local-usage-system-command-line][Local Usage (system command-line)]]
+  - [[#set-templates-base-directory][Set Templates Base Directory]]
+  - [[#install-templates-into-a-project][Install Templates Into a Project]]
+  - [[#update-dblocks-in-org-files][Update Dblocks in Org Files]]
+- [[#key-files][Key Files]]
 - [[#documentation-and-blee-panels][Documentation and Blee-Panels]]
-  - [[#bisosgitist-blee-panels][bisos.gitist Blee-Panels]]
+  - [[#bisostartaiactivity-blee-panels][bisos.startAiActivity Blee-Panels]]
 - [[#support][Support]]
 - [[#planned-improvements][Planned Improvements]]
 
-* Gitist Layers
+* Part of BISOS — ByStar Internet Services Operating System
 
-1) PyCS Framework
-2) Seeded/Planted PyCS Framework (gitist.cs)
-3) Common csCmndsList (bisos.csSeed)
-4) Gitist Commands CSUs
+Layered on top of Debian, *BISOS* (By* Internet Services Operating System)
+is a unified and universal framework for developing both internet services and
+software-service continuums that use internet services. See
+[[https://github.com/bxGenesis/start][Bootstrapping ByStar, BISOS and Blee]]
+for information about getting started with BISOS.
 
+*BISOS* is a foundation for *The Libre-Halaal ByStar Digital Ecosystem* which
+is described as a cure for losses of autonomy and privacy in a book titled:
+[[https://github.com/bxplpc/120033][Nature of Polyexistentials]]
+
+/bisos.startAiActivity/ is part of BISOS. It is a standalone package that can
+be used independently of the full BISOS environment.
+
+* bisos.startAiActivity is a Command-Only PyCS Facility
+
+bisos.startAiActivity is a command-line tool. It is a PyCS single-unit
+command service. PyCS is a framework that converges development of CLI tools
+and services. PyCS is an alternative to FastAPI, Typer and Click.
+
+bisos.startAiActivity uses the PyCS-Framework to:
+
+1) Install AI collaborative development templates (symlinks and safe-copies)
+   into any project directory or git repo root.
+2) Expand =b:ai:file/particulars= org-mode dynamic blocks in installed files
+   using pure Python, without requiring Emacs or =bx-dblock=.
+3) Manage persistent user-config parameters (e.g. =templates= base path) via
+   =~/.config/bisos/startAiActivity.cs/=.
+
+The core of PyCS-Framework is the /bisos.b/ package (the PyCS-Foundation).
+See [[https://github.com/bisos-pip/b][bisos.b]] for an overview.
 
 * Post-Installation Setup
 
-After installing, run the provisioning script to create the credentials directory
-and place the configuration templates:
+After installing, configure the templates base directory. If
+=/bisos/apps/defaults/ai-templates= exists on your system it is used as the
+default automatically. Otherwise, set it explicitly:
 
 #+begin_src bash
-config/provision.pcs -i credsSetup
+startAiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/ai-templates
 #+end_src
 
-This creates =~/credentials/git/= and copies two config files there if they do
-not already exist:
-
-- =~/credentials/git/githubHosts.cfg= — GitHub configuration; insert your GitHub PAT (Personal Access Token) here.
-- =~/credentials/git/gitlabHosts.cfg= — GitLab configuration; insert your GitLab PAT here.
-
-Once the PATs are in place, you can run the gitist proc scripts, e.g.:
+Verify the setting:
 
 #+begin_src bash
-bin/github-pub-gitist.pcs
-bin/gitlab-pub-gitist.pcs
+startAiActivity.cs -i userConfig_get --parName=templates
 #+end_src
 
+The AI templates are maintained at:
+[[https://github.com/bisos/defaults/tree/master/ai-templates]]
 
 * Installation
 
-The sources for the bisos.gitist pip package are maintained at:
-https://github.com/bisos-pip/gitist.
+The sources for the bisos.startAiActivity pip package are maintained at:
+https://github.com/bisos-pip/startAiActivity.
 
-The bisos.gitist pip package is available at PYPI as
-https://pypi.org/project/bisos.gitist
+The bisos.startAiActivity pip package is available at PYPI as
+https://pypi.org/project/bisos.startAiActivity
 
-You can install bisos.gitist with pip or pipx.
+You can install bisos.startAiActivity with pip or pipx.
 
 ** Installation With pip
 
-If you need access to bisos.gitist as a python module, you can install it with pip:
+If you need access to bisos.startAiActivity as a python module, you can
+install it with pip:
 
 #+begin_src bash
-pip install bisos.gitist
+pip install bisos.startAiActivity
 #+end_src
 
 ** Installation With pipx
 
-If you only need access to bisos.gitist on command-line, you can install it with pipx:
+If you only need access to bisos.startAiActivity on command-line, you can
+install it with pipx:
 
 #+begin_src bash
-pipx install bisos.gitist
+pipx install bisos.startAiActivity
+#+end_src
+
+The following commands are made available:
+
+- =startAiActivity.cs= — installs AI collaborative development templates
+- =py-dblock.cs= — updates org-mode dynamic blocks in files (pure Python)
+
+** Post-Installation Basic Testing
+
+After installation, run:
+
+#+begin_src bash
+startAiActivity.cs
+startAiActivity.cs -i userConfig_get --parName=templates
 #+end_src
 
 * Usage
 
-** Local Usage (system command-line)
-
-=gitist.cs= does the equivalent of gitist.
+** Set Templates Base Directory
 
 #+begin_src bash
-bin/gitist.cs
-bin/gitistProc.pcs
+startAiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/ai-templates
 #+end_src
 
+** Install Templates Into a Project
+
+Install into the current directory:
+
+#+begin_src bash
+startAiActivity.cs -i initiate --activity=bisos-pip
+#+end_src
+
+Install at the git repo root:
+
+#+begin_src bash
+startAiActivity.cs -i initiate --root=repo --activity=bisos-pip
+#+end_src
+
+Available activities match subdirectories under the templates base (e.g.
+=bisos-pip=, =bisos-core=, =xu-single=, =blee-panels=, =lcnt=). Run
+=startAiActivity.cs -i examples= to see all available activities.
+
+** Update Dblocks in Org Files
+
+#+begin_src bash
+py-dblock.cs -i updateDblocks AI-WorkPlan.org AI-DevStatus.org
+#+end_src
+
+* Key Files
+
+An overview of the relevant files of the bisos.startAiActivity package:
+
+*** =py3/bin/startAiActivity.cs=
+
+The main CS-MU (Command-Services Multi-Unit). Provides the =initiate=,
+=userConfig_get=, and =userConfig_set= commands. Uses =bisos.b.userConfig_csu=
+for persistent parameter management.
+
+*** =py3/bin/py-dblock.cs=
+
+A CS command that applies pure-Python org-mode dblock expansion to one or
+more files. Imports =dblock_particulars= to register the
+=b:ai:file/particulars= handler.
+
+*** =py3/bisos/startAiActivity/updateDblock.py=
+
+General dblock dispatch engine. Handlers register under a signature string
+via =registerHandler(sig, fn)=. =expandAll(filePath)= does a single-pass
+regex substitution over the file, dispatching each =####+BEGIN: <signature>=
+block to its registered handler.
+
+*** =py3/bisos/startAiActivity/dblock_particulars.py=
+
+Self-registering handler for the =b:ai:file/particulars= dblock signature.
+Derives the =activity= from the =AI-Activity.org= symlink and builds the
+companion-docs list by scanning the directory.
+
+*** PyPi and Github Packaging
+
+All bisos-pip repos in the https://github.com/bisos-pip github organization
+follow the same structure. They all have [[file:./py3/setup.py][setup.py]] files driven by
+[[file:./py3/pypiProc.sh][pypiProc.sh]].
 
 * Documentation and Blee-Panels
 
-bisos.gitist is part of ByStar Digital Ecosystem [[http://www.by-star.net]].
+bisos.startAiActivity is part of ByStar Digital Ecosystem [[http://www.by-star.net]].
 
 This module's primary documentation is in the form of Blee-Panels.
 Additional information is also available in: [[http://www.by-star.net/PLPC/180047]]
 
-** bisos.gitist Blee-Panels
+** bisos.startAiActivity Blee-Panels
 
-bisos.gitist Blee-Panles are in ./panels directory.
-From within Blee and BISOS these panles are accessible under the
-Blee "Panels" menu.
+bisos.startAiActivity Blee-Panels are in the =./py3/panels= directory. From
+within Blee and BISOS these panels are accessible under the Blee "Panels"
+menu.
 
-See [[file:./py3/panels/_nodeBase_/fullUsagePanel-en.org]] for a starting point.
+See [[file:./py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org]]
+for a starting point.
 
 * Support
 
@@ -129,11 +229,10 @@ author/maintainer\\
 [[http://mohsen.1.banan.byname.net][Mohsen Banan]] at:
 [[http://mohsen.1.banan.byname.net/contact]]
 
-
 * Planned Improvements
 
-- Enumerate applicabilities: telecom/SON, datacenter, CMIP-MOs
-- py3/bisos/gitist/tocsModule_csu.py
+- Upload to PyPI and test as pipx install
+- Write fullUsagePanel-en.org Blee-Panel
 
 # Local Variables:
 # eval: (setq-local toc-org-max-depth 4)
