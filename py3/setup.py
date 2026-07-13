@@ -56,6 +56,7 @@ requires = [
 "bisos",
 "bisos.b",
 "bisos.common",
+"bisos.pyDblock",
 "setuptools==75.8.0",
 "wheel==0.38.4",
 ]
@@ -65,7 +66,6 @@ requires = [
 ####+BEGIN: b:py3:pypi:setup/scripts :comment ""
 
 scripts = [
-'bin/py-dblock.cs',
 'bin/startAiActivity.cs',
 ]
 ####+END:

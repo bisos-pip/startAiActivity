@@ -88,8 +88,8 @@ import shutil
 import subprocess
 import typing
 
-from bisos.startAiActivity import updateDblock
-import bisos.startAiActivity.dblock_particulars  # registers b:ai:file/particulars handler
+from bisos.pyDblock import updateDblock
+import bisos.pyDblock.dblock_particulars  # registers b:ai:file/particulars handler
 
 """ #+begin_org
 *  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CsFrmWrk   [[elisp:(outline-show-subtree+toggle)][||]] ~csuList emacs-list Specifications~  [[elisp:(blee:org:code-block/above-run)][ /Eval Below/ ]] [[elisp:(org-cycle)][| ]]
