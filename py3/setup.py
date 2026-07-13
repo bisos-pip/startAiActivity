@@ -65,6 +65,7 @@ requires = [
 ####+BEGIN: b:py3:pypi:setup/scripts :comment ""
 
 scripts = [
+'bin/py-dblock.cs',
 'bin/startAiActivity.cs',
 ]
 ####+END:
