@@ -37,7 +37,6 @@
 ** +
 ** Scope of this panel is bisos.startAiActivity.
 ** Installs AI collaborative development templates (CLAUDE.md, AI-AGENTS.org, etc.) into any project directory.
-** Provides pure-Python dblock expansion via py-dblock.cs — no Emacs required.
 ** See  [[elisp:(blee:bnsm:panel-goto "/bisos/panels/bisos-core/bisos-pip/bisos.startAiActivity/README")][README]] of this bisos-pip package.
 ** -B|
 ####+BEGIN: blee:bxPanel:foldingSection :outLevel 0 :sep t :title "Pip and Pipx Package Installation" :anchor "Installation" :extraInfo "bisos.startAiActivity"
@@ -90,17 +89,33 @@
 ####+BEGIN: blee:panel:icm:py:cmnd :outLevel 1 :sep nil :folding? nil :label "Direct" :icmName "startAiActivity.cs -i initiate --activity=lcnt" :comment "Install lcnt templates into current directory" :afterComment ""
 * [[elisp:(show-all)][(>]] [[elisp:(blee:menu-sel:outline:popupMenu)][+-]] [[elisp:(blee:menu-sel:navigation:popupMenu)][==]]  /Direct/ :: [[elisp:(lsip-local-run-command "startAiActivity.cs -i initiate --activity=lcnt")][startAiActivity.cs -i initiate --activity=lcnt]] *|*  =Install lcnt templates into current directory= *|*    [[elisp:(org-shifttab)][<)]] E|
 ####+END:
-####+BEGIN: blee:bxPanel:foldingSection :outLevel 0 :sep t :title "py-dblock.cs --- Update Org Dblocks" :anchor "PyDblock" :extraInfo "py-dblock"
+####+BEGIN: blee:bxPanel:foldingSection :outLevel 0 :sep t :title "aiSuspend and aiResume --- Reversibly Pause AI Collaboration" :anchor "Suspend" :extraInfo "aiSuspend / aiResume"
 * /[[elisp:(beginning-of-buffer)][|^]]  [[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]] [[elisp:(delete-other-windows)][|1]]/
-* [[elisp:(show-all)][(>]]  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_  _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_     [[elisp:(outline-show-subtree+toggle)][| _py-dblock.cs --- Update Org Dblocks_: |]] <<PyDblock>> py-dblock  [[elisp:(org-shifttab)][<)]] E|
+* [[elisp:(show-all)][(>]]  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_  _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_     [[elisp:(outline-show-subtree+toggle)][| _aiSuspend and aiResume --- Reversibly Pause AI Collaboration_: |]] <<Suspend>> aiSuspend / aiResume  [[elisp:(org-shifttab)][<)]] E|
 ####+END
-####+BEGIN: blee:panel:icm:py:intro :outLevel 1 :sep t :folding? nil :label "CS" :icmName "py-dblock.cs" :comment "Examples Menu" :afterComment "-- -i examples"
+** +
+** =aiSuspend= removes symlinks and =.claude/= entries and renames =AI-DevStatus.org= / =AI-WorkPlan.org= to a =.dormant= suffix so the collaboration state survives.
+** =aiResume= restores the =.dormant= files, re-installs the symlinks and =.claude/=, and infers the activity from =AI-Activity.org= or the =Activity:= header of =AI-WorkPlan.org=.
+** Both commands operate on the current directory --- no =--root= parameter needed.
+** -B|
+####+BEGIN: blee:panel:icm:py:cmnd :outLevel 1 :sep t :folding? nil :label "Direct" :icmName "startAiActivity.cs -i aiSuspend" :comment "Suspend AI collaboration (stash to .dormant)" :afterComment ""
 * /[[elisp:(beginning-of-buffer)][|^]] [[elisp:(blee:menu-sel:navigation:popupMenu)][==]] [[elisp:(delete-other-windows)][|1]]/
-* [[elisp:(show-all)][(>]] [[elisp:(blee:menu-sel:outline:popupMenu)][+-]] [[elisp:(blee:menu-sel:navigation:popupMenu)][==]]  /CS/ :: [[elisp:(lsip-local-run-command "py-dblock.cs -i examples")][py-dblock.cs]]  [[elisp:(lsip-local-run-command "py-dblock.cs -i visit")][visit]]  [[elisp:(lsip-local-run-command "which -a py-dblock.cs")][which -a]]  [[elisp:(lsip-local-run-command "py-dblock.cs -i describe")][describe]] *|*  =Examples Menu= *|*  -- -i examples [[elisp:(org-shifttab)][<)]] E|
+* [[elisp:(show-all)][(>]] [[elisp:(blee:menu-sel:outline:popupMenu)][+-]] [[elisp:(blee:menu-sel:navigation:popupMenu)][==]]  /Direct/ :: [[elisp:(lsip-local-run-command "startAiActivity.cs -i aiSuspend")][startAiActivity.cs -i aiSuspend]] *|*  =Suspend AI collaboration (stash to .dormant)= *|*    [[elisp:(org-shifttab)][<)]] E|
+####+END:
+####+BEGIN: blee:panel:icm:py:cmnd :outLevel 1 :sep nil :folding? nil :label "Direct" :icmName "startAiActivity.cs -i aiResume" :comment "Resume AI collaboration (restore .dormant, re-install symlinks)" :afterComment ""
+* [[elisp:(show-all)][(>]] [[elisp:(blee:menu-sel:outline:popupMenu)][+-]] [[elisp:(blee:menu-sel:navigation:popupMenu)][==]]  /Direct/ :: [[elisp:(lsip-local-run-command "startAiActivity.cs -i aiResume")][startAiActivity.cs -i aiResume]] *|*  =Resume AI collaboration (restore .dormant, re-install symlinks)= *|*    [[elisp:(org-shifttab)][<)]] E|
+####+END:
+####+BEGIN: blee:bxPanel:foldingSection :outLevel 0 :sep t :title "deClaudify --- Permanently Remove AI Collaboration Files" :anchor "DeClaudify" :extraInfo "deClaudify"
+* /[[elisp:(beginning-of-buffer)][|^]]  [[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]] [[elisp:(delete-other-windows)][|1]]/
+* [[elisp:(show-all)][(>]]  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_  _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_     [[elisp:(outline-show-subtree+toggle)][| _deClaudify --- Permanently Remove AI Collaboration Files_: |]] <<DeClaudify>> deClaudify  [[elisp:(org-shifttab)][<)]] E|
 ####+END
-####+BEGIN: blee:panel:icm:py:cmnd :outLevel 1 :sep t :folding? nil :label "Direct" :icmName "py-dblock.cs -i updateDblocks AI-WorkPlan.org AI-DevStatus.org" :comment "Expand dblocks in AI org files" :afterComment ""
+** +
+** =deClaudify= is the irreversible counterpart of =aiSuspend=. It removes symlinks (=CLAUDE.md=, =AI-AGENTS.org=, =AI-WORKFLOW.org=, =AI-Activity.org=), the =.claude/= entries, and deletes the editable files =AI-DevStatus.org= and =AI-WorkPlan.org=.
+** Symlinks are only removed if they are actually symlinks; copied files are only removed if they are regular files. User-modified files are left intact.
+** -B|
+####+BEGIN: blee:panel:icm:py:cmnd :outLevel 1 :sep t :folding? nil :label "Direct" :icmName "startAiActivity.cs -i deClaudify" :comment "Permanently remove AI collaboration files from current directory" :afterComment ""
 * /[[elisp:(beginning-of-buffer)][|^]] [[elisp:(blee:menu-sel:navigation:popupMenu)][==]] [[elisp:(delete-other-windows)][|1]]/
-* [[elisp:(show-all)][(>]] [[elisp:(blee:menu-sel:outline:popupMenu)][+-]] [[elisp:(blee:menu-sel:navigation:popupMenu)][==]]  /Direct/ :: [[elisp:(lsip-local-run-command "py-dblock.cs -i updateDblocks AI-WorkPlan.org AI-DevStatus.org")][py-dblock.cs -i updateDblocks AI-WorkPlan.org AI-DevStatus.org]] *|*  =Expand dblocks in AI org files= *|*    [[elisp:(org-shifttab)][<)]] E|
+* [[elisp:(show-all)][(>]] [[elisp:(blee:menu-sel:outline:popupMenu)][+-]] [[elisp:(blee:menu-sel:navigation:popupMenu)][==]]  /Direct/ :: [[elisp:(lsip-local-run-command "startAiActivity.cs -i deClaudify")][startAiActivity.cs -i deClaudify]] *|*  =Permanently remove AI collaboration files from current directory= *|*    [[elisp:(org-shifttab)][<)]] E|
 ####+END:
 ####+BEGIN: blee:bxPanel:evolution
 * [[elisp:(show-all)][(>]] [[elisp:(describe-function 'org-dblock-write:blee:bxPanel:evolution)][dbf]]

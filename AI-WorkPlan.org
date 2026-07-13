@@ -86,7 +86,7 @@ Key decisions:
   =commonParamsSpecify=; mandatory only for =setup=. =examples= command now calls
   =templatesBaseGet()= at runtime and handles =None= gracefully instead of crashing.
   =excludedDirs= updated to =mother= (was =bystar=).
-** DONE [#A] <<Improve Towards py-dblock>> -- make py imitate :ai:
+** DONE [#A] <<Improve Towards py-dblock>> -- make py imitate org-mode dblocks  :ai:
 SCHEDULED: <2026-06-09 Tue>
 - updateDblock.expandParticulars(dst, targetDir, activity)  is the specific approach.
 - The general approach is to mimic org-mode's model for dblocks.
@@ -116,7 +116,7 @@ Generalized the dblock engine across three files:
 Also: added =chmod +x *= to =.claude/settings.json=; added "Claude Permissions" section
 to =mother/AI-WORKFLOW.org= directing Claude to always offer to persist new permissions
 to =.claude/settings.json= at the time of asking.
-** DONE [#A] <<Improve Towards Persistent Parameters>> -- make py imitate :ai:
+** DONE [#A] <<Improve Towards Persistent Parameters>> -- make userConfig persistent parameters Generic :ai:
 SCHEDULED: <2026-06-09 Tue>
 - Add parPermanence="userConfig" (or an emum) to this. Default is None.
   csParams.parDictAdd(
@@ -150,7 +150,7 @@ In =startAiActivity.cs=:
   override still working as before.
 ** -
 
-* Stage 3: Documentation and pypi upload and pipx testing
+* Stage 3: Documentation and pypi upload
 
 Goal: Update README for pypi, Update Blee-Panels documentation, upload to pypi and test as pipx
 
@@ -167,15 +167,76 @@ PyCS Facility, Post-Installation Setup, Installation (pip + pipx), Usage
 Support, Planned Improvements. Also wrote =py3/README.rst= as the converted
 PyPI form, following RST conventions matching pandoc/ox-rst output.
 ** DONE [#A] Based on this ai context, Write ./py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org
-CLOSED: [2026-07-12 Sat]
-SCHEDULED: <2026-06-09 Tue>
+CLOSED: [2026-07-12 Sat] SCHEDULED: <2026-06-09 Tue>
 ----- AI Results: ------
 Wrote the full Blee panel at =py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org=
 with standard header dblocks, Overview, Pip/Pipx Installation (runResult dblocks),
 startAiActivity.cs intro, User Config section (userConfig_get/set), initiate section
 (bisos-pip, repo, xu-single, blee-panels, lcnt activities), py-dblock.cs section,
 and Design/Evolution TODOs. No RO/service sections (command-only package).
-** TODO [#A] After upload to pypi, test it as a pipx install
+** DONE [#A] <<No py-dblock.cs>> in Documentation
+CLOSED: [2026-07-13 Sun] SCHEDULED: <2026-06-09 Tue>
+Now that bisos.pyDblock is in place separate from  startAiActicity. Delete all mention of py-dblock.cs from documentation
+Show me current mentions before deleting them
+----- AI Results: ------
+Removed all =py-dblock.cs= mentions from the four documentation files:
+- =README.org= — removed from Overview paragraph, Installation commands list, "Update Dblocks" Usage section, and Key Files section
+- =AI-DevStatus.org= — removed from Architecture listing, Entry points, What Works, and What Is Untested
+- =fullUsagePanel-en.org= — removed Overview bullet and entire "py-dblock.cs --- Update Org Dblocks" section
+Historical references in =AI-WorkPlan.org= (DONE task bodies) and =startAiActivity.org= were left intact as they are part of the development record.
+=py3/README.rst= was not touched — it is machine-generated from =README.org=.
+** -
+
+
+* Stage 4: Lifecycle Commands
+
+Goal: Add commands for reversible and permanent removal of AI collaboration files.
+
+
+* Stage 4 TODOs
+** +
+** DONE [#A] <<deClaudify>> -- permanent removal of AI collaboration files :ai:
+CLOSED: [2026-07-13 Sun] SCHEDULED: <2026-07-13 Sun>
+Add a =deClaudify= command that permanently removes all AI collaboration files
+installed by =initiate=: symlinks (CLAUDE.md, AI-AGENTS.org, AI-WORKFLOW.org,
+AI-Activity.org, .claude/settings.json, .claude/commands), copied files
+(AI-DevStatus.org, AI-WorkPlan.org), and the .claude/ dir if empty.
+No =--root= param needed — always operates on the current directory.
+----- AI Results: ------
+Implemented =deClaudify= in =startAiActivity.cs=. Removes symlinks only if they
+are symlinks (leaves regular files intact), removes copied files only if they are
+regular files (leaves symlinks intact), removes =.claude/= if empty after cleanup.
+Added to =examples= command output.
+** DONE [#A] <<aiSuspend-aiResume>> -- reversible suspension of AI collaboration :ai:
+CLOSED: [2026-07-13 Sun] SCHEDULED: <2026-07-13 Sun>
+Add =aiSuspend= and =aiResume= command pair. =aiSuspend= removes symlinks and
+=.claude/= (same as =deClaudify=) but instead of deleting =AI-DevStatus.org= and
+=AI-WorkPlan.org=, renames them to =.dormant= suffix so they survive.
+=aiResume= restores the =.dormant= files and re-installs all symlinks and =.claude/=
+entries, inferring the activity from the =AI-Activity.org= symlink target or the
+=Activity:= header in =AI-WorkPlan.org=. Neither command takes =--root=.
+----- AI Results: ------
+Implemented =aiSuspend= and =aiResume= in =startAiActivity.cs=. End-to-end tested:
+suspend/resume cycle leaves the directory identical to its pre-suspend state.
+Activity inference works from =AI-WorkPlan.org= dblock header when the symlink
+is absent (which it is after suspend). Added both to =examples= output.
+** -
+
+
+* Stage 9: pipx outside of bisos testing
+
+Goal: Make sure that startAiActivity works fine outside of bisos
+
+
+* Stage 9 TODOs
+** +
+** TODO [#A] Setup an Examples repo for the templates and test against it.
+SCHEDULED: <2026-06-09 Tue>
+----- AI Results: ------
+** TODO [#A] After upload to pypi, test it as a pipx install in a fresh Debian Machine
+SCHEDULED: <2026-06-09 Tue>
+----- AI Results: ------
+** TODO [#A] Update Documentation to include Examples Repo specifically.
 SCHEDULED: <2026-06-09 Tue>
 ----- AI Results: ------
 

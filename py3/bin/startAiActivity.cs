@@ -211,6 +211,19 @@ class examples(cs.Cmnd):
 
         templatesBaseStr = userConfig_csu.parGet('templates')
 
+        cs.examples.menuChapter('=aiSuspend= / =aiResume= -- suspend and resume AI collaboration')
+        cmnd('aiSuspend',
+             pars=od([]),
+             comment="# Remove symlinks/.claude, rename WorkPlan/DevStatus to .dormant")
+        cmnd('aiResume',
+             pars=od([]),
+             comment="# Restore .dormant files and re-install symlinks/.claude")
+
+        cs.examples.menuChapter('=deClaudify= -- remove AI collaboration files')
+        cmnd('deClaudify',
+             pars=od([]),
+             comment="# Remove AI files from current directory")
+
         cs.examples.menuChapter('=initiate= *root=curDir* (default) -- install into current directory')
         if templatesBaseStr is None:
             cmnd('initiate',
@@ -333,28 +346,312 @@ Expands b:ai:file/particulars dblock in copied files using pure Python.
                 updateDblock.expandAll(dst)
                 b_io.ann.note(f"DBLOCK-UPDATED: {dst}")
 
-        # .claude/ — install settings.json and commands/
-        # Source is _claude/ in templates (visible); installed as .claude/ in target
-        # Use activity-specific _claude/ if it exists, else fall back to mother/_claude/
-        activityClaudeDir = activityDir / '_claude'
-        motherClaudeDir = motherDir / '_claude'
-        claudeSrcDir = activityClaudeDir if activityClaudeDir.is_dir() else motherClaudeDir
+        # .claude/ — activity-oriented symlinks so the same activity produces
+        # identical .claude/ layouts across every project that uses it.
+        # For each entry (settings.json file, commands/ directory), prefer the
+        # activity's _claude/<entry> when present, else fall back to mother/_claude/<entry>.
+        # settings.local.json is a per-machine overlay — never installed from templates.
+        claudeDstDir = targetDir / '.claude'
+        claudeDstDir.mkdir(exist_ok=True)
 
-        for claudeSrcFile in claudeSrcDir.rglob('*'):
-            if not claudeSrcFile.is_file():
+        for claudeEntry in ['settings.json', 'commands']:
+            activityClaudeSrc = activityDir / '_claude' / claudeEntry
+            motherClaudeSrc = motherDir / '_claude' / claudeEntry
+            claudeSrc = activityClaudeSrc if activityClaudeSrc.exists() else motherClaudeSrc
+            if not claudeSrc.exists():
                 continue
-            relPath = claudeSrcFile.relative_to(claudeSrcDir)
-            claudeDst = targetDir / '.claude' / relPath
-            claudeDst.parent.mkdir(parents=True, exist_ok=True)
-            if claudeDst.exists():
+            claudeDst = claudeDstDir / claudeEntry
+            if claudeDst.exists() or claudeDst.is_symlink():
                 b_io.ann.note(f"SKIP (exists): {claudeDst}")
             else:
-                shutil.copy2(claudeSrcFile, claudeDst)
-                b_io.ann.note(f"COPIED: {claudeSrcFile} -> {claudeDst}")
+                claudeDst.symlink_to(claudeSrc)
+                b_io.ann.note(f"SYMLINKED: {claudeDst} -> {claudeSrc}")
 
         return cmndOutcome.set(
             opError=b.op.OpError.Success,
             opResults=f"AI templates initiated for activity={activity} at {targetDir}",
+        )
+
+
+####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "aiSuspend" :comment "Suspend AI collaboration: remove symlinks/.claude, stash editable files" :extent "verify" :ro "cli" :parsMand "" :parsOpt "" :argsMin 0 :argsMax 0 :pyInv ""
+""" #+begin_org
+*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<aiSuspend>>  =verify= ro=cli   [[elisp:(org-cycle)][| ]]
+#+end_org """
+class aiSuspend(cs.Cmnd):
+    cmndParamsMandatory = [ ]
+    cmndParamsOptional = [ ]
+    cmndArgsLen = {'Min': 0, 'Max': 0,}
+
+    @cs.track(fnLoc=True, fnEntry=True, fnExit=True)
+    def cmnd(self,
+             rtInv: cs.RtInvoker,
+             cmndOutcome: b.op.Outcome,
+    ) -> b.op.Outcome:
+
+        failed = b_io.eh.badOutcome
+        callParamsDict = {}
+        if self.invocationValidate(rtInv, cmndOutcome, callParamsDict, None).isProblematic():
+            return failed(cmndOutcome)
+####+END:
+        self.cmndDocStr(f""" #+begin_org
+** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Suspend AI collaboration in current directory.
+Removes symlinks (CLAUDE.md, AI-AGENTS.org, AI-WORKFLOW.org, AI-Activity.org)
+and .claude/ entries. Renames AI-DevStatus.org and AI-WorkPlan.org to .dormant
+so they survive and can be restored by aiResume.
+        #+end_org """)
+
+        targetDir = pathlib.Path.cwd()
+
+        # Remove symlinks
+        symlinkFiles = ['CLAUDE.md', 'AI-AGENTS.org', 'AI-WORKFLOW.org', 'AI-Activity.org']
+        for fname in symlinkFiles:
+            dst = targetDir / fname
+            if dst.is_symlink():
+                dst.unlink()
+                b_io.ann.note(f"REMOVED symlink: {dst}")
+            elif dst.exists():
+                b_io.ann.note(f"SKIP (not a symlink, leaving intact): {dst}")
+            else:
+                b_io.ann.note(f"SKIP (not present): {dst}")
+
+        # Stash editable files by renaming to .dormant
+        stashFiles = ['AI-DevStatus.org', 'AI-WorkPlan.org']
+        for fname in stashFiles:
+            src = targetDir / fname
+            dst = targetDir / (fname + '.dormant')
+            if src.is_file() and not src.is_symlink():
+                if dst.exists():
+                    b_io.ann.note(f"SKIP stash (dormant already exists): {dst}")
+                else:
+                    src.rename(dst)
+                    b_io.ann.note(f"STASHED: {src} -> {dst}")
+            elif src.is_symlink():
+                b_io.ann.note(f"SKIP stash (is a symlink, leaving intact): {src}")
+            else:
+                b_io.ann.note(f"SKIP stash (not present): {src}")
+
+        # Remove .claude/ symlinked entries
+        claudeDstDir = targetDir / '.claude'
+        for claudeEntry in ['settings.json', 'commands']:
+            claudeDst = claudeDstDir / claudeEntry
+            if claudeDst.is_symlink():
+                claudeDst.unlink()
+                b_io.ann.note(f"REMOVED symlink: {claudeDst}")
+            elif claudeDst.exists():
+                b_io.ann.note(f"SKIP (not a symlink, leaving intact): {claudeDst}")
+            else:
+                b_io.ann.note(f"SKIP (not present): {claudeDst}")
+
+        if claudeDstDir.is_dir() and not any(claudeDstDir.iterdir()):
+            claudeDstDir.rmdir()
+            b_io.ann.note(f"REMOVED empty directory: {claudeDstDir}")
+
+        return cmndOutcome.set(
+            opError=b.op.OpError.Success,
+            opResults=f"aiSuspend complete at {targetDir}",
+        )
+
+
+####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "aiResume" :comment "Resume AI collaboration: restore .dormant files and re-install symlinks/.claude" :extent "verify" :ro "cli" :parsMand "" :parsOpt "templates" :argsMin 0 :argsMax 0 :pyInv ""
+""" #+begin_org
+*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<aiResume>>  =verify= parsOpt="templates" ro=cli   [[elisp:(org-cycle)][| ]]
+#+end_org """
+class aiResume(cs.Cmnd):
+    cmndParamsMandatory = [ ]
+    cmndParamsOptional = [ 'templates', ]
+    cmndArgsLen = {'Min': 0, 'Max': 0,}
+
+    @cs.track(fnLoc=True, fnEntry=True, fnExit=True)
+    def cmnd(self,
+             rtInv: cs.RtInvoker,
+             cmndOutcome: b.op.Outcome,
+             templates: typing.Optional[str]=None,   # Cs Optional Param
+    ) -> b.op.Outcome:
+
+        failed = b_io.eh.badOutcome
+        callParamsDict = {'templates': templates, }
+        if self.invocationValidate(rtInv, cmndOutcome, callParamsDict, None).isProblematic():
+            return failed(cmndOutcome)
+        templates = csParam.mappedValue('templates', templates)
+####+END:
+        self.cmndDocStr(f""" #+begin_org
+** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Resume AI collaboration in current directory.
+Restores AI-DevStatus.org and AI-WorkPlan.org from their .dormant copies.
+Re-installs symlinks (CLAUDE.md, AI-AGENTS.org, AI-WORKFLOW.org, AI-Activity.org)
+and .claude/ entries from the templates base. The activity is inferred from the
+dormant AI-Activity.org symlink target if present, otherwise from the templates base.
+        #+end_org """)
+
+        targetDir = pathlib.Path.cwd()
+
+        # Restore .dormant files
+        stashFiles = ['AI-DevStatus.org', 'AI-WorkPlan.org']
+        for fname in stashFiles:
+            src = targetDir / (fname + '.dormant')
+            dst = targetDir / fname
+            if src.exists():
+                if dst.exists() or dst.is_symlink():
+                    b_io.ann.note(f"SKIP restore (already exists): {dst}")
+                else:
+                    src.rename(dst)
+                    b_io.ann.note(f"RESTORED: {src} -> {dst}")
+            else:
+                b_io.ann.note(f"SKIP restore (dormant not found): {src}")
+
+        # Determine templates base
+        templatesBaseStr = userConfig_csu.parGet('templates', templates)
+        if templatesBaseStr is None:
+            b_io.eh.problem_usageError(
+                "templates not configured. Run: startAiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/templates")
+            return failed(cmndOutcome)
+        templatesBase = pathlib.Path(templatesBaseStr)
+        motherDir = templatesBase / 'mother'
+
+        # Infer activity from AI-Activity.org symlink target if it still exists,
+        # otherwise from the restored AI-WorkPlan.org dblock header, otherwise fail.
+        activityOrg = targetDir / 'AI-Activity.org'
+        activity = None
+        if activityOrg.is_symlink():
+            # target is <templatesBase>/<activity>/AI-Activity.org
+            target = pathlib.Path(activityOrg.readlink())
+            activity = target.parent.name
+        else:
+            # try to read Activity: line from AI-WorkPlan.org dblock header
+            workPlan = targetDir / 'AI-WorkPlan.org'
+            if workPlan.exists():
+                for line in workPlan.read_text().splitlines():
+                    if line.strip().startswith('Activity:'):
+                        activity = line.split(':', 1)[1].strip()
+                        break
+
+        if activity is None:
+            b_io.eh.problem_usageError(
+                "Cannot infer activity. Ensure AI-Activity.org symlink or AI-WorkPlan.org with Activity: header is present.")
+            return failed(cmndOutcome)
+
+        activityDir = templatesBase / activity
+        if not activityDir.is_dir():
+            b_io.eh.problem_usageError(f"Activity directory not found: {activityDir}")
+            return failed(cmndOutcome)
+
+        b_io.ann.note(f"Inferred activity: {activity}")
+
+        # Re-install constant symlinks
+        constantFiles = ['CLAUDE.md', 'AI-AGENTS.org', 'AI-WORKFLOW.org']
+        for fname in constantFiles:
+            src = motherDir / fname
+            dst = targetDir / fname
+            if dst.exists() or dst.is_symlink():
+                b_io.ann.note(f"SKIP (exists): {dst}")
+            else:
+                dst.symlink_to(src)
+                b_io.ann.note(f"SYMLINKED: {dst} -> {src}")
+
+        # Re-install AI-Activity.org symlink
+        activitySrc = activityDir / 'AI-Activity.org'
+        activityDst = targetDir / 'AI-Activity.org'
+        if activityDst.exists() or activityDst.is_symlink():
+            b_io.ann.note(f"SKIP (exists): {activityDst}")
+        else:
+            activityDst.symlink_to(activitySrc)
+            b_io.ann.note(f"SYMLINKED: {activityDst} -> {activitySrc}")
+
+        # Re-install .claude/ symlinked entries
+        claudeDstDir = targetDir / '.claude'
+        claudeDstDir.mkdir(exist_ok=True)
+        for claudeEntry in ['settings.json', 'commands']:
+            activityClaudeSrc = activityDir / '_claude' / claudeEntry
+            motherClaudeSrc = motherDir / '_claude' / claudeEntry
+            claudeSrc = activityClaudeSrc if activityClaudeSrc.exists() else motherClaudeSrc
+            if not claudeSrc.exists():
+                continue
+            claudeDst = claudeDstDir / claudeEntry
+            if claudeDst.exists() or claudeDst.is_symlink():
+                b_io.ann.note(f"SKIP (exists): {claudeDst}")
+            else:
+                claudeDst.symlink_to(claudeSrc)
+                b_io.ann.note(f"SYMLINKED: {claudeDst} -> {claudeSrc}")
+
+        return cmndOutcome.set(
+            opError=b.op.OpError.Success,
+            opResults=f"aiResume complete at {targetDir} (activity={activity})",
+        )
+
+
+####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "deClaudify" :comment "Remove AI collaboration files installed by initiate" :extent "verify" :ro "cli" :parsMand "" :parsOpt "" :argsMin 0 :argsMax 0 :pyInv ""
+""" #+begin_org
+*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<deClaudify>>  =verify= ro=cli   [[elisp:(org-cycle)][| ]]
+#+end_org """
+class deClaudify(cs.Cmnd):
+    cmndParamsMandatory = [ ]
+    cmndParamsOptional = [ ]
+    cmndArgsLen = {'Min': 0, 'Max': 0,}
+
+    @cs.track(fnLoc=True, fnEntry=True, fnExit=True)
+    def cmnd(self,
+             rtInv: cs.RtInvoker,
+             cmndOutcome: b.op.Outcome,
+    ) -> b.op.Outcome:
+
+        failed = b_io.eh.badOutcome
+        callParamsDict = {}
+        if self.invocationValidate(rtInv, cmndOutcome, callParamsDict, None).isProblematic():
+            return failed(cmndOutcome)
+####+END:
+        self.cmndDocStr(f""" #+begin_org
+** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Remove AI collaboration files installed by initiate.
+Deletes symlinks: CLAUDE.md, AI-AGENTS.org, AI-WORKFLOW.org, AI-Activity.org,
+.claude/settings.json, .claude/commands.
+Deletes copied files: AI-DevStatus.org, AI-WorkPlan.org.
+Removes .claude/ directory if it becomes empty.
+        #+end_org """)
+
+        targetDir = pathlib.Path.cwd()
+
+        # Symlinked constant files and activity file
+        symlinkFiles = ['CLAUDE.md', 'AI-AGENTS.org', 'AI-WORKFLOW.org', 'AI-Activity.org']
+        for fname in symlinkFiles:
+            dst = targetDir / fname
+            if dst.is_symlink():
+                dst.unlink()
+                b_io.ann.note(f"REMOVED symlink: {dst}")
+            elif dst.exists():
+                b_io.ann.note(f"SKIP (not a symlink, leaving intact): {dst}")
+            else:
+                b_io.ann.note(f"SKIP (not present): {dst}")
+
+        # Safe-copied files — only remove if they are regular files (not symlinks)
+        copiedFiles = ['AI-DevStatus.org', 'AI-WorkPlan.org']
+        for fname in copiedFiles:
+            dst = targetDir / fname
+            if dst.is_file() and not dst.is_symlink():
+                dst.unlink()
+                b_io.ann.note(f"REMOVED file: {dst}")
+            elif dst.is_symlink():
+                b_io.ann.note(f"SKIP (is a symlink, leaving intact): {dst}")
+            else:
+                b_io.ann.note(f"SKIP (not present): {dst}")
+
+        # .claude/ symlinked entries
+        claudeDstDir = targetDir / '.claude'
+        for claudeEntry in ['settings.json', 'commands']:
+            claudeDst = claudeDstDir / claudeEntry
+            if claudeDst.is_symlink():
+                claudeDst.unlink()
+                b_io.ann.note(f"REMOVED symlink: {claudeDst}")
+            elif claudeDst.exists():
+                b_io.ann.note(f"SKIP (not a symlink, leaving intact): {claudeDst}")
+            else:
+                b_io.ann.note(f"SKIP (not present): {claudeDst}")
+
+        # Remove .claude/ dir if now empty
+        if claudeDstDir.is_dir() and not any(claudeDstDir.iterdir()):
+            claudeDstDir.rmdir()
+            b_io.ann.note(f"REMOVED empty directory: {claudeDstDir}")
+
+        return cmndOutcome.set(
+            opError=b.op.OpError.Success,
+            opResults=f"deClaudify complete at {targetDir}",
         )
 
 

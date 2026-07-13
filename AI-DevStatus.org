@@ -19,27 +19,28 @@ This file is maintained by Claude. Updates are typically triggered by the
 
 * Current State
 
-As of 2026-07-12, Stages 1–3 (documentation) are complete. The package is
-functionally working. The sole remaining task is PyPI upload and pipx testing.
+As of 2026-07-13, Stages 1–4 are complete. The package is functionally working
+with a full set of lifecycle commands. The sole remaining task is PyPI upload
+and pipx testing (Stage 9).
 
 Key changes since last status:
 
-- =userConfig_csu.py= moved from =bisos.startAiActivity= to =bisos.b= — it is
-  now a general-purpose CSU importable as =from bisos.b import userConfig_csu=.
-- =parPermanence="userConfig"= added to the =templates= param in =startAiActivity.cs=.
-- =parDictAdd= in =bisos.b/cs/param.py= now has a hook: when
-  =parPermanence="userConfig"= and =parDefault= is not None, it auto-writes the
-  default to the user-config store at runtime (if the store is empty). This fires
-  via =g_extraParams= — not at import time.
-- =parDefault= for =templates= is set conditionally:
-  ='/bisos/apps/defaults/ai-templates' if that directory exists, else None=.
-- =README.org= written (repo root) and =py3/README.rst= written (PyPI source).
-- =py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org= written.
-- =bisos-pip/AI-Activity.org= updated with:
-  - "bisos-pip Packages Are Local pip-Installed" section
-  - "The csuListProc Dblock Pattern" section
-  - "README.org Authorship and Conversion to README.rst" section
-  - "Blee-Panel Authorship for bisos-pip Packages" section
+- =deClaudify= command added to =startAiActivity.cs= — permanently removes all
+  AI collaboration files installed by =initiate= (symlinks, copied files, =.claude/=).
+  Operates on current directory only; no =--root= param.
+- =aiSuspend= command added — removes symlinks and =.claude/= like =deClaudify=,
+  but renames =AI-DevStatus.org= and =AI-WorkPlan.org= to =.dormant= suffix
+  instead of deleting them. Leaves the repo in a recoverable dormant state.
+- =aiResume= command added — restores =.dormant= files and re-installs all
+  symlinks and =.claude/= entries. Infers the activity from the =AI-Activity.org=
+  symlink target if present, otherwise from the =Activity:= header in
+  =AI-WorkPlan.org=. Takes optional =--templates= override.
+- Earlier changes (still current):
+  - =userConfig_csu.py= moved from =bisos.startAiActivity= to =bisos.b=.
+  - =parPermanence="userConfig"= on the =templates= param with auto-default hook.
+  - =README.org= and =py3/README.rst= written.
+  - =fullUsagePanel-en.org= written.
+  - =bisos-pip/AI-Activity.org= updated with four new sections.
 
 * Architecture
 
@@ -47,7 +48,6 @@ Key changes since last status:
 py3/
   bin/
     startAiActivity.cs      — main csxu; initiate, userConfig_get/set, examples
-    py-dblock.cs            — csxu; updateDblocks command (processes org files)
   bisos/
     startAiActivity/
       updateDblock.py       — general dblock dispatch engine (registerHandler / expandAll)
@@ -71,7 +71,6 @@ Key external dependencies (not bundled):
 Entry points (=setup.py= console_scripts):
 
 - =startAiActivity.cs= → =py3/bin/startAiActivity.cs=
-- =py-dblock.cs= → =py3/bin/py-dblock.cs=
 
 * What Works
 
@@ -85,8 +84,12 @@ Entry points (=setup.py= console_scripts):
   into current directory.
 - =startAiActivity.cs -i initiate --root=repo --activity=bisos-pip= — installs
   at git repo root.
-- =py-dblock.cs -i updateDblocks <file...>= — expands =b:ai:file/particulars=
-  dblocks in listed org files (pure Python, no Emacs needed).
+- =startAiActivity.cs -i deClaudify= — permanently removes all AI files from
+  current directory.
+- =startAiActivity.cs -i aiSuspend= — stashes editable files as =.dormant= and
+  removes symlinks/=.claude/= from current directory.
+- =startAiActivity.cs -i aiResume= — restores =.dormant= files and re-installs
+  symlinks/=.claude/=; infers activity automatically.
 - Auto-default for templates: if =/bisos/apps/defaults/ai-templates= exists,
   it is written to the user-config store on first run (via =parDictAdd= hook).
 - =userConfig_csu= is general-purpose in =bisos.b=; any pycs package can use it
@@ -104,8 +107,42 @@ Entry points (=setup.py= console_scripts):
 - All template activities other than =bisos-pip= (=xu-single=, =blee-panels=,
   =lcnt=, =bisos-core=) — =initiate= logic is generic but only =bisos-pip= was
   exercised interactively.
-- =py-dblock.cs= on a file with multiple dblocks of different signatures
-  (only =b:ai:file/particulars= handler is registered).
+- =aiResume= activity inference from =AI-WorkPlan.org= =Activity:= header on
+  activities other than =bisos-pip=.
+- =deClaudify= / =aiSuspend= / =aiResume= on a repo where =.claude/= contains
+  non-symlink files (e.g. =settings.local.json=) — those are intentionally left
+  intact but not explicitly tested.
+
+* Architecture
+
+#+begin_example
+py3/
+  bin/
+    startAiActivity.cs      — main csxu; initiate, deClaudify, aiSuspend, aiResume,
+                              userConfig_get/set, examples
+  bisos/
+    startAiActivity/
+      updateDblock.py       — general dblock dispatch engine (registerHandler / expandAll)
+      dblock_particulars.py — self-registering handler for b:ai:file/particulars
+panels/
+  bisos.startAiActivity/
+    _nodeBase_/
+      fullUsagePanel-en.org — primary Blee panel
+README.org                  — human-oriented repo README (org-mode source)
+py3/README.rst              — PyPI README (converted from README.org)
+#+end_example
+
+Key external dependencies (not bundled):
+
+- =bisos.b= — PyCS-Core; provides =cs=, =b_io=, =fp=, =b.op= APIs and
+  =userConfig_csu= (moved here from this package)
+- =bisos.b.cs.param= — =CmndParamDict.parDictAdd= with =parPermanence= hook
+- AI templates repo: =https://github.com/bisos/defaults/tree/master/ai-templates=
+  (not bundled; path configured via user-config)
+
+Entry points (=setup.py= console_scripts):
+
+- =startAiActivity.cs= → =py3/bin/startAiActivity.cs=
 
 * Key Design Decisions
 
@@ -137,6 +174,22 @@ Entry points (=setup.py= console_scripts):
 - *=mother/= not =bystar/=* — the baseline templates directory is named =mother/=
   in the current templates repo layout. The =excludedDirs= set in =examples=
   uses =mother= accordingly.
+
+- *=deClaudify= vs =aiSuspend= distinction* — =deClaudify= is permanent cleanup
+  (deletes editable files); =aiSuspend= is reversible suspension (renames to
+  =.dormant=). Both operate on the current directory only — no =--root= param,
+  because the files are already present and discoverable.
+
+- *=.dormant= suffix for stashed files* — chosen over a =Stashed-= prefix or
+  a separate directory. The suffix keeps files in the same directory (no path
+  changes), sorts them near their originals, and is unambiguous to both humans
+  and tooling. =aiResume= looks for exactly these suffixed names.
+
+- *Activity inference in =aiResume=* — first tries the =AI-Activity.org= symlink
+  target (parent dir name = activity); falls back to the =Activity:= header line
+  in the =AI-WorkPlan.org= dblock. This means =aiResume= works correctly even
+  after =aiSuspend= has removed the symlink, as long as the =.dormant= WorkPlan
+  is present.
 
 # Local Variables:
 # eval: (setq-local toc-org-max-depth 4)

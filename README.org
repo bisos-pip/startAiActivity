@@ -23,8 +23,8 @@ Claude Code.
 
 bisos.startAiActivity is a python package that uses the
 [[https://github.com/bisos-pip/pycs][PyCS-Framework]]. It provides the
-=startAiActivity.cs= command and a pure-Python dblock expansion engine
-(=py-dblock.cs=) for updating org-mode dynamic blocks without Emacs.
+=startAiActivity.cs= command for installing and managing AI collaborative
+development templates.
 
 * Table of Contents     :TOC:
 - [[#overview][Overview]]
@@ -38,8 +38,9 @@ bisos.startAiActivity is a python package that uses the
 - [[#usage][Usage]]
   - [[#set-templates-base-directory][Set Templates Base Directory]]
   - [[#install-templates-into-a-project][Install Templates Into a Project]]
-  - [[#update-dblocks-in-org-files][Update Dblocks in Org Files]]
-- [[#key-files][Key Files]]
+  - [[#suspend-and-resume-ai-collaboration][Suspend and Resume AI Collaboration]]
+  - [[#remove-ai-collaboration-files][Remove AI Collaboration Files]]
+  - [[#key-files][Key Files]]
 - [[#documentation-and-blee-panels][Documentation and Blee-Panels]]
   - [[#bisostartaiactivity-blee-panels][bisos.startAiActivity Blee-Panels]]
 - [[#support][Support]]
@@ -128,7 +129,6 @@ pipx install bisos.startAiActivity
 The following commands are made available:
 
 - =startAiActivity.cs= — installs AI collaborative development templates
-- =py-dblock.cs= — updates org-mode dynamic blocks in files (pure Python)
 
 ** Post-Installation Basic Testing
 
@@ -165,11 +165,44 @@ Available activities match subdirectories under the templates base (e.g.
 =bisos-pip=, =bisos-core=, =xu-single=, =blee-panels=, =lcnt=). Run
 =startAiActivity.cs -i examples= to see all available activities.
 
-** Update Dblocks in Org Files
+** Suspend and Resume AI Collaboration
+
+When AI collaboration on a project needs to be paused temporarily, use
+=aiSuspend= to enter a dormant state and =aiResume= to restore it.
+
+=aiSuspend= removes the constant symlinks (=CLAUDE.md=, =AI-AGENTS.org=,
+=AI-WORKFLOW.org=, =AI-Activity.org=) and the =.claude/= entries, and renames
+the editable files =AI-DevStatus.org= and =AI-WorkPlan.org= to =.dormant=
+suffixes so that the collaboration state survives.
 
 #+begin_src bash
-py-dblock.cs -i updateDblocks AI-WorkPlan.org AI-DevStatus.org
+startAiActivity.cs -i aiSuspend
 #+end_src
+
+=aiResume= restores the =.dormant= files, re-installs the symlinks, and
+re-installs =.claude/=. The activity is inferred from the =AI-Activity.org=
+symlink target or from the =Activity:= header inside =AI-WorkPlan.org=.
+
+#+begin_src bash
+startAiActivity.cs -i aiResume
+#+end_src
+
+Both commands operate on the current directory.
+
+** Remove AI Collaboration Files
+
+To permanently remove all AI collaboration files from a project, use
+=deClaudify=. Unlike =aiSuspend=, this is irreversible — it deletes the
+editable =AI-DevStatus.org= and =AI-WorkPlan.org= files along with the
+symlinks and =.claude/= entries.
+
+#+begin_src bash
+startAiActivity.cs -i deClaudify
+#+end_src
+
+The command is safe: symlinks are only removed if they are actually symlinks,
+and copied files are only removed if they are regular files. Anything a user
+has created or converted manually is left intact.
 
 * Key Files
 
@@ -178,14 +211,8 @@ An overview of the relevant files of the bisos.startAiActivity package:
 *** =py3/bin/startAiActivity.cs=
 
 The main CS-MU (Command-Services Multi-Unit). Provides the =initiate=,
-=userConfig_get=, and =userConfig_set= commands. Uses =bisos.b.userConfig_csu=
-for persistent parameter management.
-
-*** =py3/bin/py-dblock.cs=
-
-A CS command that applies pure-Python org-mode dblock expansion to one or
-more files. Imports =dblock_particulars= to register the
-=b:ai:file/particulars= handler.
+=aiSuspend=, =aiResume=, =deClaudify=, =userConfig_get=, and =userConfig_set=
+commands. Uses =bisos.b.userConfig_csu= for persistent parameter management.
 
 *** =py3/bisos/startAiActivity/updateDblock.py=
 
