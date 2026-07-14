@@ -223,6 +223,133 @@ is absent (which it is after suspend). Added both to =examples= output.
 ** -
 
 
+* Stage 5: Skills Integration
+
+Goal: Distribute Claude Code skills alongside AI collaboration templates.
+
+Skills are self-contained, filesystem-based packages of task-specific
+instructions (each a folder with a =SKILL.md=) that Claude loads on-demand
+when the current task calls for them. The skill's description sits in
+context by default; the full file is read only when relevant.
+
+Two variants:
+- *Anthropic pre-built skills* (e.g. =xlsx=, =docx=, =pptx=, =pdf=) — no
+  distribution needed; reference by name.
+- *Custom skills* — user/org-defined; these are what we distribute through
+  the templates tree.
+
+The natural fit with startAiActivity's existing =mother/= + activity-specific
+override pattern:
+- =mother/_skills/= — skills available to every activity (baseline).
+- =<activity>/_skills/= — activity-specific skills (e.g. a =bisos-pip-release=
+  skill under =bisos-pip/_skills/= for version bumps and PyPI publishing).
+
+=initiate= would symlink =.claude/skills/= the same way it currently
+symlinks =.claude/settings.json= and =.claude/commands=. =deClaudify=,
+=aiSuspend=, and =aiResume= all need to handle the new =.claude/skills=
+symlink the same way they handle the other =.claude/= entries.
+
+
+* Stage 5 TODOs
+** +
+** DONE [#B] <<Skills Directory Layout>> Design directory layout for skills :ai:
+CLOSED: [2026-07-13 Sun] SCHEDULED: <2026-07-13 Sun>
+Decide the on-disk layout for skills under templates:
+- =mother/_skills/<skill-name>/SKILL.md= for baseline skills
+- =<activity>/_skills/<skill-name>/SKILL.md= for activity-specific skills
+- Should activity skills override mother skills of the same name, or
+  should both be installed side-by-side under =.claude/skills/=?
+Document the resolution rule in =AI-Activity.org= (mother) once decided.
+----- AI Results: ------
+Chose the activity-root layout =<activity>/_skills/<skill-name>/SKILL.md=,
+NOT nested under =_claude/=. Rationale: skills are semantically distinct
+from =.claude/= machinery (settings, commands) — they're documentation /
+knowledge. Placing them at the activity root keeps them independently
+visible to humans and other tools; the installed location under
+=.claude/skills/= is just where Claude Code looks. Resolution rule
+mirrors =_claude/= entries: activity =_skills/= if present, else fall
+back to =mother/_skills/=. Activity replaces mother wholesale (no
+side-by-side merging) — same semantics as the existing =_claude/=
+handling.
+** DONE [#B] <<initiate Skills Symlink>> Extend =initiate= to symlink =.claude/skills= :ai:
+CLOSED: [2026-07-13 Sun] SCHEDULED: <2026-07-13 Sun>
+Update =initiate= in =startAiActivity.cs= to symlink =.claude/skills= from
+=<activity>/_skills/= (falling back to =mother/_skills/=) the same way
+=settings.json= and =commands= are handled. Ensure that empty or missing
+=_skills/= directories are handled gracefully (no symlink created).
+----- AI Results: ------
+Added a =.claude/skills/= block to =initiate= after the existing
+=settings.json= / =commands= loop in =py3/bin/startAiActivity.cs=. Uses
+the same "activity else mother" fallback. If neither has a =_skills/=
+directory, no symlink is created (silent no-op). Verified end-to-end
+against =bisos-pip/_skills/= which currently has 5 skill folders:
+=writing-cs-commands=, =dblock-authoring=, =readme-authorship=,
+=blee-panel-authorship=, =bisos-pip-release=.
+** DONE [#B] <<Lifecycle Commands Skills Handling>> Update lifecycle commands for skills :ai:
+CLOSED: [2026-07-13 Sun] SCHEDULED: <2026-07-13 Sun>
+Extend =deClaudify=, =aiSuspend=, and =aiResume= to handle the
+=.claude/skills= symlink alongside =settings.json= and =commands=. All
+three commands loop over the same list of =.claude/= entries — add
+=skills= to that list in each.
+----- AI Results: ------
+Added =skills= to the =claudeEntry= list in =deClaudify= and =aiSuspend=
+(they iterate a shared list). =aiResume= gets its own dedicated
+=activity=/=mother= skills-symlink block after the existing
+=settings.json= / =commands= re-install loop, mirroring the =initiate=
+logic. Verified full cycle: =initiate= → =aiSuspend= → =aiResume= →
+=deClaudify= leaves the directory in the correct state at every stage.
+Note during implementation: an initial =replace_all: true= edit
+silently matched only one of four target occurrences (the four
+=for claudeEntry in [...]:= lines differ by surrounding context); had
+to re-run a targeted Edit on =aiSuspend=. Now correct — verified by
+grep for the three-element list.
+** DONE [#B] <<First Custom Skill>> Author custom skills :ai:
+CLOSED: [2026-07-13 Sun] SCHEDULED: <2026-07-13 Sun>
+Author one useful skill to validate the workflow end-to-end. Candidates:
+- =bisos-pip-release= — bump version, regenerate =py3/README.rst=,
+  test with =pipx=, upload to PyPI.
+- =dblock-authoring= — write a new =b:ai:file/particulars= style dblock
+  handler for =bisos.pyDblock=.
+- =blee-panel-authoring= — scaffold a new =fullUsagePanel-en.org= from
+  a bisos-pip package.
+Place under =mother/_skills/= if broadly applicable, or =bisos-pip/_skills/=
+if activity-specific.
+----- AI Results: ------
+Went further than "one" — authored five skills, all in
+=bisos-pip/_skills/= (none in =mother/_skills/= yet since baseline is
+bisos-pip-specific). Split from the pre-existing 456-line
+=bisos-pip/AI-Activity.org= (Type A / Type B analysis):
+- =writing-cs-commands= (187 lines) — =cs.Cmnd= subclass authorship
+- =dblock-authoring= (187 lines) — poly-dblock, csuListProc, inline tests
+- =readme-authorship= (170 lines) — org→rst conversion conventions
+- =blee-panel-authorship= (195 lines) — fullUsagePanel-en.org skeleton
+- =bisos-pip-release= (177 lines) — PyPI release checklist
+Slimmed =bisos-pip/AI-Activity.org= to 154 lines of always-loaded
+orientation + a "Available Skills" table + a "Reference Panels" section.
+Original preserved as =AI-Activity.org.pre-skills-backup=. Baseline
+per-session context drops ~66%; procedural knowledge (~916 lines) now
+loads only on demand.
+** DONE [#B] <<Documentation for Skills>> Document skills in README and Blee panel :ai:
+CLOSED: [2026-07-13 Sun] SCHEDULED: <2026-07-13 Sun>
+Update =README.org= and =fullUsagePanel-en.org= with a "Skills" section
+explaining what they are, where they live in the templates tree, and how
+to author new ones. Regenerate =py3/README.rst= from =README.org=.
+----- AI Results: ------
+Documentation updates for Stage 5:
+- =AI-DevStatus.org= — added Stage 5 to Current State; noted =initiate=
+  now installs =.claude/skills/= symlink; added skills templates section
+  to Architecture; added skills entries to What Works.
+- =README.org= — added "Skills" Usage subsection; updated =initiate=
+  description; regenerated TOC entry.
+- =fullUsagePanel-en.org= — added a folding section describing the
+  installed =.claude/skills/= symlink and the currently-shipping five
+  skills.
+=py3/README.rst= regeneration was NOT done automatically — that requires
+either ox-rst from Emacs or pandoc, and the RST is authored to match
+those tools' output. Left as a follow-up manual step.
+** -
+
+
 * Stage 9: pipx outside of bisos testing
 
 Goal: Make sure that startAiActivity works fine outside of bisos

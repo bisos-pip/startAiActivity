@@ -89,6 +89,21 @@
 ####+BEGIN: blee:panel:icm:py:cmnd :outLevel 1 :sep nil :folding? nil :label "Direct" :icmName "startAiActivity.cs -i initiate --activity=lcnt" :comment "Install lcnt templates into current directory" :afterComment ""
 * [[elisp:(show-all)][(>]] [[elisp:(blee:menu-sel:outline:popupMenu)][+-]] [[elisp:(blee:menu-sel:navigation:popupMenu)][==]]  /Direct/ :: [[elisp:(lsip-local-run-command "startAiActivity.cs -i initiate --activity=lcnt")][startAiActivity.cs -i initiate --activity=lcnt]] *|*  =Install lcnt templates into current directory= *|*    [[elisp:(org-shifttab)][<)]] E|
 ####+END:
+####+BEGIN: blee:bxPanel:foldingSection :outLevel 0 :sep t :title "Skills --- Task-Specific Instructions Loaded On Demand" :anchor "Skills" :extraInfo "skills"
+* /[[elisp:(beginning-of-buffer)][|^]]  [[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]] [[elisp:(delete-other-windows)][|1]]/
+* [[elisp:(show-all)][(>]]  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_  _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_     [[elisp:(outline-show-subtree+toggle)][| _Skills --- Task-Specific Instructions Loaded On Demand_: |]] <<Skills>> skills  [[elisp:(org-shifttab)][<)]] E|
+####+END
+** +
+** When an activity ships a =_skills/= directory, =initiate= symlinks it to =.claude/skills/= alongside =settings.json= and =commands=.
+** Skills are folders each containing a =SKILL.md= with YAML front-matter (=name:=, =description:=) followed by markdown content. Claude Code discovers them and loads their content only when the current task matches the description.
+** The =bisos-pip= activity currently ships five skills:
+**  - =writing-cs-commands= --- authoring =cs.Cmnd= subclasses (params, args, classHead dblock, common patterns).
+**  - =dblock-authoring= --- poly-dblock =####+BEGIN:= blocks, =csuListProc= pattern, dblock-based inline unit tests.
+**  - =readme-authorship= --- =README.org= authorship and org→rst conversion for PyPI.
+**  - =blee-panel-authorship= --- standard =fullUsagePanel-en.org= skeleton and dblock content policy.
+**  - =bisos-pip-release= --- end-to-end PyPI release checklist.
+** Authoring a new skill: add a folder under =<templates-base>/<activity>/_skills/<skill-name>/= with a =SKILL.md= inside. If applicable to every activity, place under =mother/_skills/= instead.
+** -B|
 ####+BEGIN: blee:bxPanel:foldingSection :outLevel 0 :sep t :title "aiSuspend and aiResume --- Reversibly Pause AI Collaboration" :anchor "Suspend" :extraInfo "aiSuspend / aiResume"
 * /[[elisp:(beginning-of-buffer)][|^]]  [[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]] [[elisp:(delete-other-windows)][|1]]/
 * [[elisp:(show-all)][(>]]  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_  _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_     [[elisp:(outline-show-subtree+toggle)][| _aiSuspend and aiResume --- Reversibly Pause AI Collaboration_: |]] <<Suspend>> aiSuspend / aiResume  [[elisp:(org-shifttab)][<)]] E|

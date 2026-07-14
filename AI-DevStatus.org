@@ -19,58 +19,26 @@ This file is maintained by Claude. Updates are typically triggered by the
 
 * Current State
 
-As of 2026-07-13, Stages 1–4 are complete. The package is functionally working
-with a full set of lifecycle commands. The sole remaining task is PyPI upload
-and pipx testing (Stage 9).
+As of 2026-07-13, Stages 1–5 are complete. The package is functionally working
+with a full set of lifecycle commands and skills integration. The sole
+remaining task is PyPI upload and pipx testing (Stage 9).
 
 Key changes since last status:
 
-- =deClaudify= command added to =startAiActivity.cs= — permanently removes all
-  AI collaboration files installed by =initiate= (symlinks, copied files, =.claude/=).
-  Operates on current directory only; no =--root= param.
-- =aiSuspend= command added — removes symlinks and =.claude/= like =deClaudify=,
-  but renames =AI-DevStatus.org= and =AI-WorkPlan.org= to =.dormant= suffix
-  instead of deleting them. Leaves the repo in a recoverable dormant state.
-- =aiResume= command added — restores =.dormant= files and re-installs all
-  symlinks and =.claude/= entries. Infers the activity from the =AI-Activity.org=
-  symlink target if present, otherwise from the =Activity:= header in
-  =AI-WorkPlan.org=. Takes optional =--templates= override.
+- *Stage 5 — Skills integration:* =initiate= now installs a =.claude/skills/=
+  symlink from the activity's =_skills/= (falling back to =mother/_skills/=).
+  =deClaudify=, =aiSuspend=, and =aiResume= all handle the new symlink
+  consistently. On the templates side, =bisos-pip/AI-Activity.org= was split:
+  the always-loaded orientation content stayed (154 lines, down from 456),
+  and 5 procedural skills were extracted to =bisos-pip/_skills/=:
+  =writing-cs-commands=, =dblock-authoring=, =readme-authorship=,
+  =blee-panel-authorship=, =bisos-pip-release=.
 - Earlier changes (still current):
-  - =userConfig_csu.py= moved from =bisos.startAiActivity= to =bisos.b=.
+  - =deClaudify= — permanently removes all AI collaboration files.
+  - =aiSuspend= / =aiResume= — reversible dormant/wake cycle.
+  - =userConfig_csu.py= in =bisos.b= (general-purpose).
   - =parPermanence="userConfig"= on the =templates= param with auto-default hook.
-  - =README.org= and =py3/README.rst= written.
-  - =fullUsagePanel-en.org= written.
-  - =bisos-pip/AI-Activity.org= updated with four new sections.
-
-* Architecture
-
-#+begin_example
-py3/
-  bin/
-    startAiActivity.cs      — main csxu; initiate, userConfig_get/set, examples
-  bisos/
-    startAiActivity/
-      updateDblock.py       — general dblock dispatch engine (registerHandler / expandAll)
-      dblock_particulars.py — self-registering handler for b:ai:file/particulars
-panels/
-  bisos.startAiActivity/
-    _nodeBase_/
-      fullUsagePanel-en.org — primary Blee panel
-README.org                  — human-oriented repo README (org-mode source)
-py3/README.rst              — PyPI README (converted from README.org)
-#+end_example
-
-Key external dependencies (not bundled):
-
-- =bisos.b= — PyCS-Core; provides =cs=, =b_io=, =fp=, =b.op= APIs and now also
-  =userConfig_csu= (moved here from this package)
-- =bisos.b.cs.param= — =CmndParamDict.parDictAdd= with =parPermanence= hook
-- AI templates repo: =https://github.com/bisos/defaults/tree/master/ai-templates=
-  (not bundled; path configured via user-config)
-
-Entry points (=setup.py= console_scripts):
-
-- =startAiActivity.cs= → =py3/bin/startAiActivity.cs=
+  - =README.org=, =py3/README.rst=, =fullUsagePanel-en.org= written.
 
 * What Works
 
@@ -81,7 +49,9 @@ Entry points (=setup.py= console_scripts):
 - =startAiActivity.cs -i userConfig_get --parName=templates= — reads and
   displays current value.
 - =startAiActivity.cs -i initiate --activity=bisos-pip= — installs templates
-  into current directory.
+  into current directory. Now also installs =.claude/skills/= symlink when
+  the activity ships a =_skills/= directory (bisos-pip currently ships 5
+  skills — see Architecture).
 - =startAiActivity.cs -i initiate --root=repo --activity=bisos-pip= — installs
   at git repo root.
 - =startAiActivity.cs -i deClaudify= — permanently removes all AI files from
@@ -95,6 +65,12 @@ Entry points (=setup.py= console_scripts):
 - =userConfig_csu= is general-purpose in =bisos.b=; any pycs package can use it
   by adding ='bisos.b.userConfig_csu'= to its =csuList= and tagging params with
   =parPermanence="userConfig"=.
+- Skills installation: when the target activity has a =_skills/= directory,
+  =initiate= symlinks it to =.claude/skills/= so Claude Code discovers the
+  skills automatically. Verified end-to-end against the 5 bisos-pip skills.
+- Lifecycle-command skills handling: =aiSuspend= removes =.claude/skills=,
+  =aiResume= re-installs it, =deClaudify= removes it — same shape as
+  =settings.json= and =commands= handling.
 
 * What Is Untested
 
@@ -138,7 +114,29 @@ Key external dependencies (not bundled):
   =userConfig_csu= (moved here from this package)
 - =bisos.b.cs.param= — =CmndParamDict.parDictAdd= with =parPermanence= hook
 - AI templates repo: =https://github.com/bisos/defaults/tree/master/ai-templates=
-  (not bundled; path configured via user-config)
+  (not bundled; path configured via user-config). Structure per activity:
+  #+begin_example
+  ai-templates/
+    mother/                   — baseline (constant symlinks)
+      CLAUDE.md
+      AI-AGENTS.org
+      AI-WORKFLOW.org
+      _claude/
+        settings.json
+        commands/
+    <activity>/               — e.g. bisos-pip, xu-single, blee-panels, lcnt
+      AI-Activity.org         — always-loaded orientation
+      AI-DevStatus.org        — initial-state safe-copy
+      AI-WorkPlan.org         — initial-state safe-copy
+      _claude/                — optional per-activity overrides
+      _skills/                — optional per-activity skills (new in Stage 5)
+        <skill-name>/SKILL.md
+  #+end_example
+  When either =_claude/<entry>= or =_skills/= is missing on the activity,
+  =initiate= falls back to =mother/=. When missing on both, no symlink is
+  created. Currently =bisos-pip/_skills/= ships 5 skills:
+  =writing-cs-commands=, =dblock-authoring=, =readme-authorship=,
+  =blee-panel-authorship=, =bisos-pip-release=.
 
 Entry points (=setup.py= console_scripts):
 
@@ -190,6 +188,25 @@ Entry points (=setup.py= console_scripts):
   in the =AI-WorkPlan.org= dblock. This means =aiResume= works correctly even
   after =aiSuspend= has removed the symlink, as long as the =.dormant= WorkPlan
   is present.
+
+- *Skills at activity root, not under =_claude/=* — skills live in
+  =<activity>/_skills/=, not =<activity>/_claude/skills/=. Rationale: skills are
+  semantically distinct from =.claude/= machinery — they're knowledge, not
+  harness config. Placing them at the activity root keeps them independently
+  visible to humans and other tools; the installed location under
+  =.claude/skills/= is just where Claude Code looks. =initiate= symlinks
+  =<activity>/_skills/= to =.claude/skills/= to bridge the two.
+
+- *Splitting =AI-Activity.org= into orientation + skills* — the pre-Stage-5
+  =bisos-pip/AI-Activity.org= was 456 lines of always-loaded context, of which
+  ~60% was procedural knowledge only needed for specific tasks (writing CS
+  commands, authoring READMEs, releasing to PyPI). Splitting cut the baseline
+  to 154 lines and moved ~916 lines of procedural content into 5 skills that
+  load on demand. Original preserved as =AI-Activity.org.pre-skills-backup=.
+  Trade-off: skills are a Claude Code-only feature; a human reading
+  =AI-Activity.org= outside Claude Code will see references but not content.
+  Mitigation: the "Available Skills" table in =AI-Activity.org= names each
+  skill's file path, so a human can open it directly.
 
 # Local Variables:
 # eval: (setq-local toc-org-max-depth 4)

@@ -38,6 +38,7 @@ development templates.
 - [[#usage][Usage]]
   - [[#set-templates-base-directory][Set Templates Base Directory]]
   - [[#install-templates-into-a-project][Install Templates Into a Project]]
+  - [[#skills][Skills]]
   - [[#suspend-and-resume-ai-collaboration][Suspend and Resume AI Collaboration]]
   - [[#remove-ai-collaboration-files][Remove AI Collaboration Files]]
   - [[#key-files][Key Files]]
@@ -164,6 +165,54 @@ startAiActivity.cs -i initiate --root=repo --activity=bisos-pip
 Available activities match subdirectories under the templates base (e.g.
 =bisos-pip=, =bisos-core=, =xu-single=, =blee-panels=, =lcnt=). Run
 =startAiActivity.cs -i examples= to see all available activities.
+
+=initiate= installs the following into the target directory: symlinks for
+the constant files (=CLAUDE.md=, =AI-AGENTS.org=, =AI-WORKFLOW.org=,
+=AI-Activity.org=); safe-copies of the editable files (=AI-DevStatus.org=,
+=AI-WorkPlan.org=, with =b:ai:file/particulars= dblocks expanded); and
+symlinks under =.claude/= for =settings.json=, =commands/=, and =skills/=
+(when the activity ships a =_skills/= directory). See the *Skills*
+subsection below.
+
+** Skills
+
+When an activity ships a =_skills/= directory at its templates root,
+=initiate= symlinks it to =.claude/skills/= alongside the other =.claude/=
+entries. Claude Code discovers those skills automatically and loads them
+on demand when the current task calls for them.
+
+*Skills* are self-contained, filesystem-based packages of task-specific
+instructions. Each skill is a folder containing a =SKILL.md= file whose
+front-matter description tells Claude when to consult the full file. This
+lets a repo carry deep procedural knowledge (how to write a CS command,
+how to author a Blee panel, how to release to PyPI) without loading that
+content on every session — the short descriptions sit in context by
+default, and Claude reads the full skill only when it matches the task
+at hand.
+
+The =bisos-pip= activity currently ships five skills:
+
+- =writing-cs-commands= — authoring =cs.Cmnd= subclasses (params, args,
+  classHead dblock, common patterns).
+- =dblock-authoring= — working with poly-dblock =####+BEGIN:= blocks,
+  the =csuListProc= pattern, and dblock-based inline unit tests.
+- =readme-authorship= — writing =README.org= and syncing to =README.rst=
+  for PyPI (org→rst conversion conventions).
+- =blee-panel-authorship= — the standard =fullUsagePanel-en.org= skeleton
+  and dblock content policy.
+- =bisos-pip-release= — end-to-end PyPI release checklist (linters,
+  packaging, Test-PyPI trial, upload).
+
+To author a new skill, add a folder under the appropriate templates
+directory:
+
+- =mother/_skills/<name>/SKILL.md= — available to every activity
+- =<activity>/_skills/<name>/SKILL.md= — activity-specific
+
+Each =SKILL.md= starts with YAML front-matter (=---=-delimited) containing
+=name:= and =description:= fields. The description drives when Claude
+loads the skill; write it as a concrete trigger ("Use when writing or
+modifying a PyCS =cs.Cmnd= subclass") rather than a topic label.
 
 ** Suspend and Resume AI Collaboration
 

@@ -367,6 +367,20 @@ Expands b:ai:file/particulars dblock in copied files using pure Python.
                 claudeDst.symlink_to(claudeSrc)
                 b_io.ann.note(f"SYMLINKED: {claudeDst} -> {claudeSrc}")
 
+        # .claude/skills/ — skills live at activity root as _skills/ (not _claude/skills/)
+        # so they're independently visible to humans and other tools. Symlinked into
+        # .claude/skills/ so Claude Code can discover them.
+        activitySkillsSrc = activityDir / '_skills'
+        motherSkillsSrc = motherDir / '_skills'
+        skillsSrc = activitySkillsSrc if activitySkillsSrc.exists() else motherSkillsSrc
+        if skillsSrc.exists():
+            skillsDst = claudeDstDir / 'skills'
+            if skillsDst.exists() or skillsDst.is_symlink():
+                b_io.ann.note(f"SKIP (exists): {skillsDst}")
+            else:
+                skillsDst.symlink_to(skillsSrc)
+                b_io.ann.note(f"SYMLINKED: {skillsDst} -> {skillsSrc}")
+
         return cmndOutcome.set(
             opError=b.op.OpError.Success,
             opResults=f"AI templates initiated for activity={activity} at {targetDir}",
@@ -432,7 +446,7 @@ so they survive and can be restored by aiResume.
 
         # Remove .claude/ symlinked entries
         claudeDstDir = targetDir / '.claude'
-        for claudeEntry in ['settings.json', 'commands']:
+        for claudeEntry in ['settings.json', 'commands', 'skills']:
             claudeDst = claudeDstDir / claudeEntry
             if claudeDst.is_symlink():
                 claudeDst.unlink()
@@ -572,6 +586,18 @@ dormant AI-Activity.org symlink target if present, otherwise from the templates 
                 claudeDst.symlink_to(claudeSrc)
                 b_io.ann.note(f"SYMLINKED: {claudeDst} -> {claudeSrc}")
 
+        # Re-install .claude/skills/ symlink
+        activitySkillsSrc = activityDir / '_skills'
+        motherSkillsSrc = motherDir / '_skills'
+        skillsSrc = activitySkillsSrc if activitySkillsSrc.exists() else motherSkillsSrc
+        if skillsSrc.exists():
+            skillsDst = claudeDstDir / 'skills'
+            if skillsDst.exists() or skillsDst.is_symlink():
+                b_io.ann.note(f"SKIP (exists): {skillsDst}")
+            else:
+                skillsDst.symlink_to(skillsSrc)
+                b_io.ann.note(f"SYMLINKED: {skillsDst} -> {skillsSrc}")
+
         return cmndOutcome.set(
             opError=b.op.OpError.Success,
             opResults=f"aiResume complete at {targetDir} (activity={activity})",
@@ -634,7 +660,7 @@ Removes .claude/ directory if it becomes empty.
 
         # .claude/ symlinked entries
         claudeDstDir = targetDir / '.claude'
-        for claudeEntry in ['settings.json', 'commands']:
+        for claudeEntry in ['settings.json', 'commands', 'skills']:
             claudeDst = claudeDstDir / claudeEntry
             if claudeDst.is_symlink():
                 claudeDst.unlink()
