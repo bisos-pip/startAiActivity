@@ -280,6 +280,15 @@ Entry points (=setup.py= console_scripts):
   Mitigation: the "Available Skills" table in =AI-Activity.org= names each
   skill's file path, so a human can open it directly.
 
+- *This repo functions as a working example of the full AI Activity
+  workflow.* The presence of =AI-WorkPlan.org_archive= alongside
+  =AI-WorkPlan.org= demonstrates the org-archive pattern in action ---
+  completed stages are moved to the archive file (via org-mode's
+  =org-archive-subtree=) to keep the active WorkPlan focused on current
+  work. Other artifacts in this repo (=verify.sh=, the skills folder,
+  =AI-DevStatus.org='s update discipline) are similarly load-bearing
+  as reference implementations of what the templates enable.
+
 # Local Variables:
 # eval: (setq-local toc-org-max-depth 4)
 # End:

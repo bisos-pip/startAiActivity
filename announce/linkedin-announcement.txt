@@ -1,0 +1,32 @@
+Claude Code is powerful. But when you close the session, everything Claude learned about your project is gone.
+
+I built something to fix that.
+
+Real software or writing work spans many sessions, sometimes across machines, often across teammates. Every new Claude Code session means re-explaining context, re-establishing conventions, re-orienting. When a colleague picks up your work, they get even less — they can read the code, but not how you've been collaborating with Claude on it.
+
+I call the answer an AI Activity — a durable, collaborative effort between a human and Claude toward a specific purpose (writing a document, building software, enhancing existing software). Unlike a one-shot chat, an activity spans many sessions. Its state lives in version-controlled files, not in any one session's memory.
+
+Two org-mode files encode it:
+• AI-Activity.org — the human's usual way of doing that kind of work. Reusable across every project of that kind.
+• AI-WorkPlan.org — this specific effort's stages and TODOs. Paired with AI-DevStatus.org, which tracks where things stand right now.
+
+Both human-to-human handoff (you start it, a colleague continues it) and human-to-AI resumption (one session begins the work, another resumes weeks later) are the same problem: continuity across a discontinuity. Org-mode is the substrate that makes both work — real TODO state machines, anchors, archive, scheduled dates. Markdown can only approximate these through convention.
+
+I've published it as bisos.startAiActivity on PyPI. Zero-config setup:
+
+  pipx install bisos.startAiActivity
+  git clone https://github.com/bxexamples/aiActivityTemplates ~/aiActivityTemplates
+  cd yourProject
+  startAiActivity.cs -i initiate --activity=bisos-pip
+
+That's it. Claude Code walks up from your project, reads the CLAUDE.md hierarchy, and knows how you work and where the current effort stands. Fork the templates repo to customize for your team's conventions. Nest subprojects. Suspend and resume activities.
+
+Engine (PyPI): https://pypi.org/project/bisos.startAiActivity
+Engine (source): https://github.com/bisos-pip/startAiActivity
+Templates: https://github.com/bxexamples/aiActivityTemplates
+
+Part of BISOS — the ByStar Internet Services OS, a Libre-Halaal digital ecosystem prioritizing autonomy and privacy. Standalone package, works outside BISOS too.
+
+If you're using Claude Code for real work, try it. I'd love to hear how it lands.
+
+#ClaudeCode #AI #DeveloperTools #OrgMode #Emacs #OpenSource #BISOS #ByStar
