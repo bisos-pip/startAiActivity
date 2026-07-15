@@ -80,9 +80,9 @@ bisos.startAiActivity is a python package that uses the
 - [[#key-files][Key Files]]
     - [[#py3binstartaiactivitycs][=py3/bin/startAiActivity.cs=]]
     - [[#py3bisosstartaiactivityupdatedblockpy][=py3/bisos/startAiActivity/updateDblock.py=]]
+    - [[#][]]
     - [[#py3bisosstartaiactivitydblock_particularspy][=py3/bisos/startAiActivity/dblock_particulars.py=]]
     - [[#pypi-and-github-packaging][PyPi and Github Packaging]]
-- [[#testing][Testing]]
 - [[#documentation-and-blee-panels][Documentation and Blee-Panels]]
   - [[#bisosstartaiactivity-blee-panels][bisos.startAiActivity Blee-Panels]]
 - [[#support][Support]]
@@ -403,6 +403,8 @@ via =registerHandler(sig, fn)=. =expandAll(filePath)= does a single-pass
 regex substitution over the file, dispatching each =begin: <signature>=
 block to its registered handler.
 
+*** 
+
 *** =py3/bisos/startAiActivity/dblock_particulars.py=
 
 Self-registering handler for the =b:ai:file/particulars= dblock signature.
@@ -414,31 +416,6 @@ companion-docs list by scanning the directory.
 All bisos-pip repos in the https://github.com/bisos-pip github organization
 follow the same structure. They all have [[file:./py3/setup.py][setup.py]] files driven by
 [[file:./py3/pypiProc.sh][pypiProc.sh]].
-
-* Testing
-
-An end-to-end verification harness lives at =py3/test/verify.sh=. It
-exercises every command in the =startAiActivity.cs= surface — user-config
-read/write, =initiate=, =deClaudify=, =aiSuspend= / =aiResume= (with base-mode
-detection), and =initiateSub= (both the positive case within the repo and a
-negative case in an isolated =/tmp/= dir that expects a =EH_Problem_UsageError=
-refusal).
-
-Run it as:
-
-#+begin_src bash
-cd py3/test
-./verify.sh
-#+end_src
-
-The shebang is =#!/bin/bash -i= — this makes the shell interactive, so
-=~/.bashrc= runs its full body and defines the =lpDo= alias (from ByStar's
-=_opDo= convention) used throughout the script for uniform logging.
-
-The harness starts from a clean state and leaves a clean state — the test
-directory contains only =verify.sh= itself before and after a successful
-run. Exit code 0 indicates all steps behaved as expected (including the
-intended refusal in the negative case).
 
 * Documentation and Blee-Panels
 
