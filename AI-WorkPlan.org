@@ -442,6 +442,56 @@ Refusal is visible in the trace as
 ** -
 
 
+* Stage 7: Precedence-based templates auto-detect
+
+Goal: Zero-config setup for a non-BISOS user who does the canonical
+=git clone https://github.com/bxexamples/aiActivityTemplates ~/aiActivityTemplates=.
+Currently =parDefault= for the =templates= param probes only
+=/bisos/apps/defaults/ai-templates=; extend to also probe
+=~/aiActivityTemplates=, with user-first precedence.
+
+
+* Stage 7 TODOs
+** +
+** DONE [#A] <<Templates Precedence Probe>> Add ~/aiActivityTemplates before BISOS path :ai:
+CLOSED: [2026-07-15 Tue] SCHEDULED: <2026-07-15 Tue>
+Extract the =parDefault= probe into a helper =_detectTemplatesDefault()=
+that walks a candidate list in precedence order (=~/aiActivityTemplates=,
+then =/bisos/apps/defaults/ai-templates=) and returns the first existing
+path as a resolved absolute string, or None. User-first ordering: a
+personal clone at =~/aiActivityTemplates= wins over the BISOS system
+copy even when both are present. Uses =pathlib.Path(...).expanduser()=
+for tilde resolution and stores the expanded absolute path.
+----- AI Results: ------
+Implemented =_detectTemplatesDefault()= in =startAiActivity.cs=
+immediately before =commonParamsSpecify=; the =parDictAdd= call for
+=templates= now uses =parDefault=_detectTemplatesDefault()=. Verified:
+on this BISOS machine (no =~/aiActivityTemplates=, BISOS path present),
+the function returns =/bisos/apps/defaults/ai-templates= (fallback
+correct); running =startAiActivity.cs -i userConfig_get --parName=templates=
+through the CLI returns the same. Precedence path (both exist) not
+directly testable on this machine but the loop order guarantees it.
+** DONE [#A] <<Precedence Docs>> Update three docs :ai:
+CLOSED: [2026-07-15 Tue] SCHEDULED: <2026-07-15 Tue>
+Update the engine =README.org= (Post-Installation Setup + two-part
+architecture section), the templates repo =README.org= (Using This Repo
++ BISOS-Specific Users), and =AI-DevStatus.org= (What Is Untested +
+Key Design Decisions) to reflect the precedence-based probe.
+----- AI Results: ------
+Engine README: replaced the single-path "BISOS users pre-provisioned"
+subsection with a precedence-explaining "Auto-detection: two canonical
+locations" subsection; Post-Installation Setup restructured to lead
+with the zero-config canonical-clone path, with the explicit
+=userConfig_set= form kept as an escape hatch for non-canonical clone
+paths. Templates repo README: step 2 rewritten to advertise the
+zero-config path; BISOS-Specific Users section updated to describe the
+combined precedence behavior. =AI-DevStatus.org=: "What Is Untested"
+entry updated to reflect both paths as auto-defaults; "Conditional
+parDefault" Key Design Decision rewritten as "Precedence-based
+parDefault probe" with the user-first rationale.
+** -
+
+
 * Stage 9: pipx outside of bisos testing
 
 Goal: Make sure that startAiActivity works fine outside of bisos

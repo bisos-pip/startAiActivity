@@ -223,47 +223,65 @@ Because the templates are versioned separately from the engine, you can:
   bisos.startAiActivity= and =git pull= on your templates clone are two
   separate operations.
 
-** BISOS users: templates are pre-provisioned
+** Auto-detection: two canonical locations
 
-Users on a BISOS system have the templates already available at
-=/bisos/apps/defaults/ai-templates= (a git checkout of the same content,
-maintained as part of the BISOS environment). If that path exists,
-=startAiActivity.cs= auto-detects it as the default templates base. No
-manual clone step needed.
+=startAiActivity.cs= probes two well-known locations *in this order* and
+persists the first one that exists as the default templates base:
+
+1. =~/aiActivityTemplates= --- the canonical per-user clone path. If you
+   =git clone https://github.com/bxexamples/aiActivityTemplates
+   ~/aiActivityTemplates= (or forked and cloned your fork to that
+   name), the engine finds it automatically.
+2. =/bisos/apps/defaults/ai-templates= --- the BISOS-provisioned system
+   path. Present on BISOS systems out of the box.
+
+If neither exists, no default is set and the user must run
+=userConfig_set --parName=templates --parValue=<path>= explicitly.
+
+The precedence is *user-first, system-second*: a personal clone at
+=~/aiActivityTemplates= wins over the BISOS path even when both are
+present. This lets a user working on a BISOS system point the engine at
+their own fork simply by cloning it to the canonical name, with no
+=userConfig_set= call needed.
 
 * Post-Installation Setup
 
-** For non-BISOS users: clone the templates repo, then configure
+** For non-BISOS users: canonical clone, no config step
 
-1. Clone the templates repo somewhere convenient:
+The zero-config path:
 
-   #+begin_src bash
-   git clone https://github.com/bxexamples/aiActivityTemplates ~/aiActivityTemplates
-   #+end_src
+#+begin_src bash
+git clone https://github.com/bxexamples/aiActivityTemplates ~/aiActivityTemplates
+#+end_src
 
-   (Path is your choice; =~/aiActivityTemplates= is a reasonable default.)
+That's it. The engine auto-detects =~/aiActivityTemplates= on first
+invocation and persists it as the templates base. You can verify:
 
-2. Tell =startAiActivity.cs= where the clone lives:
+#+begin_src bash
+startAiActivity.cs -i userConfig_get --parName=templates
+#+end_src
 
-   #+begin_src bash
-   startAiActivity.cs -i userConfig_set --parName=templates --parValue=~/aiActivityTemplates
-   #+end_src
+If you prefer a different path, clone there instead and run
+=userConfig_set= explicitly:
 
-3. Verify:
+#+begin_src bash
+git clone https://github.com/bxexamples/aiActivityTemplates /some/other/path
+startAiActivity.cs -i userConfig_set --parName=templates --parValue=/some/other/path
+#+end_src
 
-   #+begin_src bash
-   startAiActivity.cs -i userConfig_get --parName=templates
-   #+end_src
-
-You are now ready to =initiate= projects. If you later want to customize
-the templates for your own conventions, fork the repo, edit your fork,
-and re-point =--parValue= at the fork.
+If you later want to customize the templates for your own conventions,
+fork the repo, edit your fork, and (if you cloned to a non-canonical
+path) re-point =--parValue= at the fork.
 
 ** For BISOS users: nothing to do (usually)
 
-If =/bisos/apps/defaults/ai-templates= exists on your system, it is used
-as the default automatically. You can override it (to point at a personal
-fork, for instance) with the same =userConfig_set= command shown above.
+BISOS provisions =/bisos/apps/defaults/ai-templates= as part of the
+environment, and the engine auto-detects it. No clone or config step
+needed.
+
+To override with a personal fork on a BISOS system, either clone the
+fork to =~/aiActivityTemplates= (which then takes precedence) or run
+=userConfig_set= with an explicit path.
 
 * Installation
 

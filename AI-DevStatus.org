@@ -107,9 +107,10 @@ Key changes since last status:
 - PyPI upload and =pipx install bisos.startAiActivity= end-to-end test.
 - =py3/README.rst= rendering on PyPI (RST formatting not yet verified in PyPI
   preview).
-- Behavior of auto-default hook when =/bisos/apps/defaults/ai-templates= does
-  not exist on a fresh machine (parDefault=None → hook is a no-op, user must
-  run =userConfig_set= manually).
+- Behavior of auto-default hook when neither =~/aiActivityTemplates= nor
+  =/bisos/apps/defaults/ai-templates= exists on a fresh machine
+  (parDefault=None → hook is a no-op, user must run =userConfig_set=
+  manually). Positive path (either exists) is exercised.
 - All template activities other than =bisos-pip= (=xu-single=, =blee-panels=,
   =lcnt=, =bisos-core=) — =initiate= logic is generic but only =bisos-pip= was
   exercised interactively.
@@ -189,10 +190,16 @@ Entry points (=setup.py= console_scripts):
   =g_extraParams=, not at import time. The hook is in =bisos.b/cs/param.py= so
   it is available to all PyCS packages.
 
-- *Conditional parDefault* — =parDefault= for =templates= is set to the well-known
-  path only if that directory actually exists on the machine. On a machine without
-  =/bisos/apps/defaults/ai-templates=, =parDefault= is =None= and the user must
-  configure manually. This avoids silently storing a non-existent path.
+- *Precedence-based parDefault probe* — =parDefault= for =templates= is
+  set by =_detectTemplatesDefault()=, which probes two well-known paths
+  in order: =~/aiActivityTemplates= (canonical per-user clone from the
+  templates repo README) first, then =/bisos/apps/defaults/ai-templates=
+  (BISOS-provisioned) second. First existing path wins; if neither
+  exists, =parDefault= is =None= and the user must =userConfig_set=
+  explicitly. User-first ordering means a personal fork cloned to the
+  canonical name transparently takes over from the BISOS system copy
+  --- no explicit =userConfig_set= needed. This avoids silently storing
+  a non-existent path and honors user intent when both are present.
 
 - *=csuListProc= pattern: elisp block is mandatory* — the
   =b:py3:cs:framework/csuListProc= dblock reads =b:py:cs:csuList= from the

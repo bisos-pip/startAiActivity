@@ -128,6 +128,26 @@ def g_extraParams():
 #+end_org """
 ####+END:
 
+def _detectTemplatesDefault() -> typing.Optional[str]:
+    """Probe well-known templates locations in precedence order.
+
+    A user's own clone at ~/aiActivityTemplates (the canonical path
+    advertised in the aiActivityTemplates repo README) takes precedence
+    over the BISOS-provisioned /bisos/apps/defaults/ai-templates so that
+    a customized fork wins over the system copy when both are present.
+    Returns the first existing path as a resolved absolute string, or
+    None if neither exists (caller must userConfig_set explicitly).
+    """
+    candidates = [
+        pathlib.Path('~/aiActivityTemplates').expanduser(),
+        pathlib.Path('/bisos/apps/defaults/ai-templates'),
+    ]
+    for candidate in candidates:
+        if candidate.is_dir():
+            return str(candidate)
+    return None
+
+
 def commonParamsSpecify(
         csParams: cs.param.CmndParamDict,
 ) -> None:
@@ -154,7 +174,7 @@ def commonParamsSpecify(
         parName='templates',
         parDescription="Override templatesBase file parameter for this run.",
         parDataType=None,
-        parDefault='/bisos/apps/defaults/ai-templates' if pathlib.Path('/bisos/apps/defaults/ai-templates').is_dir() else None,
+        parDefault=_detectTemplatesDefault(),
         parChoices=[],
         argparseShortOpt=None,
         argparseLongOpt='--templates',
