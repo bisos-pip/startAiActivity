@@ -19,12 +19,23 @@ This file is maintained by Claude. Updates are typically triggered by the
 
 * Current State
 
-As of 2026-07-13, Stages 1–5 are complete. The package is functionally working
-with a full set of lifecycle commands and skills integration. The sole
-remaining task is PyPI upload and pipx testing (Stage 9).
+As of 2026-07-14, Stages 1–6 are complete. The package is functionally working
+with a full set of lifecycle commands, skills integration, and subproject
+overlays. The sole remaining task is PyPI upload and pipx testing (Stage 9).
 
 Key changes since last status:
 
+- *Stage 6 — Subproject overlays:* New =initiateSub= command installs a slim
+  overlay (=CLAUDE.md= + =AI-Activity.org= + =AI-DevStatus.org= +
+  =AI-WorkPlan.org=) in a subdirectory. The invariants (=AI-AGENTS.org=,
+  =AI-WORKFLOW.org=, =.claude/=) are inherited from an already-=initiate=-d
+  ancestor via Claude Code's walk-up. Preconditions: a
+  startAiActivity-signature CLAUDE.md must exist in some ancestor, AND the
+  target directory must not already have a CLAUDE.md. =aiSuspend= /
+  =aiResume= are now mode-aware: =aiSuspend= preserves CLAUDE.md as
+  =CLAUDE.md.dormant= (keeping its symlink target as the mode signature);
+  =aiResume= reads the target to decide base vs sub restore. New template
+  at =mother/initiateSub/CLAUDE.md=.
 - *Stage 5 — Skills integration:* =initiate= now installs a =.claude/skills/=
   symlink from the activity's =_skills/= (falling back to =mother/_skills/=).
   =deClaudify=, =aiSuspend=, and =aiResume= all handle the new symlink
@@ -54,6 +65,11 @@ Key changes since last status:
   skills — see Architecture).
 - =startAiActivity.cs -i initiate --root=repo --activity=bisos-pip= — installs
   at git repo root.
+- =startAiActivity.cs -i initiateSub --activity=bisos-pip= — installs slim
+  subproject overlay in current directory. Requires an ancestor to have been
+  =initiate=-d first (walks up looking for a startAiActivity-signature
+  =CLAUDE.md=). Does NOT install =AI-AGENTS.org=, =AI-WORKFLOW.org=, or
+  =.claude/= (all inherited from the ancestor).
 - =startAiActivity.cs -i deClaudify= — permanently removes all AI files from
   current directory.
 - =startAiActivity.cs -i aiSuspend= — stashes editable files as =.dormant= and
@@ -71,6 +87,20 @@ Key changes since last status:
 - Lifecycle-command skills handling: =aiSuspend= removes =.claude/skills=,
   =aiResume= re-installs it, =deClaudify= removes it — same shape as
   =settings.json= and =commands= handling.
+- Subproject overlays: =initiateSub= walks up looking for an initiated
+  ancestor and installs a slim overlay (no =AI-AGENTS.org=, =AI-WORKFLOW.org=,
+  =.claude/=). Precondition uses symlink-target check against
+  =templatesBase= — no content parsing. Nested =initiateSub= works
+  (parent → child → grandchild verified).
+- Mode-aware lifecycle: =aiSuspend= stashes =CLAUDE.md= → =CLAUDE.md.dormant=
+  (preserving symlink target as mode signature); =aiResume= reads it to
+  choose base vs sub restore path.
+- End-to-end verification harness: =py3/test/verify.sh= exercises the full
+  command surface (userConfig, initiate, deClaudify, aiSuspend/aiResume with
+  mode-detection log, initiateSub positive-and-negative cases) and exits 0
+  from a clean start to a clean end. The negative case for =initiateSub= runs
+  in a fresh =/tmp= dir with no ancestor CLAUDE.md and expects a visible
+  =EH_Problem_UsageError= refusal.
 
 * What Is Untested
 
@@ -94,12 +124,15 @@ Key changes since last status:
 #+begin_example
 py3/
   bin/
-    startAiActivity.cs      — main csxu; initiate, deClaudify, aiSuspend, aiResume,
-                              userConfig_get/set, examples
+    startAiActivity.cs      — main csxu; initiate, initiateSub, deClaudify,
+                              aiSuspend, aiResume, userConfig_get/set, examples
   bisos/
     startAiActivity/
       updateDblock.py       — general dblock dispatch engine (registerHandler / expandAll)
       dblock_particulars.py — self-registering handler for b:ai:file/particulars
+  test/
+    verify.sh               — end-to-end verification harness (run via bash -i;
+                              uses lpDo from ~/.bashrc for uniform logging)
 panels/
   bisos.startAiActivity/
     _nodeBase_/
@@ -118,12 +151,14 @@ Key external dependencies (not bundled):
   #+begin_example
   ai-templates/
     mother/                   — baseline (constant symlinks)
-      CLAUDE.md
+      CLAUDE.md               — base CLAUDE.md (imports @./AI-AGENTS.org)
       AI-AGENTS.org
       AI-WORKFLOW.org
       _claude/
         settings.json
         commands/
+      initiateSub/            — slim overlay template (new in Stage 6)
+        CLAUDE.md             — imports only local AI-Activity/DevStatus/WorkPlan
     <activity>/               — e.g. bisos-pip, xu-single, blee-panels, lcnt
       AI-Activity.org         — always-loaded orientation
       AI-DevStatus.org        — initial-state safe-copy
@@ -165,9 +200,11 @@ Entry points (=setup.py= console_scripts):
   =g_extraParams= calls only =cs.csuList_commonParamsSpecify= — not the csxu's
   own =commonParamsSpecify=, which is wired separately by the framework.
 
-- *=README.org= is the authoritative source* — =py3/README.rst= is derived from
-  it. The RST is written to match pandoc/ox-rst output conventions. When both
-  need updating, edit =README.org= first, then regenerate or manually sync RST.
+- *=README.org= is the only authored source; =py3/README.rst= is generated*
+  by =py3/pypiProc.sh -i fullPrep= (invoked directly or via
+  =fullPrepBuild forPypi=). Never hand-edit =README.rst= — edits are
+  overwritten at release time. Between releases, =README.rst= may be stale
+  relative to =README.org=; that's expected and harmless.
 
 - *=mother/= not =bystar/=* — the baseline templates directory is named =mother/=
   in the current templates repo layout. The =excludedDirs= set in =examples=
@@ -196,6 +233,34 @@ Entry points (=setup.py= console_scripts):
   visible to humans and other tools; the installed location under
   =.claude/skills/= is just where Claude Code looks. =initiate= symlinks
   =<activity>/_skills/= to =.claude/skills/= to bridge the two.
+
+- *Subproject overlays use Claude Code walk-up, not local hooks* — an
+  =initiateSub= directory has a slim =CLAUDE.md= that imports only its
+  local trio. The invariants come from an ancestor's =CLAUDE.md= via
+  Claude Code's built-in upward walk. This avoids relying on manual
+  prompting or session hooks — discovery is fully automatic once files
+  are on disk.
+
+- *Symlink-target as mode signature* — =aiSuspend= renames =CLAUDE.md=
+  to =CLAUDE.md.dormant= (preserving the symlink target) rather than
+  removing it. =aiResume= reads the target with =readlink= + resolve and
+  compares against =<templatesBase>/mother/initiateSub/CLAUDE.md= to
+  distinguish base from sub. Chose this over storing mode in a dblock
+  or requiring a =--sub= flag: (a) zero user burden, (b) tolerates
+  hand-edits (only the symlink target matters), (c) survives filesystem
+  copies and git checkouts.
+
+- *=--activity= required on =initiateSub=* — no inheritance-from-parent
+  default. Rationale: a subproject can legitimately be a different
+  activity than its parent (e.g., a =blee-panels= subproject inside a
+  =bisos-pip= repo), and inference would silently pick the wrong one
+  in that case. Explicit is better.
+
+- *Nested =initiateSub= allowed* — both base and sub CLAUDE.md symlinks
+  land under =templatesBase=, so the precondition check treats them
+  equivalently. Grandchild's walk-up hits child's =CLAUDE.md=, which
+  points at =mother/initiateSub/CLAUDE.md= — still under =templatesBase=,
+  precondition satisfied.
 
 - *Splitting =AI-Activity.org= into orientation + skills* — the pre-Stage-5
   =bisos-pip/AI-Activity.org= was 456 lines of always-loaded context, of which

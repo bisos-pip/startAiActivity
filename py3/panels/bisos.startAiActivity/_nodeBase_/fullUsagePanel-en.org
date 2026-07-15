@@ -89,6 +89,22 @@
 ####+BEGIN: blee:panel:icm:py:cmnd :outLevel 1 :sep nil :folding? nil :label "Direct" :icmName "startAiActivity.cs -i initiate --activity=lcnt" :comment "Install lcnt templates into current directory" :afterComment ""
 * [[elisp:(show-all)][(>]] [[elisp:(blee:menu-sel:outline:popupMenu)][+-]] [[elisp:(blee:menu-sel:navigation:popupMenu)][==]]  /Direct/ :: [[elisp:(lsip-local-run-command "startAiActivity.cs -i initiate --activity=lcnt")][startAiActivity.cs -i initiate --activity=lcnt]] *|*  =Install lcnt templates into current directory= *|*    [[elisp:(org-shifttab)][<)]] E|
 ####+END:
+####+BEGIN: blee:bxPanel:foldingSection :outLevel 0 :sep t :title "initiateSub --- Slim Overlay for Nested Subprojects" :anchor "InitiateSub" :extraInfo "initiateSub"
+* /[[elisp:(beginning-of-buffer)][|^]]  [[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]] [[elisp:(delete-other-windows)][|1]]/
+* [[elisp:(show-all)][(>]]  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_  _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_     [[elisp:(outline-show-subtree+toggle)][| _initiateSub --- Slim Overlay for Nested Subprojects_: |]] <<InitiateSub>> initiateSub  [[elisp:(org-shifttab)][<)]] E|
+####+END
+** +
+** =initiateSub= installs a slim subproject overlay --- only =CLAUDE.md= (symlink to =mother/initiateSub/CLAUDE.md=), =AI-Activity.org=, =AI-DevStatus.org=, =AI-WorkPlan.org=.
+** Does NOT install =AI-AGENTS.org=, =AI-WORKFLOW.org=, or =.claude/= --- those are inherited from an ancestor via Claude Code's =CLAUDE.md= walk-up.
+** Preconditions: an ancestor directory must have been =initiate=-d already, and the target directory must not already have a =CLAUDE.md=.
+** =--activity= is required (no inheritance-from-parent default).
+** Nested =initiateSub= is supported --- a subproject's =CLAUDE.md= satisfies the walk-up precondition for a sub-subproject.
+** =aiSuspend= / =aiResume= are mode-aware: =aiSuspend= stashes =CLAUDE.md= as =CLAUDE.md.dormant= (preserving symlink target as mode signature); =aiResume= reads it to choose base vs sub restore.
+** -B|
+####+BEGIN: blee:panel:icm:py:cmnd :outLevel 1 :sep t :folding? nil :label "Direct" :icmName "startAiActivity.cs -i initiateSub --activity=bisos-pip" :comment "Install slim bisos-pip subproject overlay in current directory" :afterComment ""
+* /[[elisp:(beginning-of-buffer)][|^]] [[elisp:(blee:menu-sel:navigation:popupMenu)][==]] [[elisp:(delete-other-windows)][|1]]/
+* [[elisp:(show-all)][(>]] [[elisp:(blee:menu-sel:outline:popupMenu)][+-]] [[elisp:(blee:menu-sel:navigation:popupMenu)][==]]  /Direct/ :: [[elisp:(lsip-local-run-command "startAiActivity.cs -i initiateSub --activity=bisos-pip")][startAiActivity.cs -i initiateSub --activity=bisos-pip]] *|*  =Install slim bisos-pip subproject overlay in current directory= *|*    [[elisp:(org-shifttab)][<)]] E|
+####+END:
 ####+BEGIN: blee:bxPanel:foldingSection :outLevel 0 :sep t :title "Skills --- Task-Specific Instructions Loaded On Demand" :anchor "Skills" :extraInfo "skills"
 * /[[elisp:(beginning-of-buffer)][|^]]  [[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]] [[elisp:(delete-other-windows)][|1]]/
 * [[elisp:(show-all)][(>]]  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_  _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_     [[elisp:(outline-show-subtree+toggle)][| _Skills --- Task-Specific Instructions Loaded On Demand_: |]] <<Skills>> skills  [[elisp:(org-shifttab)][<)]] E|
@@ -131,6 +147,20 @@
 ####+BEGIN: blee:panel:icm:py:cmnd :outLevel 1 :sep t :folding? nil :label "Direct" :icmName "startAiActivity.cs -i deClaudify" :comment "Permanently remove AI collaboration files from current directory" :afterComment ""
 * /[[elisp:(beginning-of-buffer)][|^]] [[elisp:(blee:menu-sel:navigation:popupMenu)][==]] [[elisp:(delete-other-windows)][|1]]/
 * [[elisp:(show-all)][(>]] [[elisp:(blee:menu-sel:outline:popupMenu)][+-]] [[elisp:(blee:menu-sel:navigation:popupMenu)][==]]  /Direct/ :: [[elisp:(lsip-local-run-command "startAiActivity.cs -i deClaudify")][startAiActivity.cs -i deClaudify]] *|*  =Permanently remove AI collaboration files from current directory= *|*    [[elisp:(org-shifttab)][<)]] E|
+####+END:
+####+BEGIN: blee:bxPanel:foldingSection :outLevel 0 :sep t :title "Testing --- End-to-End Verification" :anchor "Testing" :extraInfo "verify.sh"
+* /[[elisp:(beginning-of-buffer)][|^]]  [[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]] [[elisp:(delete-other-windows)][|1]]/
+* [[elisp:(show-all)][(>]]  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_  _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_     [[elisp:(outline-show-subtree+toggle)][| _Testing --- End-to-End Verification_: |]] <<Testing>> verify.sh  [[elisp:(org-shifttab)][<)]] E|
+####+END
+** +
+** The =py3/test/verify.sh= harness exercises every command in the =startAiActivity.cs= surface end-to-end.
+** Covered: =userConfig_set= / =userConfig_get=, =initiate= (both root modes), =deClaudify=, =aiSuspend= / =aiResume= (base mode, with mode-detection log), =initiateSub= (positive case within repo), =initiateSub= negative case (isolated =/tmp/= dir --- expects =EH_Problem_UsageError= refusal).
+** Shebang is =#!/bin/bash -i= --- interactive shell so =~/.bashrc= runs its full body and defines =lpDo= (ByStar's =_opDo= alias for uniform command logging).
+** Starts from a clean state, leaves a clean state. Exit code 0 indicates all steps (including the intended refusal) behaved as expected.
+** -B|
+####+BEGIN: blee:panel:icm:py:cmnd :outLevel 1 :sep t :folding? nil :label "Direct" :icmName "bash -i py3/test/verify.sh" :comment "Run the end-to-end verification harness" :afterComment ""
+* /[[elisp:(beginning-of-buffer)][|^]] [[elisp:(blee:menu-sel:navigation:popupMenu)][==]] [[elisp:(delete-other-windows)][|1]]/
+* [[elisp:(show-all)][(>]] [[elisp:(blee:menu-sel:outline:popupMenu)][+-]] [[elisp:(blee:menu-sel:navigation:popupMenu)][==]]  /Direct/ :: [[elisp:(lsip-local-run-command "bash -i py3/test/verify.sh")][bash -i py3/test/verify.sh]] *|*  =Run the end-to-end verification harness= *|*    [[elisp:(org-shifttab)][<)]] E|
 ####+END:
 ####+BEGIN: blee:bxPanel:evolution
 * [[elisp:(show-all)][(>]] [[elisp:(describe-function 'org-dblock-write:blee:bxPanel:evolution)][dbf]]

@@ -209,6 +209,7 @@ class examples(cs.Cmnd):
         od = collections.OrderedDict
         cmnd = cs.examples.cmndEnter
 
+        templatesBaseDefault = "/bisos/apps/defaults/ai-templates"
         templatesBaseStr = userConfig_csu.parGet('templates')
 
         cs.examples.menuChapter('=aiSuspend= / =aiResume= -- suspend and resume AI collaboration')
@@ -247,6 +248,17 @@ class examples(cs.Cmnd):
                 cmnd('initiate',
                      pars=od([('root', 'repo'), ('activity', activity)]),
                      comment=f"# Install {activity} templates at repo base")
+
+        cs.examples.menuChapter('=initiateSub= -- slim subproject overlay (requires initiated parent)')
+        if templatesBaseStr is None:
+            cmnd('initiateSub',
+                 pars=od([('activity', '<activity>')]),
+                 comment="# templates not set — run userConfig_set --parName=templates first")
+        else:
+            for activity in activities:
+                cmnd('initiateSub',
+                     pars=od([('activity', activity)]),
+                     comment=f"# Install slim {activity} overlay in current subdir")
 
         return(cmndOutcome)
 
@@ -387,6 +399,149 @@ Expands b:ai:file/particulars dblock in copied files using pure Python.
         )
 
 
+####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "initiateSub" :comment "Install slim subproject AI-collaboration overlay (requires initiated parent)" :extent "verify" :ro "cli" :parsMand "activity" :parsOpt "root templates" :argsMin 0 :argsMax 0 :pyInv ""
+""" #+begin_org
+*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<initiateSub>>  =verify= parsMand=activity parsOpt="root templates" ro=cli   [[elisp:(org-cycle)][| ]]
+#+end_org """
+class initiateSub(cs.Cmnd):
+    cmndParamsMandatory = [ 'activity', ]
+    cmndParamsOptional = [ 'root', 'templates', ]
+    cmndArgsLen = {'Min': 0, 'Max': 0,}
+
+    @cs.track(fnLoc=True, fnEntry=True, fnExit=True)
+    def cmnd(self,
+             rtInv: cs.RtInvoker,
+             cmndOutcome: b.op.Outcome,
+             activity: typing.Optional[str]=None,   # Cs Mandatory Param
+             root: typing.Optional[str]=None,        # Cs Optional Param
+             templates: typing.Optional[str]=None,   # Cs Optional Param
+    ) -> b.op.Outcome:
+
+        failed = b_io.eh.badOutcome
+        callParamsDict = {'activity': activity, 'root': root, 'templates': templates, }
+        if self.invocationValidate(rtInv, cmndOutcome, callParamsDict, None).isProblematic():
+            return failed(cmndOutcome)
+        activity = csParam.mappedValue('activity', activity)
+        root = csParam.mappedValue('root', root)
+        templates = csParam.mappedValue('templates', templates)
+####+END:
+        self.cmndDocStr(f""" #+begin_org
+** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Install subproject AI-collaboration overlay.
+Installs only AI-Activity.org (symlink), AI-DevStatus.org (safe-copy),
+AI-WorkPlan.org (safe-copy), and a slim CLAUDE.md (symlink to
+mother/initiateSub/CLAUDE.md) that imports only the local trio.
+Does NOT install AI-AGENTS.org, AI-WORKFLOW.org, or .claude/ — those
+are inherited from a parent directory that was previously initiated.
+Refuses if no initiated parent is found (walks up looking for a
+startAiActivity-signature CLAUDE.md symlink) or if the target directory
+already has a CLAUDE.md.
+        #+end_org """)
+
+        templatesBaseStr = userConfig_csu.parGet('templates', templates)
+        if templatesBaseStr is None:
+            b_io.eh.problem_usageError(
+                "templates not configured. Run: startAiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/templates")
+            return failed(cmndOutcome)
+        templatesBase = pathlib.Path(templatesBaseStr).resolve()
+
+        activityDir = templatesBase / activity
+        if not activityDir.is_dir():
+            b_io.eh.problem_usageError(f"Activity directory not found: {activityDir}")
+            return failed(cmndOutcome)
+
+        subClaudeSrc = templatesBase / 'mother' / 'initiateSub' / 'CLAUDE.md'
+        if not subClaudeSrc.exists():
+            b_io.eh.problem_usageError(f"Subproject CLAUDE.md template not found: {subClaudeSrc}")
+            return failed(cmndOutcome)
+
+        if root == 'repo':
+            result = subprocess.run(
+                ['git', 'rev-parse', '--show-toplevel'],
+                capture_output=True, text=True,
+            )
+            if result.returncode != 0:
+                b_io.eh.problem_usageError("Could not determine repo root (not in a git repo?)")
+                return failed(cmndOutcome)
+            targetDir = pathlib.Path(result.stdout.strip())
+        else:
+            targetDir = pathlib.Path.cwd()
+
+        # Refuse if target already has a CLAUDE.md (avoid clobbering existing initiate/initiateSub)
+        localClaude = targetDir / 'CLAUDE.md'
+        if localClaude.exists() or localClaude.is_symlink():
+            b_io.eh.problem_usageError(
+                f"CLAUDE.md already exists at {targetDir}. "
+                "Run deClaudify first if you meant to reinstall.")
+            return failed(cmndOutcome)
+
+        # Precondition: walk up looking for a startAiActivity-signature CLAUDE.md
+        # (a CLAUDE.md symlink whose target lands under templatesBase). If not
+        # found, refuse — initiateSub requires an initiated parent.
+        parent = targetDir.parent
+        foundBase = None
+        while True:
+            parentClaude = parent / 'CLAUDE.md'
+            if parentClaude.is_symlink():
+                linkTarget = pathlib.Path(parentClaude.readlink())
+                if not linkTarget.is_absolute():
+                    linkTarget = (parentClaude.parent / linkTarget).resolve()
+                else:
+                    linkTarget = linkTarget.resolve()
+                try:
+                    linkTarget.relative_to(templatesBase)
+                    foundBase = parent
+                    break
+                except ValueError:
+                    pass  # symlink target isn't under templatesBase — keep walking
+            if parent.parent == parent:
+                break  # reached filesystem root
+            parent = parent.parent
+
+        if foundBase is None:
+            b_io.eh.problem_usageError(
+                f"No initiated parent found for {targetDir}. "
+                f"Walked up to / looking for a CLAUDE.md symlink pointing under {templatesBase}. "
+                "Run 'initiate' at a parent directory first, or use 'initiate' here "
+                "if this should be the base.")
+            return failed(cmndOutcome)
+
+        b_io.ann.note(f"Initiated parent found at: {foundBase}")
+
+        # Install slim CLAUDE.md (symlink to mother/initiateSub/CLAUDE.md)
+        localClaude.symlink_to(subClaudeSrc)
+        b_io.ann.note(f"SYMLINKED: {localClaude} -> {subClaudeSrc}")
+
+        # AI-Activity.org — symlinked to activity/
+        activitySrc = activityDir / 'AI-Activity.org'
+        activityDst = targetDir / 'AI-Activity.org'
+        if activityDst.exists() or activityDst.is_symlink():
+            b_io.ann.note(f"SKIP (exists): {activityDst}")
+        else:
+            activityDst.symlink_to(activitySrc)
+            b_io.ann.note(f"SYMLINKED: {activityDst} -> {activitySrc}")
+
+        # Initial files — safe-copied from activity/, falling back to mother/
+        motherDir = templatesBase / 'mother'
+        initialFiles = ['AI-DevStatus.org', 'AI-WorkPlan.org']
+        for fname in initialFiles:
+            activityFileSrc = activityDir / fname
+            motherFileSrc = motherDir / fname
+            src = activityFileSrc if activityFileSrc.exists() else motherFileSrc
+            dst = targetDir / fname
+            if dst.exists():
+                b_io.ann.note(f"SKIP (exists): {dst}")
+            else:
+                shutil.copy2(src, dst)
+                b_io.ann.note(f"COPIED: {src} -> {dst}")
+                updateDblock.expandAll(dst)
+                b_io.ann.note(f"DBLOCK-UPDATED: {dst}")
+
+        return cmndOutcome.set(
+            opError=b.op.OpError.Success,
+            opResults=f"Subproject AI-collaboration overlay installed for activity={activity} at {targetDir} (inherits from {foundBase})",
+        )
+
+
 ####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "aiSuspend" :comment "Suspend AI collaboration: remove symlinks/.claude, stash editable files" :extent "verify" :ro "cli" :parsMand "" :parsOpt "" :argsMin 0 :argsMax 0 :pyInv ""
 """ #+begin_org
 *  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<aiSuspend>>  =verify= ro=cli   [[elisp:(org-cycle)][| ]]
@@ -409,15 +564,34 @@ class aiSuspend(cs.Cmnd):
 ####+END:
         self.cmndDocStr(f""" #+begin_org
 ** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Suspend AI collaboration in current directory.
-Removes symlinks (CLAUDE.md, AI-AGENTS.org, AI-WORKFLOW.org, AI-Activity.org)
-and .claude/ entries. Renames AI-DevStatus.org and AI-WorkPlan.org to .dormant
-so they survive and can be restored by aiResume.
+Removes symlinks (AI-AGENTS.org, AI-WORKFLOW.org, AI-Activity.org) and
+=.claude/= entries. Preserves =CLAUDE.md= as =CLAUDE.md.dormant= so its
+symlink target is available to aiResume as a signature (base vs sub).
+Renames AI-DevStatus.org and AI-WorkPlan.org to .dormant so they
+survive and can be restored by aiResume.
         #+end_org """)
 
         targetDir = pathlib.Path.cwd()
 
-        # Remove symlinks
-        symlinkFiles = ['CLAUDE.md', 'AI-AGENTS.org', 'AI-WORKFLOW.org', 'AI-Activity.org']
+        # Preserve CLAUDE.md as CLAUDE.md.dormant — the symlink target is the
+        # signature aiResume needs to tell base (mother/CLAUDE.md) from sub
+        # (mother/initiateSub/CLAUDE.md).
+        claudeLive = targetDir / 'CLAUDE.md'
+        claudeDormant = targetDir / 'CLAUDE.md.dormant'
+        if claudeLive.is_symlink():
+            if claudeDormant.exists() or claudeDormant.is_symlink():
+                b_io.ann.note(f"SKIP stash (dormant already exists): {claudeDormant}")
+            else:
+                claudeLive.rename(claudeDormant)
+                b_io.ann.note(f"STASHED symlink: {claudeLive} -> {claudeDormant}")
+        elif claudeLive.exists():
+            b_io.ann.note(f"SKIP (CLAUDE.md not a symlink, leaving intact): {claudeLive}")
+        else:
+            b_io.ann.note(f"SKIP (not present): {claudeLive}")
+
+        # Remove the other symlinks (no dormant preservation needed — they're
+        # reinstalled from templates based on the CLAUDE.md.dormant signature).
+        symlinkFiles = ['AI-AGENTS.org', 'AI-WORKFLOW.org', 'AI-Activity.org']
         for fname in symlinkFiles:
             dst = targetDir / fname
             if dst.is_symlink():
@@ -491,9 +665,12 @@ class aiResume(cs.Cmnd):
         self.cmndDocStr(f""" #+begin_org
 ** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Resume AI collaboration in current directory.
 Restores AI-DevStatus.org and AI-WorkPlan.org from their .dormant copies.
-Re-installs symlinks (CLAUDE.md, AI-AGENTS.org, AI-WORKFLOW.org, AI-Activity.org)
-and .claude/ entries from the templates base. The activity is inferred from the
-dormant AI-Activity.org symlink target if present, otherwise from the templates base.
+Detects base vs sub mode from the =CLAUDE.md.dormant= symlink target: if it
+points at =mother/initiateSub/CLAUDE.md=, restores subproject-style (slim
+CLAUDE.md only; AI-AGENTS.org, AI-WORKFLOW.org, and =.claude/= are inherited
+from a parent). Otherwise restores the full base stack. Activity is inferred
+from the =AI-Activity.org= symlink target or the =Activity:= header in
+=AI-WorkPlan.org=.
         #+end_org """)
 
         targetDir = pathlib.Path.cwd()
@@ -520,6 +697,26 @@ dormant AI-Activity.org symlink target if present, otherwise from the templates 
             return failed(cmndOutcome)
         templatesBase = pathlib.Path(templatesBaseStr)
         motherDir = templatesBase / 'mother'
+
+        # Detect base vs sub mode from CLAUDE.md.dormant symlink target.
+        # Sub: points at <templatesBase>/mother/initiateSub/CLAUDE.md
+        # Base: points at <templatesBase>/mother/CLAUDE.md
+        subMode = False
+        claudeDormant = targetDir / 'CLAUDE.md.dormant'
+        subClaudeTemplate = (templatesBase / 'mother' / 'initiateSub' / 'CLAUDE.md').resolve()
+        if claudeDormant.is_symlink():
+            dormantTarget = pathlib.Path(claudeDormant.readlink())
+            if not dormantTarget.is_absolute():
+                dormantTarget = (claudeDormant.parent / dormantTarget).resolve()
+            else:
+                dormantTarget = dormantTarget.resolve()
+            if dormantTarget == subClaudeTemplate:
+                subMode = True
+                b_io.ann.note("MODE: sub (CLAUDE.md.dormant points at mother/initiateSub/CLAUDE.md)")
+            else:
+                b_io.ann.note("MODE: base (CLAUDE.md.dormant points at mother/CLAUDE.md)")
+        else:
+            b_io.ann.note("MODE: base (no CLAUDE.md.dormant found — defaulting to base)")
 
         # Infer activity from AI-Activity.org symlink target if it still exists,
         # otherwise from the restored AI-WorkPlan.org dblock header, otherwise fail.
@@ -550,18 +747,33 @@ dormant AI-Activity.org symlink target if present, otherwise from the templates 
 
         b_io.ann.note(f"Inferred activity: {activity}")
 
-        # Re-install constant symlinks
-        constantFiles = ['CLAUDE.md', 'AI-AGENTS.org', 'AI-WORKFLOW.org']
-        for fname in constantFiles:
-            src = motherDir / fname
-            dst = targetDir / fname
-            if dst.exists() or dst.is_symlink():
-                b_io.ann.note(f"SKIP (exists): {dst}")
-            else:
-                dst.symlink_to(src)
-                b_io.ann.note(f"SYMLINKED: {dst} -> {src}")
+        # Re-install CLAUDE.md — either slim (sub) or full-stack (base).
+        # In sub mode, promote CLAUDE.md.dormant back to CLAUDE.md by rename.
+        # In base mode, do the same if a dormant exists; otherwise create fresh.
+        claudeLive = targetDir / 'CLAUDE.md'
+        if claudeLive.exists() or claudeLive.is_symlink():
+            b_io.ann.note(f"SKIP (exists): {claudeLive}")
+        elif claudeDormant.is_symlink():
+            claudeDormant.rename(claudeLive)
+            b_io.ann.note(f"PROMOTED: {claudeDormant} -> {claudeLive}")
+        else:
+            # No dormant marker — create fresh symlink based on detected mode.
+            claudeSrc = (motherDir / 'initiateSub' / 'CLAUDE.md') if subMode else (motherDir / 'CLAUDE.md')
+            claudeLive.symlink_to(claudeSrc)
+            b_io.ann.note(f"SYMLINKED: {claudeLive} -> {claudeSrc}")
 
-        # Re-install AI-Activity.org symlink
+        # AI-AGENTS.org and AI-WORKFLOW.org: base mode only; subs inherit from parent.
+        if not subMode:
+            for fname in ['AI-AGENTS.org', 'AI-WORKFLOW.org']:
+                src = motherDir / fname
+                dst = targetDir / fname
+                if dst.exists() or dst.is_symlink():
+                    b_io.ann.note(f"SKIP (exists): {dst}")
+                else:
+                    dst.symlink_to(src)
+                    b_io.ann.note(f"SYMLINKED: {dst} -> {src}")
+
+        # Re-install AI-Activity.org symlink (both modes)
         activitySrc = activityDir / 'AI-Activity.org'
         activityDst = targetDir / 'AI-Activity.org'
         if activityDst.exists() or activityDst.is_symlink():
@@ -569,6 +781,13 @@ dormant AI-Activity.org symlink target if present, otherwise from the templates 
         else:
             activityDst.symlink_to(activitySrc)
             b_io.ann.note(f"SYMLINKED: {activityDst} -> {activitySrc}")
+
+        # .claude/ entries: base mode only; subs inherit from parent.
+        if subMode:
+            return cmndOutcome.set(
+                opError=b.op.OpError.Success,
+                opResults=f"aiResume complete at {targetDir} (activity={activity}, mode=sub)",
+            )
 
         # Re-install .claude/ symlinked entries
         claudeDstDir = targetDir / '.claude'
@@ -600,7 +819,7 @@ dormant AI-Activity.org symlink target if present, otherwise from the templates 
 
         return cmndOutcome.set(
             opError=b.op.OpError.Success,
-            opResults=f"aiResume complete at {targetDir} (activity={activity})",
+            opResults=f"aiResume complete at {targetDir} (activity={activity}, mode=base)",
         )
 
 
@@ -634,8 +853,9 @@ Removes .claude/ directory if it becomes empty.
 
         targetDir = pathlib.Path.cwd()
 
-        # Symlinked constant files and activity file
-        symlinkFiles = ['CLAUDE.md', 'AI-AGENTS.org', 'AI-WORKFLOW.org', 'AI-Activity.org']
+        # Symlinked constant files and activity file (includes CLAUDE.md.dormant
+        # in case deClaudify runs while a session is suspended)
+        symlinkFiles = ['CLAUDE.md', 'CLAUDE.md.dormant', 'AI-AGENTS.org', 'AI-WORKFLOW.org', 'AI-Activity.org']
         for fname in symlinkFiles:
             dst = targetDir / fname
             if dst.is_symlink():
@@ -646,8 +866,10 @@ Removes .claude/ directory if it becomes empty.
             else:
                 b_io.ann.note(f"SKIP (not present): {dst}")
 
-        # Safe-copied files — only remove if they are regular files (not symlinks)
-        copiedFiles = ['AI-DevStatus.org', 'AI-WorkPlan.org']
+        # Safe-copied files — only remove if they are regular files (not symlinks).
+        # Includes .dormant copies in case deClaudify runs while a session is suspended.
+        copiedFiles = ['AI-DevStatus.org', 'AI-WorkPlan.org',
+                       'AI-DevStatus.org.dormant', 'AI-WorkPlan.org.dormant']
         for fname in copiedFiles:
             dst = targetDir / fname
             if dst.is_file() and not dst.is_symlink():

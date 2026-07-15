@@ -344,9 +344,101 @@ Documentation updates for Stage 5:
 - =fullUsagePanel-en.org= — added a folding section describing the
   installed =.claude/skills/= symlink and the currently-shipping five
   skills.
-=py3/README.rst= regeneration was NOT done automatically — that requires
-either ox-rst from Emacs or pandoc, and the RST is authored to match
-those tools' output. Left as a follow-up manual step.
+=py3/README.rst= was NOT updated in this pass — that is not a manual step:
+=README.rst= is regenerated automatically by =py3/pypiProc.sh -i fullPrep=
+during release preparation. Between releases, =README.rst= being stale
+relative to =README.org= is expected. (Earlier notes in this WorkPlan
+that described =README.rst= as needing manual regeneration were wrong —
+see the corrected =readme-authorship= skill.)
+** -
+
+
+* Stage 6: Subproject Overlays via initiateSub
+
+Goal: A separate command that installs only the subproject-specific state
+(=CLAUDE.md=, =AI-Activity.org=, =AI-DevStatus.org=, =AI-WorkPlan.org=) in
+a subdirectory, requiring an already-=initiate=-d ancestor. The invariants
+(=AI-AGENTS.org=, =AI-WORKFLOW.org=, =.claude/=) are inherited from the
+ancestor via Claude Code's walk-up.
+
+Motivation: nested projects should not re-install the invariants at every
+level. Doing so wastes context (Claude reads the same =AI-AGENTS.org= twice)
+and creates ambiguity about which activity applies. A slim overlay keeps
+subproject state local without duplicating the base.
+
+
+* Stage 6 TODOs
+** +
+** DONE [#B] <<initiateSub Command>> Add =initiateSub= command :ai:
+CLOSED: [2026-07-14 Mon] SCHEDULED: <2026-07-14 Mon>
+Requires =--activity= (no inheritance from parent). Preconditions:
+1. Walk up from target directory looking for a =CLAUDE.md= symlink whose
+   target lands under the configured =templatesBase=. If none, refuse.
+2. Target directory must not already have a =CLAUDE.md=. If it does, refuse.
+Install: slim =CLAUDE.md= (symlink to =mother/initiateSub/CLAUDE.md=),
+=AI-Activity.org= (symlink), =AI-DevStatus.org= and =AI-WorkPlan.org=
+(safe-copy with dblock expansion). Does NOT install =AI-AGENTS.org=,
+=AI-WORKFLOW.org=, or =.claude/=.
+----- AI Results: ------
+Implemented in =py3/bin/startAiActivity.cs=. New template at
+=mother/initiateSub/CLAUDE.md= imports only =@./AI-Activity.org=,
+=@./AI-DevStatus.org=, =@./AI-WorkPlan.org=. Precondition uses symlink-
+target check (readlink + relative_to templatesBase) — no content parsing.
+Nested =initiateSub= works because both base and sub CLAUDE.md symlinks
+land under =templatesBase=, so the precondition treats them equivalently.
+End-to-end verified: refusal on isolated dir, refusal when CLAUDE.md
+already present, success in properly-nested child, success in
+grandchild (nested case).
+** DONE [#B] <<aiSuspend/aiResume Mode Detection>> Sub-aware suspend/resume :ai:
+CLOSED: [2026-07-14 Mon] SCHEDULED: <2026-07-14 Mon>
+=aiSuspend= should NOT unlink =CLAUDE.md= — it should rename it to
+=CLAUDE.md.dormant=, preserving the symlink target as the mode signature.
+=aiResume= should read =CLAUDE.md.dormant='s target: if it points at
+=mother/initiateSub/CLAUDE.md=, restore in sub mode (no =AI-AGENTS.org=,
+=AI-WORKFLOW.org=, or =.claude/=); otherwise base mode.
+----- AI Results: ------
+=aiSuspend= now stashes CLAUDE.md → CLAUDE.md.dormant instead of removing
+it. The other symlinks (=AI-AGENTS.org=, =AI-WORKFLOW.org=, =AI-Activity.org=)
+are still removed since they can be re-derived. =aiResume= reads the
+=.dormant= symlink target, compares against
+=<templatesBase>/mother/initiateSub/CLAUDE.md= (resolved), sets
+=subMode= boolean, and gates the AI-AGENTS/AI-WORKFLOW/.claude/ install
+blocks on it. If no =CLAUDE.md.dormant= is found, defaults to base mode.
+Verified: base-mode suspend/resume cycle unchanged from Stage 4;
+sub-mode cycle correctly restores the slim overlay without touching
+inherited invariants. =deClaudify= updated to also remove =.dormant=
+files (base and sub), in case cleanup runs while suspended.
+** DONE [#B] <<initiateSub Docs>> Update documentation :ai:
+CLOSED: [2026-07-14 Mon] SCHEDULED: <2026-07-14 Mon>
+Update =README.org=, =AI-DevStatus.org=, =fullUsagePanel-en.org= with the
+subproject-overlay concept and =initiateSub= usage. Add =initiateSub= to
+=examples= command output.
+----- AI Results: ------
+Documentation updates: =AI-WorkPlan.org= (Stage 6 with TODOs marked DONE),
+=AI-DevStatus.org= (Current State, What Works, Key Design Decisions),
+=README.org= (new Subproject Overlay Usage subsection),
+=fullUsagePanel-en.org= (new folding section for =initiateSub=).
+=examples= command extended with an =initiateSub= chapter.
+** DONE [#B] <<verify.sh Test Harness>> Author end-to-end verify.sh :ai:
+CLOSED: [2026-07-14 Mon] SCHEDULED: <2026-07-14 Mon>
+Author a =py3/test/verify.sh= that exercises the full command surface
+end-to-end from a fresh directory: =userConfig_set/get=,
+=initiate= (both root modes), =deClaudify=, =aiSuspend=/=aiResume=
+(base mode with mode-detection log), =initiateSub= (positive case
+inside repo), and =initiateSub= (negative case in isolated =/tmp/=
+dir — expect =EH_Problem_UsageError= refusal). Uses =lpDo= for
+uniform logging.
+----- AI Results: ------
+Wrote =py3/test/verify.sh=. Shebang =#!/bin/bash -i= (needed so
+=~/.bashrc= runs its interactive body and defines =_opDo=; =lpDo= is
+an alias defined there and needs =bash -i= to expand). Uses
+=lpDo eval rm -rf ... 2\>/dev/null= for silent cleanup (escaped
+redirect so eval sees it as shell syntax). Uses =lpDo pushd= / =popd=
+around the =/tmp= negative case for visible directory changes, and
+=lpDo eval rm -rf "$TMPDIR"= to clean up. Full cycle exits 0 and
+leaves the test directory containing only =verify.sh= itself.
+Refusal is visible in the trace as
+=EH_Problem_UsageError: No initiated parent found for /tmp/tmp.*=.
 ** -
 
 
