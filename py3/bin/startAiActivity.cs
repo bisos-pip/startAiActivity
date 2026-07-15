@@ -232,7 +232,7 @@ class examples(cs.Cmnd):
                  comment="# templates not set — run userConfig_set --parName=templates first")
         else:
             templatesBase = pathlib.Path(templatesBaseStr)
-            excludedDirs = {'mother', 'startAiAt.cs', 'test'}
+            excludedDirs = {'mother', 'test'}
             activities = sorted([
                 d.name for d in templatesBase.iterdir()
                 if d.is_dir() and d.name not in excludedDirs

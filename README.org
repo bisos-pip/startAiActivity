@@ -5,32 +5,67 @@
 
 #+BEGIN: b:org:pypi:readme/topControls :pkgName "startAiActivity" :comment "basic"
 
-|----------------------+------------------------------------------------------------------|
+|----------------------+--------------------------------------------------------------------------------|
 | ~Blee Panel Controls~: | [[elisp:(show-all)][Show-All]] : [[elisp:(org-shifttab)][Overview]] : [[elisp:(progn (org-shifttab) (org-content))][Content]] : [[elisp:(delete-other-windows)][(1)]] : [[elisp:(progn (save-buffer) (kill-buffer))][S&Q]] : [[elisp:(save-buffer)][Save]]  : [[elisp:(kill-buffer)][Quit]]  : [[elisp:(bury-buffer)][Bury]] |
-| ~Panel Links~:         | [[file:./py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org][Repo Blee Panel]] --  [[file:/bisos/git/bxRepos/bisos-pip/startAiActivity/py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org][Blee Panel]]                                                |
-| ~See Also~:            | [[https://pypi.org/project/bisos.startAiActivity][At PYPI]] : [[https://github.com/bisos-pip/pycs][bisos.PyCS]]                                             |
-|----------------------+------------------------------------------------------------------|
+| ~Panel Links~:         | [[file:./py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org][Repo Blee Panel]] --  [[file:/bisos/git/bxRepos/bisos-pip/startAiActivity/py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org][Blee Panel]]                         |
+| ~See Also~:            | [[https://pypi.org/project/bisos.startAiActivity][At PYPI]] : [[https://github.com/bisos-pip/pycs][bisos.PyCS]]                                                         |
+|----------------------+--------------------------------------------------------------------------------|
 
 #+END:
 
 * Overview
 
 /bisos.startAiActivity/ installs the ByStar AI collaborative development
-template set (=CLAUDE.md=, =AI-AGENTS.org=, =AI-WORKFLOW.org=,
-=AI-Activity.org=, =AI-DevStatus.org=, =AI-WorkPlan.org=) into any project
-directory or git repo root, wiring it for collaborative development with
-Claude Code.
+template set --- =CLAUDE.md=, =AI-AGENTS.org=, =AI-WORKFLOW.org=,
+=AI-Activity.org=, =AI-DevStatus.org=, =AI-WorkPlan.org=, plus a =.claude/=
+directory with =settings.json=, =commands/=, and optionally =skills/= ---
+into a project directory, git repo root, or subproject.
+
+This package is *just the execution engine* --- the template content lives
+in a separately-cloned repo
+([[https://github.com/bxexamples/aiActivityTemplates]], or your own fork).
+See [[#two-part-architecture-execution-engine--templates][Two-Part Architecture]] below for details.
+
+The installed layout is *hierarchical and Claude-consumable*. Files fall
+into two classes:
+
+- *Invariants*, symlinked from =mother/= (=CLAUDE.md=, =AI-AGENTS.org=,
+  =AI-WORKFLOW.org=, =.claude/settings.json=, =.claude/commands/=).
+  Because they are symlinks to a shared source, an edit to =mother/=
+  propagates automatically to every project that has been =initiate=-d
+  against that templates base.
+- *Activity-specific* files, from =<activity>/= (=AI-Activity.org=
+  symlinked; =AI-DevStatus.org= and =AI-WorkPlan.org= safe-copied and
+  editable; optionally =.claude/skills/= symlinked from
+  =<activity>/_skills/= for on-demand task-specific instructions).
+
+Claude Code consumes this hierarchy automatically. On startup it walks
+upward from the current working directory collecting every =CLAUDE.md=,
+which in turn imports =AI-AGENTS.org= (imports =AI-WORKFLOW.org= +
+=AI-Activity.org= + =AI-DevStatus.org= + =AI-WorkPlan.org= via =@=
+directives). Nested subprojects installed with =initiateSub= use a slim
+=CLAUDE.md= that imports only the local trio; the invariants are
+inherited from an ancestor via the same walk-up, avoiding duplication.
 
 bisos.startAiActivity is a python package that uses the
 [[https://github.com/bisos-pip/pycs][PyCS-Framework]]. It provides the
-=startAiActivity.cs= command for installing and managing AI collaborative
-development templates.
+=startAiActivity.cs= command with the following operations:
+=userConfig_set/get= (persistent config), =initiate= (base install),
+=initiateSub= (slim subproject overlay), =aiSuspend= / =aiResume=
+(reversible pause/restore), =deClaudify= (permanent removal), and
+=examples= (all invocations with the current templates base).
 
 * Table of Contents     :TOC:
 - [[#overview][Overview]]
 - [[#part-of-bisos--bystar-internet-services-operating-system][Part of BISOS — ByStar Internet Services Operating System]]
 - [[#bisosstartaiactivity-is-a-command-only-pycs-facility][bisos.startAiActivity is a Command-Only PyCS Facility]]
+- [[#two-part-architecture-execution-engine--templates][Two-Part Architecture: Execution Engine + Templates]]
+  - [[#part-1-----the-execution-engine-this-package][Part 1 --- the execution engine (this package)]]
+  - [[#part-2-----the-templates-a-separate-repo-you-clone][Part 2 --- the templates (a separate repo you clone)]]
+  - [[#bisos-users-templates-are-pre-provisioned][BISOS users: templates are pre-provisioned]]
 - [[#post-installation-setup][Post-Installation Setup]]
+  - [[#for-non-bisos-users-clone-the-templates-repo-then-configure][For non-BISOS users: clone the templates repo, then configure]]
+  - [[#for-bisos-users-nothing-to-do-usually][For BISOS users: nothing to do (usually)]]
 - [[#installation][Installation]]
   - [[#installation-with-pip][Installation With pip]]
   - [[#installation-with-pipx][Installation With pipx]]
@@ -77,33 +112,92 @@ and services. PyCS is an alternative to FastAPI, Typer and Click.
 bisos.startAiActivity uses the PyCS-Framework to:
 
 1) Install AI collaborative development templates (symlinks and safe-copies)
-   into any project directory or git repo root.
+   from a *templates repo you clone separately* (see *Two-Part Architecture*
+   below) into any project directory, git repo root, or subproject.
 2) Expand =b:ai:file/particulars= org-mode dynamic blocks in installed files
    using pure Python, without requiring Emacs or =bx-dblock=.
-3) Manage persistent user-config parameters (e.g. =templates= base path) via
-   =~/.config/bisos/startAiActivity.cs/=.
+3) Manage persistent user-config parameters (e.g. the templates-clone path)
+   via =~/.config/bisos/startAiActivity.cs/=.
 
 The core of PyCS-Framework is the /bisos.b/ package (the PyCS-Foundation).
 See [[https://github.com/bisos-pip/b][bisos.b]] for an overview.
 
+* Two-Part Architecture: Execution Engine + Templates
+
+/bisos.startAiActivity/ is deliberately split into two independently
+versioned parts. Understanding this split is essential before installing.
+
+** Part 1 --- the execution engine (this package)
+
+This =bisos.startAiActivity= pip package contains only the *execution
+engine* --- the =startAiActivity.cs= command and its supporting Python
+modules. It knows how to symlink, copy, expand dblocks, and manage user
+config, but it *ships with no template content*.
+
+** Part 2 --- the templates (a separate repo you clone)
+
+The template content --- the =mother/= baseline files plus one directory
+per activity (=bisos-pip/=, =xu-single/=, =blee-panels/=, =lcnt/=, ...) ---
+lives in a separate repo:
+
+[[https://github.com/bxexamples/aiActivityTemplates]]
+
+This is an integral part of the package. Clone it (or fork it) somewhere
+on your filesystem, then point =startAiActivity.cs= at it via user config
+(see *Post-Installation Setup* below).
+
+Because the templates are versioned separately from the engine, you can:
+
+- *Customize for your own conventions* --- fork
+  =bxexamples/aiActivityTemplates=, edit the =mother/= invariants
+  (CLAUDE.md contents, AI-AGENTS.org, AI-WORKFLOW.org) or add your own
+  activities, and point =startAiActivity.cs= at your fork. Your changes
+  propagate to every project you =initiate= without touching the engine.
+- *Update engine and templates independently* --- =pipx upgrade
+  bisos.startAiActivity= and =git pull= on your templates clone are two
+  separate operations.
+
+** BISOS users: templates are pre-provisioned
+
+Users on a BISOS system have the templates already available at
+=/bisos/apps/defaults/ai-templates= (a git checkout of the same content,
+maintained as part of the BISOS environment). If that path exists,
+=startAiActivity.cs= auto-detects it as the default templates base. No
+manual clone step needed.
+
 * Post-Installation Setup
 
-After installing, configure the templates base directory. If
-=/bisos/apps/defaults/ai-templates= exists on your system it is used as the
-default automatically. Otherwise, set it explicitly:
+** For non-BISOS users: clone the templates repo, then configure
 
-#+begin_src bash
-startAiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/ai-templates
-#+end_src
+1. Clone the templates repo somewhere convenient:
 
-Verify the setting:
+   #+begin_src bash
+   git clone https://github.com/bxexamples/aiActivityTemplates ~/aiActivityTemplates
+   #+end_src
 
-#+begin_src bash
-startAiActivity.cs -i userConfig_get --parName=templates
-#+end_src
+   (Path is your choice; =~/aiActivityTemplates= is a reasonable default.)
 
-The AI templates are maintained at:
-[[https://github.com/bisos/defaults/tree/master/ai-templates]]
+2. Tell =startAiActivity.cs= where the clone lives:
+
+   #+begin_src bash
+   startAiActivity.cs -i userConfig_set --parName=templates --parValue=~/aiActivityTemplates
+   #+end_src
+
+3. Verify:
+
+   #+begin_src bash
+   startAiActivity.cs -i userConfig_get --parName=templates
+   #+end_src
+
+You are now ready to =initiate= projects. If you later want to customize
+the templates for your own conventions, fork the repo, edit your fork,
+and re-point =--parValue= at the fork.
+
+** For BISOS users: nothing to do (usually)
+
+If =/bisos/apps/defaults/ai-templates= exists on your system, it is used
+as the default automatically. You can override it (to point at a personal
+fork, for instance) with the same =userConfig_set= command shown above.
 
 * Installation
 

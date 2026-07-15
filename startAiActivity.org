@@ -3,6 +3,21 @@
 #+AUTHOR: Mohsen BANAN
 #+OPTIONS: toc:4
 
+* HISTORICAL NOTE
+
+This document was the design spec for =bisos.startAiActivity= at the time it
+was being derived from an earlier =startAiAt.cs= reference implementation.
+That reference implementation lived at
+=/bisos/apps/defaults/ai-templates/startAiAt.cs/= and has since been
+*retired and deleted* (2026-07-15) — all of its functionality is now in
+=startAiActivity.cs=, plus new commands (=initiateSub=, =deClaudify=,
+=aiSuspend=, =aiResume=, =userConfig_get/set=).
+
+References below to =startAiAt.cs= describe the original spec and are
+preserved as part of the development record; do not attempt to look up
+that file. For current authoritative behavior see =py3/bin/startAiActivity.cs=
+and the =bisos-pip/_skills/= documentation.
+
 * Overview
 
 =bisos.startAiActivity= is a new, standalone =bisos-pip= package that generalizes
