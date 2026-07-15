@@ -13,6 +13,59 @@
 
 #+END:
 
+* The Concept and Model of an AI Activity
+
+An *AI Activity* is a durable, collaborative effort between a human and
+an AI assistant (Claude Code) toward a specific purpose --- writing a
+document, building new software, enhancing existing software, and so on.
+Unlike a one-shot chat, an activity is expected to span many sessions,
+possibly across machines and over long stretches of time. Its state,
+conventions, and progress live in files under version control rather
+than in any one session's memory.
+
+Two org-mode files encode the activity, playing distinct roles:
+
+- =AI-Activity.org= describes the human's *usual way of doing that kind
+  of work* --- their conventions, preferred libraries, patterns, and
+  gotchas. It is *reusable*: symlinked from a shared activity template
+  so the same conventions apply to every project of that kind. Examples
+  of concrete activities: =bisos-pip= (Python package authorship),
+  =xu-single= (single-XU PyCS scripts), =blee-panels= (Blee panel
+  authorship), =lcnt= (LaTeX content).
+- =AI-WorkPlan.org= describes *this specific effort* --- what will be
+  built or written, broken into stages with TODOs. It is per-effort:
+  edited freely, org-archived as work completes, and paired with
+  =AI-DevStatus.org= which records where the effort stands right now.
+
+Activities are classes of work; WorkPlans are instances. The templates
+=/bisos.startAiActivity/= installs are what encode this distinction on
+disk --- shared invariants and activity conventions are symlinked from a
+templates repo (so improvements propagate); WorkPlan and DevStatus start
+as safe-copies (so each effort owns its own state).
+
+* Collaboration Across People and Across Sessions
+
+An AI Activity is collaborative in two symmetric senses. It is
+*human-to-human* --- one person starts the activity, a colleague continues
+it later, possibly on a different machine. And it is *human-to-AI* ---
+one Claude Code session begins the work, another resumes it hours or
+weeks later with no memory of the earlier one. Both are the same
+problem: *continuity across a discontinuity*. The state, conventions,
+and open TODOs must live in files that a fresh reader --- human or AI ---
+can pick up cold.
+
+That substrate is *org-mode*, deliberately, not Markdown. Org-mode
+provides what handoffs and resumptions actually need: TODOs with a real
+state machine (=TODO=/=DONE=/=WAITING=/=DEFERRED=), scheduled dates and
+deadlines, named anchors (=<<my-target>>=) that other files can
+cross-reference, org-archive to retire completed subtrees without losing
+history, and dynamic blocks (=begin:=) for machine-generated
+content. Markdown can only approximate these through ad-hoc convention.
+The AI Activity model relies on the structure being real --- not
+implied --- so that a colleague or a fresh Claude session can act on
+=AI-WorkPlan.org= and =AI-DevStatus.org= with the same reliability the
+original author had.
+
 * Overview
 
 /bisos.startAiActivity/ installs the ByStar AI collaborative development
@@ -56,6 +109,8 @@ bisos.startAiActivity is a python package that uses the
 =examples= (all invocations with the current templates base).
 
 * Table of Contents     :TOC:
+- [[#the-concept-and-model-of-an-ai-activity][The Concept and Model of an AI Activity]]
+- [[#collaboration-across-people-and-across-sessions][Collaboration Across People and Across Sessions]]
 - [[#overview][Overview]]
 - [[#part-of-bisos--bystar-internet-services-operating-system][Part of BISOS — ByStar Internet Services Operating System]]
 - [[#bisosstartaiactivity-is-a-command-only-pycs-facility][bisos.startAiActivity is a Command-Only PyCS Facility]]
@@ -102,6 +157,17 @@ is described as a cure for losses of autonomy and privacy in a book titled:
 
 /bisos.startAiActivity/ is part of BISOS. It is a standalone package that can
 be used independently of the full BISOS environment.
+
+Within BISOS and Blee specifically, the same org-mode substrate that
+underpins the AI Activity state files extends further --- to source-code
+authorship itself --- through *COMEEGA* (Collaborative Org-Mode Enhanced
+Emacs Generalized Authorship). Under COMEEGA, =.cs= / =.py= / =.sh= /
+=.el= source files carry org-mode structure (dblocks, headings,
+docstrings-as-org) alongside the native language, so the workflow's
+authorship idiom runs continuously from planning through implementation
+to documentation. COMEEGA is a BISOS/Blee integration detail; outside
+Blee the source files still work as ordinary Python (etc.), and the AI
+Activity model itself does not depend on COMEEGA.
 
 * bisos.startAiActivity is a Command-Only PyCS Facility
 
