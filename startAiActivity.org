@@ -41,7 +41,7 @@ The installed files are:
 | File               | Type      | Source                        | Who edits |
 |--------------------+-----------+-------------------------------+-----------|
 | =CLAUDE.md=        | symlink   | =<templatesBase>/mother/=     | never     |
-| =AI-AGENTS.org=    | symlink   | =<templatesBase>/mother/=     | never     |
+|    | symlink   | =<templatesBase>/mother/=     | never     |
 | =AI-WORKFLOW.org=  | symlink   | =<templatesBase>/mother/=     | never     |
 | =AI-Activity.org=  | symlink   | =<templatesBase>/<activity>/= | never     |
 | =AI-DevStatus.org= | safe-copy | =<activity>/= or =mother/=    | Claude    |
@@ -77,7 +77,7 @@ The templates repo can be:
 
 What =startAiAt.cs= calls =bystar/= is renamed =mother/= in the generalized
 model. =mother/= contains:
-- =CLAUDE.md=, =AI-AGENTS.org=, =AI-WORKFLOW.org= — constant symlink targets
+- =CLAUDE.md=, =AI-WORKFLOW.org= — constant symlink targets
 - =AI-DevStatus.org=, =AI-WorkPlan.org= — fallback templates when activity
   directory does not provide its own
 - =_claude/= — fallback slash commands and settings
@@ -298,7 +298,7 @@ Based on outCommentPreContent, bodyContent and outCommentPostContent.
              ($ai-general-path (expand-file-name "AI-Activity.org" $buffer-dir-name))
              ($activity (when (file-symlink-p $ai-general-path)
                           (f-filename (f-dirname (file-truename $ai-general-path)))))
-             ($companion-files '("AI-AGENTS.org" "AI-WORKFLOW.org" "AI-Activity.org"
+             ($companion-files '("" "AI-WORKFLOW.org" "AI-Activity.org"
                                  "AI-DevStatus.org" "README.org"))
              ($present-companions
               (seq-filter (lambda (f)

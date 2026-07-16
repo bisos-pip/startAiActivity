@@ -18,7 +18,7 @@ SEED="
 FILE="
 *  /This File/ :: /bisos/apps/defaults/update/bleePanel/start/bleePanelProc.sh 
 "
-if [ "${loadFiles}" == "" ] ; then
+if [ "${loadFiles}" "" ] ; then
     /bisos/core/bsip/bin/seedBleePanelProc.sh -l $0 "$@" 
     exit $?
 fi

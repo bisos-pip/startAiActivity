@@ -344,7 +344,7 @@ Expands b:ai:file/particulars dblock in copied files using pure Python.
         motherDir = templatesBase / 'mother'
 
         # Constant files — always symlinked to mother/
-        constantFiles = ['CLAUDE.md', 'AI-AGENTS.org', 'AI-WORKFLOW.org']
+        constantFiles = ['CLAUDE.md', 'AI-WORKFLOW.org']
         for fname in constantFiles:
             src = motherDir / fname
             dst = targetDir / fname
@@ -450,8 +450,8 @@ class initiateSub(cs.Cmnd):
 Installs only AI-Activity.org (symlink), AI-DevStatus.org (safe-copy),
 AI-WorkPlan.org (safe-copy), and a slim CLAUDE.md (symlink to
 mother/initiateSub/CLAUDE.md) that imports only the local trio.
-Does NOT install AI-AGENTS.org, AI-WORKFLOW.org, or .claude/ — those
-are inherited from a parent directory that was previously initiated.
+Does NOT install AI-WORKFLOW.org or .claude/ — those are inherited
+from a parent directory that was previously initiated.
 Refuses if no initiated parent is found (walks up looking for a
 startAiActivity-signature CLAUDE.md symlink) or if the target directory
 already has a CLAUDE.md.
@@ -584,9 +584,10 @@ class aiSuspend(cs.Cmnd):
 ####+END:
         self.cmndDocStr(f""" #+begin_org
 ** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Suspend AI collaboration in current directory.
-Removes symlinks (AI-AGENTS.org, AI-WORKFLOW.org, AI-Activity.org) and
-=.claude/= entries. Preserves =CLAUDE.md= as =CLAUDE.md.dormant= so its
-symlink target is available to aiResume as a signature (base vs sub).
+Removes symlinks (AI-WORKFLOW.org, AI-Activity.org, plus any legacy
+AI-AGENTS.org from pre-merge projects) and =.claude/= entries.
+Preserves =CLAUDE.md= as =CLAUDE.md.dormant= so its symlink target is
+available to aiResume as a signature (base vs sub).
 Renames AI-DevStatus.org and AI-WorkPlan.org to .dormant so they
 survive and can be restored by aiResume.
         #+end_org """)
@@ -611,6 +612,8 @@ survive and can be restored by aiResume.
 
         # Remove the other symlinks (no dormant preservation needed — they're
         # reinstalled from templates based on the CLAUDE.md.dormant signature).
+        # AI-AGENTS.org is retained as legacy cleanup — pre-merge projects
+        # have this symlink and aiSuspend should still remove it.
         symlinkFiles = ['AI-AGENTS.org', 'AI-WORKFLOW.org', 'AI-Activity.org']
         for fname in symlinkFiles:
             dst = targetDir / fname
@@ -687,8 +690,8 @@ class aiResume(cs.Cmnd):
 Restores AI-DevStatus.org and AI-WorkPlan.org from their .dormant copies.
 Detects base vs sub mode from the =CLAUDE.md.dormant= symlink target: if it
 points at =mother/initiateSub/CLAUDE.md=, restores subproject-style (slim
-CLAUDE.md only; AI-AGENTS.org, AI-WORKFLOW.org, and =.claude/= are inherited
-from a parent). Otherwise restores the full base stack. Activity is inferred
+CLAUDE.md only; AI-WORKFLOW.org and =.claude/= are inherited from a
+parent). Otherwise restores the full base stack. Activity is inferred
 from the =AI-Activity.org= symlink target or the =Activity:= header in
 =AI-WorkPlan.org=.
         #+end_org """)
@@ -782,9 +785,9 @@ from the =AI-Activity.org= symlink target or the =Activity:= header in
             claudeLive.symlink_to(claudeSrc)
             b_io.ann.note(f"SYMLINKED: {claudeLive} -> {claudeSrc}")
 
-        # AI-AGENTS.org and AI-WORKFLOW.org: base mode only; subs inherit from parent.
+        # AI-WORKFLOW.org: base mode only; subs inherit from parent.
         if not subMode:
-            for fname in ['AI-AGENTS.org', 'AI-WORKFLOW.org']:
+            for fname in ['AI-WORKFLOW.org']:
                 src = motherDir / fname
                 dst = targetDir / fname
                 if dst.exists() or dst.is_symlink():
@@ -865,8 +868,9 @@ class deClaudify(cs.Cmnd):
 ####+END:
         self.cmndDocStr(f""" #+begin_org
 ** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Remove AI collaboration files installed by initiate.
-Deletes symlinks: CLAUDE.md, AI-AGENTS.org, AI-WORKFLOW.org, AI-Activity.org,
-.claude/settings.json, .claude/commands.
+Deletes symlinks: CLAUDE.md, AI-WORKFLOW.org, AI-Activity.org,
+.claude/settings.json, .claude/commands (plus legacy AI-AGENTS.org
+from pre-merge projects, if present).
 Deletes copied files: AI-DevStatus.org, AI-WorkPlan.org.
 Removes .claude/ directory if it becomes empty.
         #+end_org """)
@@ -874,7 +878,10 @@ Removes .claude/ directory if it becomes empty.
         targetDir = pathlib.Path.cwd()
 
         # Symlinked constant files and activity file (includes CLAUDE.md.dormant
-        # in case deClaudify runs while a session is suspended)
+        # in case deClaudify runs while a session is suspended).
+        # AI-AGENTS.org is retained here as a legacy cleanup — pre-merge
+        # projects have an AI-AGENTS.org symlink that deClaudify should
+        # still remove even though initiate no longer installs it.
         symlinkFiles = ['CLAUDE.md', 'CLAUDE.md.dormant', 'AI-AGENTS.org', 'AI-WORKFLOW.org', 'AI-Activity.org']
         for fname in symlinkFiles:
             dst = targetDir / fname

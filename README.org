@@ -69,7 +69,7 @@ original author had.
 * Overview
 
 /bisos.startAiActivity/ installs the ByStar AI collaborative development
-template set --- =CLAUDE.md=, =AI-AGENTS.org=, =AI-WORKFLOW.org=,
+template set --- =CLAUDE.md=, =AI-WORKFLOW.org=,
 =AI-Activity.org=, =AI-DevStatus.org=, =AI-WorkPlan.org=, plus a =.claude/=
 directory with =settings.json=, =commands/=, and optionally =skills/= ---
 into a project directory, git repo root, or subproject.
@@ -82,7 +82,7 @@ See [[#two-part-architecture-execution-engine--templates][Two-Part Architecture]
 The installed layout is *hierarchical and Claude-consumable*. Files fall
 into two classes:
 
-- *Invariants*, symlinked from =mother/= (=CLAUDE.md=, =AI-AGENTS.org=,
+- *Invariants*, symlinked from =mother/= (=CLAUDE.md=,
   =AI-WORKFLOW.org=, =.claude/settings.json=, =.claude/commands/=).
   Because they are symlinks to a shared source, an edit to =mother/=
   propagates automatically to every project that has been =initiate=-d
@@ -94,7 +94,7 @@ into two classes:
 
 Claude Code consumes this hierarchy automatically. On startup it walks
 upward from the current working directory collecting every =CLAUDE.md=,
-which in turn imports =AI-AGENTS.org= (imports =AI-WORKFLOW.org= +
+which in turn imports (imports =AI-WORKFLOW.org= +
 =AI-Activity.org= + =AI-DevStatus.org= + =AI-WorkPlan.org= via =@=
 directives). Nested subprojects installed with =initiateSub= use a slim
 =CLAUDE.md= that imports only the local trio; the invariants are
@@ -216,7 +216,7 @@ Because the templates are versioned separately from the engine, you can:
 
 - *Customize for your own conventions* --- fork
   =bxexamples/aiActivityTemplates=, edit the =mother/= invariants
-  (CLAUDE.md contents, AI-AGENTS.org, AI-WORKFLOW.org) or add your own
+  (CLAUDE.md contents, AI-WORKFLOW.org) or add your own
   activities, and point =startAiActivity.cs= at your fork. Your changes
   propagate to every project you =initiate= without touching the engine.
 - *Update engine and templates independently* --- =pipx upgrade
@@ -351,7 +351,7 @@ Available activities match subdirectories under the templates base (e.g.
 =startAiActivity.cs -i examples= to see all available activities.
 
 =initiate= installs the following into the target directory: symlinks for
-the constant files (=CLAUDE.md=, =AI-AGENTS.org=, =AI-WORKFLOW.org=,
+the constant files (=CLAUDE.md=, =AI-WORKFLOW.org=,
 =AI-Activity.org=); safe-copies of the editable files (=AI-DevStatus.org=,
 =AI-WorkPlan.org=, with =b:ai:file/particulars= dblocks expanded); and
 symlinks under =.claude/= for =settings.json=, =commands/=, and =skills/=
@@ -362,7 +362,7 @@ subsection below.
 
 For repos with nested loosely-related subprojects that each want their own
 work plan and dev status without duplicating the invariant files
-(=AI-AGENTS.org=, =AI-WORKFLOW.org=, =.claude/=), use =initiateSub=:
+(=AI-WORKFLOW.org=, =.claude/=), use =initiateSub=:
 
 #+begin_src bash
 startAiActivity.cs -i initiateSub --activity=bisos-pip
@@ -371,7 +371,7 @@ startAiActivity.cs -i initiateSub --activity=bisos-pip
 This installs only the subproject-specific state — a slim =CLAUDE.md=
 (symlinked to =mother/initiateSub/CLAUDE.md=), =AI-Activity.org= symlink,
 and safe-copies of =AI-DevStatus.org= and =AI-WorkPlan.org=. It does NOT
-install =AI-AGENTS.org=, =AI-WORKFLOW.org=, or =.claude/= — those are
+install =AI-WORKFLOW.org=, or =.claude/= — those are
 inherited from an ancestor directory via Claude Code's =CLAUDE.md= walk-up.
 
 *Preconditions* (=initiateSub= refuses if either fails):
@@ -436,7 +436,7 @@ modifying a PyCS =cs.Cmnd= subclass") rather than a topic label.
 When AI collaboration on a project needs to be paused temporarily, use
 =aiSuspend= to enter a dormant state and =aiResume= to restore it.
 
-=aiSuspend= removes the constant symlinks (=CLAUDE.md=, =AI-AGENTS.org=,
+=aiSuspend= removes the constant symlinks (=CLAUDE.md=,
 =AI-WORKFLOW.org=, =AI-Activity.org=) and the =.claude/= entries, and renames
 the editable files =AI-DevStatus.org= and =AI-WorkPlan.org= to =.dormant=
 suffixes so that the collaboration state survives.

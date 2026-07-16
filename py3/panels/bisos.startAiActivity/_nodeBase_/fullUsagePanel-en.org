@@ -36,7 +36,7 @@
 ####+END
 ** +
 ** Scope of this panel is bisos.startAiActivity.
-** Installs AI collaborative development templates (CLAUDE.md, AI-AGENTS.org, etc.) into any project directory.
+** Installs AI collaborative development templates (CLAUDE.md, etc.) into any project directory.
 ** See  [[elisp:(blee:bnsm:panel-goto "/bisos/panels/bisos-core/bisos-pip/bisos.startAiActivity/README")][README]] of this bisos-pip package.
 ** -B|
 ####+BEGIN: blee:bxPanel:foldingSection :outLevel 0 :sep t :title "Pip and Pipx Package Installation" :anchor "Installation" :extraInfo "bisos.startAiActivity"
@@ -95,7 +95,7 @@
 ####+END
 ** +
 ** =initiateSub= installs a slim subproject overlay --- only =CLAUDE.md= (symlink to =mother/initiateSub/CLAUDE.md=), =AI-Activity.org=, =AI-DevStatus.org=, =AI-WorkPlan.org=.
-** Does NOT install =AI-AGENTS.org=, =AI-WORKFLOW.org=, or =.claude/= --- those are inherited from an ancestor via Claude Code's =CLAUDE.md= walk-up.
+** Does NOT install =AI-WORKFLOW.org=, or =.claude/= --- those are inherited from an ancestor via Claude Code's =CLAUDE.md= walk-up.
 ** Preconditions: an ancestor directory must have been =initiate=-d already, and the target directory must not already have a =CLAUDE.md=.
 ** =--activity= is required (no inheritance-from-parent default).
 ** Nested =initiateSub= is supported --- a subproject's =CLAUDE.md= satisfies the walk-up precondition for a sub-subproject.
@@ -141,7 +141,7 @@
 * [[elisp:(show-all)][(>]]  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_  _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_     [[elisp:(outline-show-subtree+toggle)][| _deClaudify --- Permanently Remove AI Collaboration Files_: |]] <<DeClaudify>> deClaudify  [[elisp:(org-shifttab)][<)]] E|
 ####+END
 ** +
-** =deClaudify= is the irreversible counterpart of =aiSuspend=. It removes symlinks (=CLAUDE.md=, =AI-AGENTS.org=, =AI-WORKFLOW.org=, =AI-Activity.org=), the =.claude/= entries, and deletes the editable files =AI-DevStatus.org= and =AI-WorkPlan.org=.
+** =deClaudify= is the irreversible counterpart of =aiSuspend=. It removes symlinks (=CLAUDE.md=, =AI-WORKFLOW.org=, =AI-Activity.org=), the =.claude/= entries, and deletes the editable files =AI-DevStatus.org= and =AI-WorkPlan.org=.
 ** Symlinks are only removed if they are actually symlinks; copied files are only removed if they are regular files. User-modified files are left intact.
 ** -B|
 ####+BEGIN: blee:panel:icm:py:cmnd :outLevel 1 :sep t :folding? nil :label "Direct" :icmName "startAiActivity.cs -i deClaudify" :comment "Permanently remove AI collaboration files from current directory" :afterComment ""

@@ -7,7 +7,7 @@ SEED="
 FILE="
 *  /This File/ :: /l/pip/facter/py3/panels/bisos.facter/_nodeBase_/ftoProc.sh
 "
-if [ "${loadFiles}" == "" ] ; then
+if [ "${loadFiles}" "" ] ; then
     /bisos/core/bsip/bin/seedFtoCommon.sh -l $0 "$@"
     exit $?
 fi

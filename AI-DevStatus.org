@@ -6,7 +6,7 @@
   Working Directory: /bisos/git/auth/bxRepos/bisos-pip/startAiActivity
   File: /bisos/git/auth/bxRepos/bisos-pip/startAiActivity/AI-DevStatus.org
   Activity: bisos-pip
-  Companion Docs: AI-AGENTS.org, AI-WORKFLOW.org, AI-Activity.org, AI-DevStatus.org, README.org
+  Companion Docs: AI-WORKFLOW.org, AI-Activity.org, AI-DevStatus.org, README.org
 
 ####+END:
 
@@ -19,16 +19,31 @@ This file is maintained by Claude. Updates are typically triggered by the
 
 * Current State
 
-As of 2026-07-14, Stages 1–6 are complete. The package is functionally working
-with a full set of lifecycle commands, skills integration, and subproject
-overlays. The sole remaining task is PyPI upload and pipx testing (Stage 9).
+As of 2026-07-16, Stages 1–8 are complete. The package is functionally working
+with a full set of lifecycle commands, skills integration, subproject
+overlays, precedence-based templates auto-detection, and the retired-
+AI-AGENTS.org simplification. PyPI upload has been done (Stage 9 items are
+all closed).
 
 Key changes since last status:
 
+- *Stage 8 — Retire AI-AGENTS.org:* Eliminated the =AI-AGENTS.org=
+  indirection layer. Previously =CLAUDE.md= was a pointer that
+  =@import=-ed =AI-AGENTS.org=, which in turn imported the four
+  subordinate files (=AI-WORKFLOW.org=, =AI-Activity.org=,
+  =AI-DevStatus.org=, =AI-WorkPlan.org=). Now =CLAUDE.md= imports those
+  four directly and =AI-AGENTS.org= is deleted from all three template
+  trees. =initiate= no longer installs an =AI-AGENTS.org= symlink;
+  =deClaudify= and =aiSuspend= retain it in their symlink-cleanup lists
+  as *legacy cleanup* so pre-merge projects can still be handled.
+- *Stage 7 — Precedence-based auto-detect:* The templates auto-default
+  probes =~/aiActivityTemplates= first, then =/bisos/apps/defaults/ai-templates=;
+  user-first ordering lets a personal fork transparently take over from
+  the system copy without =userConfig_set=.
 - *Stage 6 — Subproject overlays:* New =initiateSub= command installs a slim
   overlay (=CLAUDE.md= + =AI-Activity.org= + =AI-DevStatus.org= +
-  =AI-WorkPlan.org=) in a subdirectory. The invariants (=AI-AGENTS.org=,
-  =AI-WORKFLOW.org=, =.claude/=) are inherited from an already-=initiate=-d
+  =AI-WorkPlan.org=) in a subdirectory. The invariants
+  (=AI-WORKFLOW.org=, =.claude/=) are inherited from an already-=initiate=-d
   ancestor via Claude Code's walk-up. Preconditions: a
   startAiActivity-signature CLAUDE.md must exist in some ancestor, AND the
   target directory must not already have a CLAUDE.md. =aiSuspend= /
@@ -68,7 +83,7 @@ Key changes since last status:
 - =startAiActivity.cs -i initiateSub --activity=bisos-pip= — installs slim
   subproject overlay in current directory. Requires an ancestor to have been
   =initiate=-d first (walks up looking for a startAiActivity-signature
-  =CLAUDE.md=). Does NOT install =AI-AGENTS.org=, =AI-WORKFLOW.org=, or
+  =CLAUDE.md=). Does NOT install =AI-WORKFLOW.org=, or
   =.claude/= (all inherited from the ancestor).
 - =startAiActivity.cs -i deClaudify= — permanently removes all AI files from
   current directory.
@@ -88,7 +103,7 @@ Key changes since last status:
   =aiResume= re-installs it, =deClaudify= removes it — same shape as
   =settings.json= and =commands= handling.
 - Subproject overlays: =initiateSub= walks up looking for an initiated
-  ancestor and installs a slim overlay (no =AI-AGENTS.org=, =AI-WORKFLOW.org=,
+  ancestor and installs a slim overlay (no =AI-WORKFLOW.org=,
   =.claude/=). Precondition uses symlink-target check against
   =templatesBase= — no content parsing. Nested =initiateSub= works
   (parent → child → grandchild verified).
@@ -152,8 +167,8 @@ Key external dependencies (not bundled):
   #+begin_example
   ai-templates/
     mother/                   — baseline (constant symlinks)
-      CLAUDE.md               — base CLAUDE.md (imports @./AI-AGENTS.org)
-      AI-AGENTS.org
+      CLAUDE.md               — base CLAUDE.md (imports @./)
+      
       AI-WORKFLOW.org
       _claude/
         settings.json
@@ -288,6 +303,18 @@ Entry points (=setup.py= console_scripts):
   work. Other artifacts in this repo (=verify.sh=, the skills folder,
   =AI-DevStatus.org='s update discipline) are similarly load-bearing
   as reference implementations of what the templates enable.
+
+- *=CLAUDE.md= imports the four subordinate files directly; no
+  =AI-AGENTS.org= indirection.* The historical layer added no
+  functional value --- =AI-AGENTS.org= was aspirationally
+  vendor-neutral but 100% Claude-specific in content, and every user
+  hop through it just made the graph deeper. Merging =CLAUDE.md= to
+  import =AI-WORKFLOW.org= / =AI-Activity.org= / =AI-DevStatus.org= /
+  =AI-WorkPlan.org= directly eliminates one file, one symlink, one
+  install step, and one layer of indirection without loss. Legacy
+  projects with an =AI-AGENTS.org= symlink still get correctly cleaned
+  up by =deClaudify= and =aiSuspend= (both retain the entry in their
+  cleanup lists with an explanatory comment).
 
 # Local Variables:
 # eval: (setq-local toc-org-max-depth 4)

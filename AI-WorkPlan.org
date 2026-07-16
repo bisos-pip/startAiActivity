@@ -9,14 +9,14 @@
   Working Directory: ../..
   File: /bisos/git/auth/bxRepos/bisos-pip/startAiActivity/AI-WorkPlan.org
   Activity: bisos-pip
-  Companion Docs: AI-AGENTS.org, AI-WORKFLOW.org, AI-Activity.org, AI-DevStatus.org, README.org
+  Companion Docs: AI-WORKFLOW.org, AI-Activity.org, AI-DevStatus.org, README.org
 ###+END:
 
 This Work Plan file drives the AI collaborative development.
 Interactions are broken down into "Stages". Each Stage has a set
 of TODOs that I work with Claude to accomplish.
 
-Note to a fresh Claude: read this file together with AI-AGENTS.org, AI-WORKFLOW.org,
+Note to a fresh Claude: read this file together with AI-WORKFLOW.org,
 AI-Activity.org and AI-DevStatus.org to orient yourself. The =<<Context Confirmation>>=
 TODO below is the standard first step, or use =/bx-confirm0= as the automated equivalent.
 TODOs tagged =:ai:= are assigned to Claude. After completing a TODO, summarize results
@@ -150,7 +150,7 @@ Goal: Add commands for reversible and permanent removal of AI collaboration file
 ** DONE [#A] <<deClaudify>> -- permanent removal of AI collaboration files :ai:
 CLOSED: [2026-07-13 Sun] SCHEDULED: <2026-07-13 Sun>
 Add a =deClaudify= command that permanently removes all AI collaboration files
-installed by =initiate=: symlinks (CLAUDE.md, AI-AGENTS.org, AI-WORKFLOW.org,
+installed by =initiate=: symlinks (CLAUDE.md, AI-WORKFLOW.org,
 AI-Activity.org, .claude/settings.json, .claude/commands), copied files
 (AI-DevStatus.org, AI-WorkPlan.org), and the .claude/ dir if empty.
 No =--root= param needed — always operates on the current directory.
@@ -310,11 +310,11 @@ see the corrected =readme-authorship= skill.)
 Goal: A separate command that installs only the subproject-specific state
 (=CLAUDE.md=, =AI-Activity.org=, =AI-DevStatus.org=, =AI-WorkPlan.org=) in
 a subdirectory, requiring an already-=initiate=-d ancestor. The invariants
-(=AI-AGENTS.org=, =AI-WORKFLOW.org=, =.claude/=) are inherited from the
+(=AI-WORKFLOW.org=, =.claude/=) are inherited from the
 ancestor via Claude Code's walk-up.
 
 Motivation: nested projects should not re-install the invariants at every
-level. Doing so wastes context (Claude reads the same =AI-AGENTS.org= twice)
+level. Doing so wastes context (Claude reads the same twice)
 and creates ambiguity about which activity applies. A slim overlay keeps
 subproject state local without duplicating the base.
 
@@ -329,7 +329,7 @@ Requires =--activity= (no inheritance from parent). Preconditions:
 2. Target directory must not already have a =CLAUDE.md=. If it does, refuse.
 Install: slim =CLAUDE.md= (symlink to =mother/initiateSub/CLAUDE.md=),
 =AI-Activity.org= (symlink), =AI-DevStatus.org= and =AI-WorkPlan.org=
-(safe-copy with dblock expansion). Does NOT install =AI-AGENTS.org=,
+(safe-copy with dblock expansion). Does NOT install 
 =AI-WORKFLOW.org=, or =.claude/=.
 ----- AI Results: ------
 Implemented in =py3/bin/startAiActivity.cs=. New template at
@@ -346,15 +346,15 @@ CLOSED: [2026-07-14 Mon] SCHEDULED: <2026-07-14 Mon>
 =aiSuspend= should NOT unlink =CLAUDE.md= — it should rename it to
 =CLAUDE.md.dormant=, preserving the symlink target as the mode signature.
 =aiResume= should read =CLAUDE.md.dormant='s target: if it points at
-=mother/initiateSub/CLAUDE.md=, restore in sub mode (no =AI-AGENTS.org=,
+=mother/initiateSub/CLAUDE.md=, restore in sub mode (no 
 =AI-WORKFLOW.org=, or =.claude/=); otherwise base mode.
 ----- AI Results: ------
 =aiSuspend= now stashes CLAUDE.md → CLAUDE.md.dormant instead of removing
-it. The other symlinks (=AI-AGENTS.org=, =AI-WORKFLOW.org=, =AI-Activity.org=)
+it. The other symlinks (=AI-WORKFLOW.org=, =AI-Activity.org=)
 are still removed since they can be re-derived. =aiResume= reads the
 =.dormant= symlink target, compares against
 =<templatesBase>/mother/initiateSub/CLAUDE.md= (resolved), sets
-=subMode= boolean, and gates the AI-AGENTS/AI-WORKFLOW/.claude/ install
+=subMode= boolean, and gates the AI-WORKFLOW/.claude/ install
 blocks on it. If no =CLAUDE.md.dormant= is found, defaults to base mode.
 Verified: base-mode suspend/resume cycle unchanged from Stage 4;
 sub-mode cycle correctly restores the slim overlay without touching
@@ -441,6 +441,55 @@ combined precedence behavior. =AI-DevStatus.org=: "What Is Untested"
 entry updated to reflect both paths as auto-defaults; "Conditional
 parDefault" Key Design Decision rewritten as "Precedence-based
 parDefault probe" with the user-first rationale.
+** -
+
+
+* Stage 8: Retire AI-AGENTS.org — merge into CLAUDE.md
+
+Goal: Eliminate the =AI-AGENTS.org= indirection layer. Historically
+=CLAUDE.md= was a 3-line pointer that =@imports= =AI-AGENTS.org=, which
+in turn =@imports= =AI-WORKFLOW.org= / =AI-Activity.org= / =AI-DevStatus.org=
+/ =AI-WorkPlan.org=. The =AI-AGENTS.org= layer added no functional value:
+it was aspirationally vendor-neutral but content-wise 100% Claude-specific,
+and =CLAUDE.md= directly importing the four subordinate files is simpler
+and equally functional. Merge and delete.
+
+
+* Stage 8 TODOs
+** +
+** DONE [#A] <<AI-AGENTS Merge>> Merge AI-AGENTS.org into CLAUDE.md across three template trees + engine :ai:
+CLOSED: [2026-07-16 Tue] SCHEDULED: <2026-07-16 Tue>
+Merge steps:
+1. Rewrite =mother/CLAUDE.md= in each of the three template trees
+   (=/bisos/apps/defaults/ai-templates/=, =bxexamples/aiActivityTemplates/=,
+   =/git/rana/rana-notes/aiActivityTemplates/=) to =@import= the four
+   subordinate files directly.
+2. Delete =mother/AI-AGENTS.org= from all three trees.
+3. Update =startAiActivity.cs=: remove =AI-AGENTS.org= from =initiate='s
+   =constantFiles= and =aiResume='s constant-symlink loop. *Keep* it in
+   =aiSuspend= and =deClaudify= symlink-lists as legacy cleanup (with
+   explanatory comment) so pre-merge projects can still be cleaned up
+   correctly.
+4. Update =mother/initiateSub/CLAUDE.md= to drop the =AI-AGENTS.org=
+   mention from the "inherited from parent" list.
+5. Sweep documentation: =AI-WORKFLOW.org= (three copies), all README.org
+   files (three template repos + engine + T-Mobile), all activity-level
+   starter files (=AI-Activity.org=, initial =AI-DevStatus.org= and
+   =AI-WorkPlan.org=, =bx-initiate.md=, =bx-confirm0.md=). Batch with
+   sed patterns; clean up ==,= artifacts left by aggressive substitution.
+----- AI Results: ------
+Executed. Ten-plus-file coordinated change across three repos, no
+regressions. verify.sh exits 0. =initiate= now creates only
+=CLAUDE.md=, =AI-WORKFLOW.org=, =AI-Activity.org= symlinks + =.claude/=;
+the =AI-AGENTS.org= symlink no longer exists in fresh projects.
+=deClaudify= still recognizes and removes legacy =AI-AGENTS.org=
+symlinks from pre-merge projects — the legacy-cleanup path is
+explicitly commented at the two list sites. All three =mother/CLAUDE.md=
+files now import =AI-WORKFLOW.org= + =AI-Activity.org= + =AI-DevStatus.org=
++ =AI-WorkPlan.org= directly. Batch sed cleanup was aggressive and left
+some ==,= empty-verbatim artifacts across ~15 files; those were
+targeted-cleaned in a follow-up pass. Templates directory now cleaner:
+each activity ships exactly the files it should, no dead indirection.
 ** -
 
 
