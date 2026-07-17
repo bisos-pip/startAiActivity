@@ -129,6 +129,7 @@ bisos.startAiActivity is a python package that uses the
   - [[#set-templates-base-directory][Set Templates Base Directory]]
   - [[#install-templates-into-a-project][Install Templates Into a Project]]
   - [[#install-a-subproject-overlay][Install a Subproject Overlay]]
+  - [[#customizing-a-shared-template-file---nolink][Customizing a Shared Template File: --noLink]]
   - [[#skills][Skills]]
   - [[#suspend-and-resume-ai-collaboration][Suspend and Resume AI Collaboration]]
   - [[#remove-ai-collaboration-files][Remove AI Collaboration Files]]
@@ -389,6 +390,44 @@ the walk-up precondition for a sub-subproject.
 =aiSuspend= / =aiResume= / =deClaudify= all work correctly on subproject
 overlays. =aiResume= detects sub vs. base mode from the stashed
 =CLAUDE.md.dormant= symlink target.
+
+** Customizing a Shared Template File: =--noLink=
+
+By default, =initiate= installs the invariant files (=CLAUDE.md=,
+=AI-WORKFLOW.org=) and the activity's =AI-Activity.org= as *symlinks*
+into the templates tree. This is the intended behavior for most
+activities: it means an edit to =mother/CLAUDE.md= or an activity's
+=AI-Activity.org= propagates instantly to every project that has been
+=initiate=-d against that templates base.
+
+Sometimes you want the opposite --- a project that owns its own copy
+of one of these files, edits it freely, and doesn't affect the shared
+template. The classic case is =--activity=custom=: a project whose
+conventions are specific to itself and don't belong in a reusable
+activity template.
+
+Both =initiate= and =initiateSub= accept =--noLink=<filename>= to
+override the default. When passed, the named file is safe-copied
+instead of symlinked:
+
+#+begin_src bash
+startAiActivity.cs -i initiate --activity=custom --noLink=AI-Activity.org
+#+end_src
+
+Or for a subproject overlay:
+
+#+begin_src bash
+startAiActivity.cs -i initiateSub --activity=custom --noLink=AI-Activity.org
+#+end_src
+
+Result: =AI-Activity.org= in the target directory is a real file
+(the developer owns it), not a symlink. Everything else --- =CLAUDE.md=,
+=AI-WORKFLOW.org=, =.claude/= entries --- remains symlinked as usual.
+
+Valid filenames for =--noLink= are files that =initiate= / =initiateSub=
+would otherwise install as symlinks: =CLAUDE.md=, =AI-WORKFLOW.org=,
+=AI-Activity.org=. Only one file at a time for now; multi-file support
+will come via a =bisos.b= framework improvement later.
 
 ** Skills
 

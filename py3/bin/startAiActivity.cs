@@ -83,9 +83,12 @@ from bisos.common import csParam
 import collections
 ####+END:
 
+import datetime
+import os
 import pathlib
 import shutil
 import subprocess
+import sys
 import typing
 
 from bisos.pyDblock import updateDblock
@@ -137,6 +140,10 @@ def _detectTemplatesDefault() -> typing.Optional[str]:
     a customized fork wins over the system copy when both are present.
     Returns the first existing path as a resolved absolute string, or
     None if neither exists (caller must userConfig_set explicitly).
+
+    This function is used ONLY as a last-resort fallback when both the
+    CLI --templates override and the persisted user-config value are
+    absent. See _resolveTemplatesBase.
     """
     candidates = [
         pathlib.Path('~/aiActivityTemplates').expanduser(),
@@ -146,6 +153,101 @@ def _detectTemplatesDefault() -> typing.Optional[str]:
         if candidate.is_dir():
             return str(candidate)
     return None
+
+
+def _resolveTemplatesBase(cliOverride: typing.Optional[str]) -> typing.Optional[str]:
+    """Resolve the templates base with precedence:
+
+    1. Explicit --templates CLI override (if provided by the user)
+    2. Persisted user-config value (from userConfig_set)
+    3. Auto-detect fallback (~/aiActivityTemplates, then BISOS path)
+
+    Returns None only if all three fail. The user-config value MUST take
+    precedence over the auto-detect fallback --- otherwise a userConfig_set
+    to a non-canonical path (e.g. a T-Mobile fork) would be silently
+    ignored whenever an auto-detectable path also exists on disk.
+    """
+    if cliOverride:
+        return cliOverride
+    stored = userConfig_csu.parGet('templates')
+    if stored:
+        return stored
+    return _detectTemplatesDefault()
+
+
+def _detectUser() -> str:
+    """Best-effort user identity for the provenance line.
+
+    Fallback chain: =USER= env var, then =LOGNAME=, then =os.getlogin()=
+    (which raises OSError under nohup / detached shells), then pwd
+    module by real uid. Only returns "unknown" if all four fail.
+    """
+    for env in ('USER', 'LOGNAME'):
+        val = os.environ.get(env)
+        if val:
+            return val
+    try:
+        return os.getlogin()
+    except OSError:
+        pass
+    try:
+        import pwd
+        return pwd.getpwuid(os.getuid()).pw_name
+    except Exception:
+        pass
+    return 'unknown'
+
+
+def _writeProvenanceLine(dst: pathlib.Path, templatesBase: str) -> None:
+    """Insert a multi-line org-comment provenance block into a freshly
+    safe-copied editable file (=AI-DevStatus.org=, =AI-WorkPlan.org=).
+
+    The block records the birth-certificate values of the =initiate= /
+    =initiateSub= invocation: date, user, templates base actually used,
+    and the exact =sys.argv=. It is *plain org text*, never regenerated
+    by any dblock machinery (Python or elisp) --- Elisp dblock expanders
+    have no access to invocation context, so provenance must be inert
+    text written once at install time.
+
+    Placement: immediately after the last =#+= header directive
+    (title/date/options/tags) in the file, before any org content or
+    dblocks. This is robust to reordering of header directives.
+    """
+    text = dst.read_text()
+    lines = text.splitlines(keepends=True)
+
+    # Find the index of the last #+ directive at the top of the file.
+    # Header directives may be interleaved with blank lines; scan until
+    # the first non-blank, non-#+ line breaks the header region.
+    lastHeaderIdx = -1
+    for idx, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped.startswith('#+'):
+            lastHeaderIdx = idx
+        elif stripped == '':
+            continue
+        else:
+            break
+
+    provDate = datetime.datetime.now().astimezone().isoformat(timespec='seconds')
+    provUser = _detectUser()
+    provCommand = ' '.join(sys.argv)
+    provenance = (
+        "\n"
+        "# Provenance (installed once by startAiActivity.cs --- not regenerated):\n"
+        f"#   Date:      {provDate}\n"
+        f"#   User:      {provUser}\n"
+        f"#   Templates: {templatesBase}\n"
+        f"#   Command:   {provCommand}\n"
+    )
+
+    if lastHeaderIdx < 0:
+        # No #+ directives found at top --- prepend to file
+        newLines = [provenance] + lines
+    else:
+        newLines = lines[:lastHeaderIdx + 1] + [provenance] + lines[lastHeaderIdx + 1:]
+
+    dst.write_text(''.join(newLines))
 
 
 def commonParamsSpecify(
@@ -174,11 +276,30 @@ def commonParamsSpecify(
         parName='templates',
         parDescription="Override templatesBase file parameter for this run.",
         parDataType=None,
-        parDefault=_detectTemplatesDefault(),
+        parDefault=None,  # do NOT auto-fill; would mask userConfig_set value.
+                          # Auto-detect happens in _resolveTemplatesBase at
+                          # read time, only when both CLI override and
+                          # user-config are absent.
         parChoices=[],
         argparseShortOpt=None,
         argparseLongOpt='--templates',
         parPermanence="userConfig",
+    )
+    csParams.parDictAdd(
+        parName='noLink',
+        parDescription=(
+            "Override symlink behavior: safe-copy the specified file instead "
+            "of installing it as a symlink. Useful for --activity=custom "
+            "activities where AI-Activity.org must be a per-project copy, not "
+            "a shared symlink to the template. Accepts a single filename "
+            "(e.g. AI-Activity.org). Multi-file support to come later via "
+            "bisos.b framework improvements."
+        ),
+        parDataType=None,
+        parDefault=None,
+        parChoices=[],
+        argparseShortOpt=None,
+        argparseLongOpt='--noLink',
     )
 
 
@@ -229,8 +350,7 @@ class examples(cs.Cmnd):
         od = collections.OrderedDict
         cmnd = cs.examples.cmndEnter
 
-        templatesBaseDefault = "/bisos/apps/defaults/ai-templates"
-        templatesBaseStr = userConfig_csu.parGet('templates')
+        templatesBaseStr = _resolveTemplatesBase(None)
 
         cs.examples.menuChapter('=aiSuspend= / =aiResume= -- suspend and resume AI collaboration')
         cmnd('aiSuspend',
@@ -261,6 +381,10 @@ class examples(cs.Cmnd):
                 cmnd('initiate',
                      pars=od([('root', 'curDir'), ('activity', activity)]),
                      comment=f"# Install {activity} templates into current directory")
+                if activity == 'custom':
+                    cmnd('initiate',
+                         pars=od([('root', 'curDir'), ('activity', activity), ('noLink', 'AI-Activity.org')]),
+                         comment=f"# Same, but safe-copy AI-Activity.org (project-specific, editable)")
 
         cs.examples.menuChapter('=initiate= *root=repo* -- install at git repo base')
         if templatesBaseStr is not None:
@@ -268,6 +392,10 @@ class examples(cs.Cmnd):
                 cmnd('initiate',
                      pars=od([('root', 'repo'), ('activity', activity)]),
                      comment=f"# Install {activity} templates at repo base")
+                if activity == 'custom':
+                    cmnd('initiate',
+                         pars=od([('root', 'repo'), ('activity', activity), ('noLink', 'AI-Activity.org')]),
+                         comment=f"# Same, but safe-copy AI-Activity.org (project-specific, editable)")
 
         cs.examples.menuChapter('=initiateSub= -- slim subproject overlay (requires initiated parent)')
         if templatesBaseStr is None:
@@ -279,18 +407,22 @@ class examples(cs.Cmnd):
                 cmnd('initiateSub',
                      pars=od([('activity', activity)]),
                      comment=f"# Install slim {activity} overlay in current subdir")
+                if activity == 'custom':
+                    cmnd('initiateSub',
+                         pars=od([('activity', activity), ('noLink', 'AI-Activity.org')]),
+                         comment=f"# Same, but safe-copy AI-Activity.org (project-specific, editable)")
 
         return(cmndOutcome)
 
 
 
-####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "initiate" :comment "Install AI templates via symlinks and safe-copy" :extent "verify" :ro "cli" :parsMand "activity" :parsOpt "root templates" :argsMin 0 :argsMax 0 :pyInv ""
+####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "initiate" :comment "Install AI templates via symlinks and safe-copy" :extent "verify" :ro "cli" :parsMand "activity" :parsOpt "root templates noLink" :argsMin 0 :argsMax 0 :pyInv ""
 """ #+begin_org
-*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<initiate>>  =verify= parsMand=activity parsOpt="root templates" ro=cli   [[elisp:(org-cycle)][| ]]
+*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<initiate>>  =verify= parsMand=activity parsOpt="root templates noLink" ro=cli   [[elisp:(org-cycle)][| ]]
 #+end_org """
 class initiate(cs.Cmnd):
     cmndParamsMandatory = [ 'activity', ]
-    cmndParamsOptional = [ 'root', 'templates', ]
+    cmndParamsOptional = [ 'root', 'templates', 'noLink', ]
     cmndArgsLen = {'Min': 0, 'Max': 0,}
 
     @cs.track(fnLoc=True, fnEntry=True, fnExit=True)
@@ -300,15 +432,17 @@ class initiate(cs.Cmnd):
              activity: typing.Optional[str]=None,   # Cs Mandatory Param
              root: typing.Optional[str]=None,        # Cs Optional Param
              templates: typing.Optional[str]=None,   # Cs Optional Param
+             noLink: typing.Optional[str]=None,      # Cs Optional Param
     ) -> b.op.Outcome:
 
         failed = b_io.eh.badOutcome
-        callParamsDict = {'activity': activity, 'root': root, 'templates': templates, }
+        callParamsDict = {'activity': activity, 'root': root, 'templates': templates, 'noLink': noLink, }
         if self.invocationValidate(rtInv, cmndOutcome, callParamsDict, None).isProblematic():
             return failed(cmndOutcome)
         activity = csParam.mappedValue('activity', activity)
         root = csParam.mappedValue('root', root)
         templates = csParam.mappedValue('templates', templates)
+        noLink = csParam.mappedValue('noLink', noLink)
 ####+END:
         self.cmndDocStr(f""" #+begin_org
 ** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Install AI collaborative development templates.
@@ -317,7 +451,7 @@ Safe-copies AI-DevStatus.org and AI-WorkPlan.org from <activity>/ (falling back 
 Expands b:ai:file/particulars dblock in copied files using pure Python.
         #+end_org """)
 
-        templatesBaseStr = userConfig_csu.parGet('templates', templates)
+        templatesBaseStr = _resolveTemplatesBase(templates)
         if templatesBaseStr is None:
             b_io.eh.problem_usageError(
                 "templates not configured. Run: startAiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/templates")
@@ -343,22 +477,30 @@ Expands b:ai:file/particulars dblock in copied files using pure Python.
 
         motherDir = templatesBase / 'mother'
 
-        # Constant files — always symlinked to mother/
+        # Constant files — usually symlinked to mother/. If --noLink matches
+        # one of these, safe-copy instead (see --noLink flag docs).
         constantFiles = ['CLAUDE.md', 'AI-WORKFLOW.org']
         for fname in constantFiles:
             src = motherDir / fname
             dst = targetDir / fname
             if dst.exists() or dst.is_symlink():
                 b_io.ann.note(f"SKIP (exists): {dst}")
+            elif noLink == fname:
+                shutil.copy2(src, dst)
+                b_io.ann.note(f"COPIED (--noLink={fname}): {src} -> {dst}")
             else:
                 dst.symlink_to(src)
                 b_io.ann.note(f"SYMLINKED: {dst} -> {src}")
 
-        # AI-Activity.org — symlinked to activity/
+        # AI-Activity.org — usually symlinked to activity/. If --noLink
+        # matches, safe-copy instead (typical --activity=custom use case).
         generalSrc = activityDir / 'AI-Activity.org'
         generalDst = targetDir / 'AI-Activity.org'
         if generalDst.exists() or generalDst.is_symlink():
             b_io.ann.note(f"SKIP (exists): {generalDst}")
+        elif noLink == 'AI-Activity.org':
+            shutil.copy2(generalSrc, generalDst)
+            b_io.ann.note(f"COPIED (--noLink=AI-Activity.org): {generalSrc} -> {generalDst}")
         else:
             generalDst.symlink_to(generalSrc)
             b_io.ann.note(f"SYMLINKED: {generalDst} -> {generalSrc}")
@@ -375,6 +517,8 @@ Expands b:ai:file/particulars dblock in copied files using pure Python.
             else:
                 shutil.copy2(src, dst)
                 b_io.ann.note(f"COPIED: {src} -> {dst}")
+                _writeProvenanceLine(dst, templatesBaseStr)
+                b_io.ann.note(f"PROVENANCE-WRITTEN: {dst}")
                 updateDblock.expandAll(dst)
                 b_io.ann.note(f"DBLOCK-UPDATED: {dst}")
 
@@ -419,13 +563,13 @@ Expands b:ai:file/particulars dblock in copied files using pure Python.
         )
 
 
-####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "initiateSub" :comment "Install slim subproject AI-collaboration overlay (requires initiated parent)" :extent "verify" :ro "cli" :parsMand "activity" :parsOpt "root templates" :argsMin 0 :argsMax 0 :pyInv ""
+####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "initiateSub" :comment "Install slim subproject AI-collaboration overlay (requires initiated parent)" :extent "verify" :ro "cli" :parsMand "activity" :parsOpt "root templates noLink" :argsMin 0 :argsMax 0 :pyInv ""
 """ #+begin_org
-*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<initiateSub>>  =verify= parsMand=activity parsOpt="root templates" ro=cli   [[elisp:(org-cycle)][| ]]
+*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<initiateSub>>  =verify= parsMand=activity parsOpt="root templates noLink" ro=cli   [[elisp:(org-cycle)][| ]]
 #+end_org """
 class initiateSub(cs.Cmnd):
     cmndParamsMandatory = [ 'activity', ]
-    cmndParamsOptional = [ 'root', 'templates', ]
+    cmndParamsOptional = [ 'root', 'templates', 'noLink', ]
     cmndArgsLen = {'Min': 0, 'Max': 0,}
 
     @cs.track(fnLoc=True, fnEntry=True, fnExit=True)
@@ -435,15 +579,17 @@ class initiateSub(cs.Cmnd):
              activity: typing.Optional[str]=None,   # Cs Mandatory Param
              root: typing.Optional[str]=None,        # Cs Optional Param
              templates: typing.Optional[str]=None,   # Cs Optional Param
+             noLink: typing.Optional[str]=None,      # Cs Optional Param
     ) -> b.op.Outcome:
 
         failed = b_io.eh.badOutcome
-        callParamsDict = {'activity': activity, 'root': root, 'templates': templates, }
+        callParamsDict = {'activity': activity, 'root': root, 'templates': templates, 'noLink': noLink, }
         if self.invocationValidate(rtInv, cmndOutcome, callParamsDict, None).isProblematic():
             return failed(cmndOutcome)
         activity = csParam.mappedValue('activity', activity)
         root = csParam.mappedValue('root', root)
         templates = csParam.mappedValue('templates', templates)
+        noLink = csParam.mappedValue('noLink', noLink)
 ####+END:
         self.cmndDocStr(f""" #+begin_org
 ** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Install subproject AI-collaboration overlay.
@@ -457,7 +603,7 @@ startAiActivity-signature CLAUDE.md symlink) or if the target directory
 already has a CLAUDE.md.
         #+end_org """)
 
-        templatesBaseStr = userConfig_csu.parGet('templates', templates)
+        templatesBaseStr = _resolveTemplatesBase(templates)
         if templatesBaseStr is None:
             b_io.eh.problem_usageError(
                 "templates not configured. Run: startAiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/templates")
@@ -527,15 +673,24 @@ already has a CLAUDE.md.
 
         b_io.ann.note(f"Initiated parent found at: {foundBase}")
 
-        # Install slim CLAUDE.md (symlink to mother/initiateSub/CLAUDE.md)
-        localClaude.symlink_to(subClaudeSrc)
-        b_io.ann.note(f"SYMLINKED: {localClaude} -> {subClaudeSrc}")
+        # Install slim CLAUDE.md — usually a symlink to
+        # mother/initiateSub/CLAUDE.md. If --noLink matches, safe-copy instead.
+        if noLink == 'CLAUDE.md':
+            shutil.copy2(subClaudeSrc, localClaude)
+            b_io.ann.note(f"COPIED (--noLink=CLAUDE.md): {subClaudeSrc} -> {localClaude}")
+        else:
+            localClaude.symlink_to(subClaudeSrc)
+            b_io.ann.note(f"SYMLINKED: {localClaude} -> {subClaudeSrc}")
 
-        # AI-Activity.org — symlinked to activity/
+        # AI-Activity.org — usually symlinked to activity/. If --noLink
+        # matches, safe-copy instead (typical --activity=custom use case).
         activitySrc = activityDir / 'AI-Activity.org'
         activityDst = targetDir / 'AI-Activity.org'
         if activityDst.exists() or activityDst.is_symlink():
             b_io.ann.note(f"SKIP (exists): {activityDst}")
+        elif noLink == 'AI-Activity.org':
+            shutil.copy2(activitySrc, activityDst)
+            b_io.ann.note(f"COPIED (--noLink=AI-Activity.org): {activitySrc} -> {activityDst}")
         else:
             activityDst.symlink_to(activitySrc)
             b_io.ann.note(f"SYMLINKED: {activityDst} -> {activitySrc}")
@@ -553,6 +708,8 @@ already has a CLAUDE.md.
             else:
                 shutil.copy2(src, dst)
                 b_io.ann.note(f"COPIED: {src} -> {dst}")
+                _writeProvenanceLine(dst, templatesBaseStr)
+                b_io.ann.note(f"PROVENANCE-WRITTEN: {dst}")
                 updateDblock.expandAll(dst)
                 b_io.ann.note(f"DBLOCK-UPDATED: {dst}")
 
@@ -713,7 +870,7 @@ from the =AI-Activity.org= symlink target or the =Activity:= header in
                 b_io.ann.note(f"SKIP restore (dormant not found): {src}")
 
         # Determine templates base
-        templatesBaseStr = userConfig_csu.parGet('templates', templates)
+        templatesBaseStr = _resolveTemplatesBase(templates)
         if templatesBaseStr is None:
             b_io.eh.problem_usageError(
                 "templates not configured. Run: startAiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/templates")
@@ -882,7 +1039,7 @@ Removes .claude/ directory if it becomes empty.
         # AI-AGENTS.org is retained here as a legacy cleanup — pre-merge
         # projects have an AI-AGENTS.org symlink that deClaudify should
         # still remove even though initiate no longer installs it.
-        symlinkFiles = ['CLAUDE.md', 'CLAUDE.md.dormant', 'AI-AGENTS.org', 'AI-WORKFLOW.org', 'AI-Activity.org']
+        symlinkFiles = ['CLAUDE.md', 'CLAUDE.md.dormant', 'AI-AGENTS.org', 'AI-WORKFLOW.org']
         for fname in symlinkFiles:
             dst = targetDir / fname
             if dst.is_symlink():
@@ -893,17 +1050,21 @@ Removes .claude/ directory if it becomes empty.
             else:
                 b_io.ann.note(f"SKIP (not present): {dst}")
 
-        # Safe-copied files — only remove if they are regular files (not symlinks).
+        # AI-Activity.org may be either a symlink (default install) or a
+        # regular file (--noLink=AI-Activity.org install). Remove either.
+        # AI-DevStatus.org / AI-WorkPlan.org are always safe-copies.
         # Includes .dormant copies in case deClaudify runs while a session is suspended.
-        copiedFiles = ['AI-DevStatus.org', 'AI-WorkPlan.org',
-                       'AI-DevStatus.org.dormant', 'AI-WorkPlan.org.dormant']
-        for fname in copiedFiles:
+        removableFiles = ['AI-Activity.org', 'AI-Activity.org.dormant',
+                          'AI-DevStatus.org', 'AI-WorkPlan.org',
+                          'AI-DevStatus.org.dormant', 'AI-WorkPlan.org.dormant']
+        for fname in removableFiles:
             dst = targetDir / fname
-            if dst.is_file() and not dst.is_symlink():
+            if dst.is_symlink():
+                dst.unlink()
+                b_io.ann.note(f"REMOVED symlink: {dst}")
+            elif dst.is_file():
                 dst.unlink()
                 b_io.ann.note(f"REMOVED file: {dst}")
-            elif dst.is_symlink():
-                b_io.ann.note(f"SKIP (is a symlink, leaving intact): {dst}")
             else:
                 b_io.ann.note(f"SKIP (not present): {dst}")
 

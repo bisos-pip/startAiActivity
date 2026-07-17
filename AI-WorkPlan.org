@@ -515,6 +515,98 @@ Verified.
 ** -
 
 
+* Stage 10: Post-launch refinements --- provenance, --noLink, custom activity
+
+Goal: Address rough edges that emerged when using =bisos.startAiActivity=
+on a real hierarchical project (site-status-scripts) --- three related
+changes bundled together because they came out of the same field-usage
+session:
+
+1. Provenance recording in safe-copied files (the =templates=<X>= mistake
+   would have been caught faster with visible birth-certificate data)
+2. =--noLink= CLI override for symlinked files (needed by =custom= activity
+   where =AI-Activity.org= must be per-project, not shared)
+3. New =custom/= activity in all three templates trees (BISOS, bxexamples,
+   T-Mobile fork), for projects whose conventions don't fit any standard
+   activity
+
+
+* Stage 10 TODOs
+** +
+** DONE [#A] <<Provenance Line>> Multi-line org-comment provenance in safe-copied files :ai:
+CLOSED: [2026-07-16 Tue] SCHEDULED: <2026-07-16 Tue>
+After the safe-copy of =AI-DevStatus.org= and =AI-WorkPlan.org= (and
+before dblock expansion), insert a multi-line org-comment block
+recording: date (ISO 8601 with tz), user (=USER= env → =LOGNAME= env
+→ =os.getlogin()= → =pwd.getpwuid(os.getuid())=), templates base
+(actually used, via =_resolveTemplatesBase=), and =sys.argv=. Placement:
+after the last =#+= directive at the top of the file. Not a dblock
+--- inert text, written once at install time, never regenerated.
+Rationale: elisp dblock expanders can't recover invocation context;
+provenance must be birth-certificate data.
+----- AI Results: ------
+Implemented in =py3/bin/startAiActivity.cs=. New helpers
+=_detectUser()= (4-tier fallback chain, handles nohup/detached shells
+where =os.getlogin()= raises) and =_writeProvenanceLine()= (scans for
+last =#+= header, inserts multi-line comment block). Called from
+both =initiate= and =initiateSub= safe-copy sites. Verified in test
+runs --- provenance appears at the top of both editable files with
+correct date, user (=bystar=), templates path, and full command line.
+=aiSuspend= / =aiResume= treat provenance as opaque file content, so
+it survives suspend/resume cycles unchanged.
+** DONE [#A] <<noLink Override>> --noLink CLI flag for safe-copy override :ai:
+CLOSED: [2026-07-16 Tue] SCHEDULED: <2026-07-16 Tue>
+Add =--noLink=<filename>= parameter to both =initiate= and =initiateSub=.
+When passed, the named file is safe-copied instead of being installed
+as a symlink. Applies to =CLAUDE.md=, =AI-WORKFLOW.org=, and
+=AI-Activity.org= (files the engine would otherwise install as
+symlinks). Not applicable to =.claude/= entries. Single filename only
+for now; multi-file support later via a =bisos.b= framework improvement
+(=nargs='+'= or =append= action on =parDictAdd=).
+----- AI Results: ------
+Implemented. Chose CLI-flag over per-activity config file after
+discussion --- preserves the principle that templates should stay
+passive (a filesystem of examples, not a configuration layer). Two
+new =parDictAdd= entries (=noLink= in the =commonParamsSpecify=
+common list), classHead dblocks for both =initiate= and =initiateSub=
+extended with =noLink= in =parsOpt=, and the symlink-installation
+sites in both commands now branch on =noLink == fname= to select
+=shutil.copy2()= vs =symlink_to()=. Log messages distinguish the
+two behaviors (=SYMLINKED:= vs =COPIED (--noLink=<file>):=). All four
+combinations tested (default, =--noLink=AI-Activity.org=,
+=--noLink=CLAUDE.md=, =initiateSub --noLink=AI-Activity.org=).
+=verify.sh= regression-clean.
+** DONE [#A] <<custom Activity>> Add custom/ activity to all three templates trees :ai:
+CLOSED: [2026-07-16 Tue] SCHEDULED: <2026-07-16 Tue>
+The =custom= activity is the escape hatch for projects whose
+conventions don't fit any standard activity. Its =AI-Activity.org=
+is meant to be safe-copied via =--noLink=AI-Activity.org= and owned
+by each project. Add to T-Mobile fork first, then copy structure
+to BISOS and bxexamples so all three templates trees stay aligned.
+Also update =examples= menu output to advertise the =--noLink=
+form after each =--activity=custom= line (three menu chapters ×
+one custom line each = three additions).
+----- AI Results: ------
+=custom/AI-Activity.org= authored with proper per-project template
+framing (explains =--noLink=AI-Activity.org=, provides placeholder
+sections for project conventions). Copied to all three template
+trees; three-way md5 match confirmed. =examples= menu updated: each
+=--activity=custom= line now followed by a =--noLink=AI-Activity.org=
+variant with an explanatory comment.
+** DONE [#A] <<Stage 10 Docs>> Update README + DevStatus + WorkPlan + templates READMEs :ai:
+CLOSED: [2026-07-16 Tue] SCHEDULED: <2026-07-16 Tue>
+Four documentation edits: engine =README.org= new subsection under
+Usage covering =--noLink=; engine =AI-DevStatus.org= updates to
+Current State + Key Design Decisions; engine =AI-WorkPlan.org= this
+Stage 10 entry; per-activity Note for =custom= in each of the three
+template trees' READMEs.
+----- AI Results: ------
+Documentation updates in progress at time of writing this AI Result;
+the four edits are being applied in the same session that closed the
+three prior Stage 10 TODOs.
+** -
+
+
 # Local Variables:
 # eval: (setq-local toc-org-max-depth 4)
 # eval: (setq-local org-log-done 'time)

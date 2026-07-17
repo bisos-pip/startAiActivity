@@ -19,14 +19,29 @@ This file is maintained by Claude. Updates are typically triggered by the
 
 * Current State
 
-As of 2026-07-16, Stages 1–8 are complete. The package is functionally working
-with a full set of lifecycle commands, skills integration, subproject
-overlays, precedence-based templates auto-detection, and the retired-
-AI-AGENTS.org simplification. PyPI upload has been done (Stage 9 items are
-all closed).
+As of 2026-07-16, Stages 1–8 are complete plus post-Stage-8 refinements
+(provenance line, =--noLink= override, =custom= activity). The package
+is functionally working with a full set of lifecycle commands, skills
+integration, subproject overlays, precedence-based templates auto-detection,
+retired-AI-AGENTS.org simplification, and per-invocation provenance/symlink
+overrides. PyPI upload has been done (Stage 9 items are all closed).
 
 Key changes since last status:
 
+- *=--noLink= override for symlinked files:* =initiate= and =initiateSub=
+  now accept =--noLink=<filename>=. When present, the named file is
+  safe-copied instead of symlinked. Primary use case: =--activity=custom=
+  installs where the developer wants to own =AI-Activity.org= as a
+  per-project file rather than a symlink to the shared template.
+- *=custom= activity in all three templates trees:* Added =custom/= to
+  BISOS, bxexamples, and T-Mobile fork. Intended install form:
+  =initiate --activity=custom --noLink=AI-Activity.org=.
+- *Provenance line in safe-copied editable files:* =initiate= and
+  =initiateSub= now write a multi-line org-comment provenance block
+  into =AI-DevStatus.org= and =AI-WorkPlan.org= after the safe-copy,
+  before the dblock expansion. Records date, user, templates base,
+  and =sys.argv=. Not regenerable by any dblock (elisp or python) ---
+  provenance is inert text written once at install time.
 - *Stage 8 — Retire AI-AGENTS.org:* Eliminated the =AI-AGENTS.org=
   indirection layer. Previously =CLAUDE.md= was a pointer that
   =@import=-ed =AI-AGENTS.org=, which in turn imported the four
@@ -315,6 +330,41 @@ Entry points (=setup.py= console_scripts):
   projects with an =AI-AGENTS.org= symlink still get correctly cleaned
   up by =deClaudify= and =aiSuspend= (both retain the entry in their
   cleanup lists with an explanatory comment).
+
+- *=--noLink= is a CLI flag, not a per-activity config file.* When
+  the need for per-project safe-copy of =AI-Activity.org= (and
+  possibly other files) emerged with the =custom= activity, two
+  designs were considered: (a) a per-activity =_activity-config.org=
+  in the templates tree declaring which files should be safe-copied,
+  or (b) a =--noLink=<file>= CLI flag on the invocation. Chose (b)
+  because it preserves the design principle that *templates should
+  stay passive* --- a template tree is a filesystem of examples, not
+  a configuration layer requiring engine-side interpretation. (a)
+  would have put behavior specification in two places (config file
+  plus optional CLI override) with precedence rules to reason about.
+  (b) is more general (works on any file, not only pre-declared
+  ones), simpler (one mechanism), and honest (the choice is made at
+  invocation time by the human who knows what they want). The
+  trade-off: the user has to remember the flag. Mitigated by
+  advertising =--noLink=AI-Activity.org= in the =examples= menu
+  right after each =--activity=custom= line, and by keeping the
+  =custom= activity itself rare (used only when no standard activity
+  fits).
+
+- *Provenance is inert text, not a dblock.* The provenance line
+  written by =initiate= / =initiateSub= into =AI-DevStatus.org= and
+  =AI-WorkPlan.org= (date, user, templates base, =sys.argv=) is a
+  plain multi-line org-comment block, not a dblock of any signature.
+  Dblocks have two implementations (Python via =bisos.pyDblock=, and
+  elisp via =org-dblock-update= inside Emacs). Elisp dblock
+  regeneration cannot recover invocation context --- it runs long
+  after =initiate= exited, in a shell it never observed. Any dblock-
+  based approach would either only work under the Python expander,
+  or would need parallel elisp code reaching into a persistence
+  store. Provenance is *birth-certificate* data, correct only at
+  install time; inert text written once matches the semantics
+  exactly. Placement is after the last =#+= header directive at the
+  top of the file, robust to header reordering.
 
 # Local Variables:
 # eval: (setq-local toc-org-max-depth 4)
