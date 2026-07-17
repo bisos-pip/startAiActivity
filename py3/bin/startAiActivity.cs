@@ -360,6 +360,11 @@ class examples(cs.Cmnd):
              pars=od([]),
              comment="# Restore .dormant files and re-install symlinks/.claude")
 
+        cs.examples.menuChapter('=refresh= -- re-copy safe-copied invariants (CLAUDE.md) from templates')
+        cmnd('refresh',
+             pars=od([]),
+             comment="# Re-copy CLAUDE.md from templates; upgrades legacy symlinks")
+
         cs.examples.menuChapter('=deClaudify= -- remove AI collaboration files')
         cmnd('deClaudify',
              pars=od([]),
@@ -477,9 +482,23 @@ Expands b:ai:file/particulars dblock in copied files using pure Python.
 
         motherDir = templatesBase / 'mother'
 
-        # Constant files — usually symlinked to mother/. If --noLink matches
-        # one of these, safe-copy instead (see --noLink flag docs).
-        constantFiles = ['CLAUDE.md', 'AI-WORKFLOW.org']
+        # CLAUDE.md — always safe-copied (never a symlink). Claude Code
+        # resolves symlinks before reading, which would cause @./ imports
+        # inside a symlinked CLAUDE.md to resolve against the templates
+        # directory instead of this project. No provenance line: CLAUDE.md
+        # is meant to be the equivalent of a symlink (pristine template
+        # content). Use `refresh` to re-copy after templates change.
+        claudeMdSrc = motherDir / 'CLAUDE.md'
+        claudeMdDst = targetDir / 'CLAUDE.md'
+        if claudeMdDst.exists() or claudeMdDst.is_symlink():
+            b_io.ann.note(f"SKIP (exists): {claudeMdDst}")
+        else:
+            shutil.copy2(claudeMdSrc, claudeMdDst)
+            b_io.ann.note(f"COPIED: {claudeMdSrc} -> {claudeMdDst}")
+
+        # Other constant files — symlinked to mother/. If --noLink matches,
+        # safe-copy instead.
+        constantFiles = ['AI-WORKFLOW.org']
         for fname in constantFiles:
             src = motherDir / fname
             dst = targetDir / fname
@@ -640,17 +659,20 @@ already has a CLAUDE.md.
                 "Run deClaudify first if you meant to reinstall.")
             return failed(cmndOutcome)
 
-        # Precondition: walk up looking for a startAiActivity-signature CLAUDE.md
-        # (a CLAUDE.md symlink whose target lands under templatesBase). If not
-        # found, refuse — initiateSub requires an initiated parent.
+        # Precondition: walk up looking for a startAiActivity-signature parent.
+        # CLAUDE.md is now safe-copied (not a symlink), so we can't identify a
+        # parent by symlink target. Instead we look for the AI-WORKFLOW.org
+        # symlink (still an invariant symlink), whose target must land under
+        # templatesBase. If not found, refuse — initiateSub requires an
+        # initiated parent.
         parent = targetDir.parent
         foundBase = None
         while True:
-            parentClaude = parent / 'CLAUDE.md'
-            if parentClaude.is_symlink():
-                linkTarget = pathlib.Path(parentClaude.readlink())
+            parentWorkflow = parent / 'AI-WORKFLOW.org'
+            if parentWorkflow.is_symlink():
+                linkTarget = pathlib.Path(parentWorkflow.readlink())
                 if not linkTarget.is_absolute():
-                    linkTarget = (parentClaude.parent / linkTarget).resolve()
+                    linkTarget = (parentWorkflow.parent / linkTarget).resolve()
                 else:
                     linkTarget = linkTarget.resolve()
                 try:
@@ -666,21 +688,20 @@ already has a CLAUDE.md.
         if foundBase is None:
             b_io.eh.problem_usageError(
                 f"No initiated parent found for {targetDir}. "
-                f"Walked up to / looking for a CLAUDE.md symlink pointing under {templatesBase}. "
+                f"Walked up to / looking for an AI-WORKFLOW.org symlink pointing under {templatesBase}. "
                 "Run 'initiate' at a parent directory first, or use 'initiate' here "
                 "if this should be the base.")
             return failed(cmndOutcome)
 
         b_io.ann.note(f"Initiated parent found at: {foundBase}")
 
-        # Install slim CLAUDE.md — usually a symlink to
-        # mother/initiateSub/CLAUDE.md. If --noLink matches, safe-copy instead.
-        if noLink == 'CLAUDE.md':
-            shutil.copy2(subClaudeSrc, localClaude)
-            b_io.ann.note(f"COPIED (--noLink=CLAUDE.md): {subClaudeSrc} -> {localClaude}")
-        else:
-            localClaude.symlink_to(subClaudeSrc)
-            b_io.ann.note(f"SYMLINKED: {localClaude} -> {subClaudeSrc}")
+        # Install slim CLAUDE.md — always safe-copied (never a symlink).
+        # Claude Code resolves symlinks before reading, which would cause
+        # @./ imports inside a symlinked CLAUDE.md to resolve against the
+        # templates directory instead of this project. No provenance line:
+        # CLAUDE.md is meant to be the equivalent of a symlink.
+        shutil.copy2(subClaudeSrc, localClaude)
+        b_io.ann.note(f"COPIED: {subClaudeSrc} -> {localClaude}")
 
         # AI-Activity.org — usually symlinked to activity/. If --noLink
         # matches, safe-copy instead (typical --activity=custom use case).
@@ -743,27 +764,28 @@ class aiSuspend(cs.Cmnd):
 ** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Suspend AI collaboration in current directory.
 Removes symlinks (AI-WORKFLOW.org, AI-Activity.org, plus any legacy
 AI-AGENTS.org from pre-merge projects) and =.claude/= entries.
-Preserves =CLAUDE.md= as =CLAUDE.md.dormant= so its symlink target is
-available to aiResume as a signature (base vs sub).
-Renames AI-DevStatus.org and AI-WorkPlan.org to .dormant so they
-survive and can be restored by aiResume.
+Stashes =CLAUDE.md= as =CLAUDE.md.dormant= (rename; CLAUDE.md is now a
+safe-copy, not a symlink). Renames AI-DevStatus.org and AI-WorkPlan.org
+to .dormant so they survive and can be restored by aiResume.
         #+end_org """)
 
         targetDir = pathlib.Path.cwd()
 
-        # Preserve CLAUDE.md as CLAUDE.md.dormant — the symlink target is the
-        # signature aiResume needs to tell base (mother/CLAUDE.md) from sub
-        # (mother/initiateSub/CLAUDE.md).
+        # Stash CLAUDE.md as CLAUDE.md.dormant. CLAUDE.md is now a safe-copy
+        # (see initiate/initiateSub) — rename it aside. aiResume renames it
+        # back or re-copies from templates if missing.
         claudeLive = targetDir / 'CLAUDE.md'
         claudeDormant = targetDir / 'CLAUDE.md.dormant'
         if claudeLive.is_symlink():
+            # Legacy install: previously symlinked CLAUDE.md. Just remove it.
+            claudeLive.unlink()
+            b_io.ann.note(f"REMOVED legacy symlink: {claudeLive}")
+        elif claudeLive.is_file():
             if claudeDormant.exists() or claudeDormant.is_symlink():
                 b_io.ann.note(f"SKIP stash (dormant already exists): {claudeDormant}")
             else:
                 claudeLive.rename(claudeDormant)
-                b_io.ann.note(f"STASHED symlink: {claudeLive} -> {claudeDormant}")
-        elif claudeLive.exists():
-            b_io.ann.note(f"SKIP (CLAUDE.md not a symlink, leaving intact): {claudeLive}")
+                b_io.ann.note(f"STASHED: {claudeLive} -> {claudeDormant}")
         else:
             b_io.ann.note(f"SKIP (not present): {claudeLive}")
 
@@ -845,12 +867,14 @@ class aiResume(cs.Cmnd):
         self.cmndDocStr(f""" #+begin_org
 ** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Resume AI collaboration in current directory.
 Restores AI-DevStatus.org and AI-WorkPlan.org from their .dormant copies.
-Detects base vs sub mode from the =CLAUDE.md.dormant= symlink target: if it
-points at =mother/initiateSub/CLAUDE.md=, restores subproject-style (slim
-CLAUDE.md only; AI-WORKFLOW.org and =.claude/= are inherited from a
-parent). Otherwise restores the full base stack. Activity is inferred
-from the =AI-Activity.org= symlink target or the =Activity:= header in
-=AI-WorkPlan.org=.
+Detects base vs sub mode by walking up looking for a parent
+=AI-WORKFLOW.org= symlink under templatesBase: if found, this is a sub
+install (slim CLAUDE.md only; AI-WORKFLOW.org and =.claude/= inherited
+from parent). Otherwise base. CLAUDE.md is re-copied (safe-copy)
+from =mother/initiateSub/CLAUDE.md= (sub) or =mother/CLAUDE.md= (base)
+if =CLAUDE.md.dormant= is not present; otherwise the dormant copy is
+promoted back. Activity is inferred from the =AI-Activity.org= symlink
+target or the =Activity:= header in =AI-WorkPlan.org=.
         #+end_org """)
 
         targetDir = pathlib.Path.cwd()
@@ -875,28 +899,35 @@ from the =AI-Activity.org= symlink target or the =Activity:= header in
             b_io.eh.problem_usageError(
                 "templates not configured. Run: startAiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/templates")
             return failed(cmndOutcome)
-        templatesBase = pathlib.Path(templatesBaseStr)
+        templatesBase = pathlib.Path(templatesBaseStr).resolve()
         motherDir = templatesBase / 'mother'
 
-        # Detect base vs sub mode from CLAUDE.md.dormant symlink target.
-        # Sub: points at <templatesBase>/mother/initiateSub/CLAUDE.md
-        # Base: points at <templatesBase>/mother/CLAUDE.md
+        # Detect base vs sub mode by walking up for a parent AI-WORKFLOW.org
+        # symlink that points under templatesBase.
         subMode = False
+        parent = targetDir.parent
+        while True:
+            parentWorkflow = parent / 'AI-WORKFLOW.org'
+            if parentWorkflow.is_symlink():
+                linkTarget = pathlib.Path(parentWorkflow.readlink())
+                if not linkTarget.is_absolute():
+                    linkTarget = (parentWorkflow.parent / linkTarget).resolve()
+                else:
+                    linkTarget = linkTarget.resolve()
+                try:
+                    linkTarget.relative_to(templatesBase)
+                    subMode = True
+                    b_io.ann.note(f"MODE: sub (parent AI-WORKFLOW.org found at {parent})")
+                    break
+                except ValueError:
+                    pass
+            if parent.parent == parent:
+                break
+            parent = parent.parent
+        if not subMode:
+            b_io.ann.note("MODE: base (no initiated parent found)")
+
         claudeDormant = targetDir / 'CLAUDE.md.dormant'
-        subClaudeTemplate = (templatesBase / 'mother' / 'initiateSub' / 'CLAUDE.md').resolve()
-        if claudeDormant.is_symlink():
-            dormantTarget = pathlib.Path(claudeDormant.readlink())
-            if not dormantTarget.is_absolute():
-                dormantTarget = (claudeDormant.parent / dormantTarget).resolve()
-            else:
-                dormantTarget = dormantTarget.resolve()
-            if dormantTarget == subClaudeTemplate:
-                subMode = True
-                b_io.ann.note("MODE: sub (CLAUDE.md.dormant points at mother/initiateSub/CLAUDE.md)")
-            else:
-                b_io.ann.note("MODE: base (CLAUDE.md.dormant points at mother/CLAUDE.md)")
-        else:
-            b_io.ann.note("MODE: base (no CLAUDE.md.dormant found — defaulting to base)")
 
         # Infer activity from AI-Activity.org symlink target if it still exists,
         # otherwise from the restored AI-WorkPlan.org dblock header, otherwise fail.
@@ -927,20 +958,19 @@ from the =AI-Activity.org= symlink target or the =Activity:= header in
 
         b_io.ann.note(f"Inferred activity: {activity}")
 
-        # Re-install CLAUDE.md — either slim (sub) or full-stack (base).
-        # In sub mode, promote CLAUDE.md.dormant back to CLAUDE.md by rename.
-        # In base mode, do the same if a dormant exists; otherwise create fresh.
+        # Re-install CLAUDE.md — safe-copy (never a symlink). Promote
+        # CLAUDE.md.dormant back if present; otherwise re-copy from templates
+        # based on the detected mode.
         claudeLive = targetDir / 'CLAUDE.md'
+        claudeSrc = (motherDir / 'initiateSub' / 'CLAUDE.md') if subMode else (motherDir / 'CLAUDE.md')
         if claudeLive.exists() or claudeLive.is_symlink():
             b_io.ann.note(f"SKIP (exists): {claudeLive}")
-        elif claudeDormant.is_symlink():
+        elif claudeDormant.is_file() and not claudeDormant.is_symlink():
             claudeDormant.rename(claudeLive)
             b_io.ann.note(f"PROMOTED: {claudeDormant} -> {claudeLive}")
         else:
-            # No dormant marker — create fresh symlink based on detected mode.
-            claudeSrc = (motherDir / 'initiateSub' / 'CLAUDE.md') if subMode else (motherDir / 'CLAUDE.md')
-            claudeLive.symlink_to(claudeSrc)
-            b_io.ann.note(f"SYMLINKED: {claudeLive} -> {claudeSrc}")
+            shutil.copy2(claudeSrc, claudeLive)
+            b_io.ann.note(f"COPIED: {claudeSrc} -> {claudeLive}")
 
         # AI-WORKFLOW.org: base mode only; subs inherit from parent.
         if not subMode:
@@ -1003,6 +1033,100 @@ from the =AI-Activity.org= symlink target or the =Activity:= header in
         )
 
 
+####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "refresh" :comment "Re-copy safe-copied invariant files from templates (CLAUDE.md)" :extent "verify" :ro "cli" :parsMand "" :parsOpt "templates" :argsMin 0 :argsMax 0 :pyInv ""
+""" #+begin_org
+*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<refresh>>  =verify= parsOpt="templates" ro=cli   [[elisp:(org-cycle)][| ]]
+#+end_org """
+class refresh(cs.Cmnd):
+    cmndParamsMandatory = [ ]
+    cmndParamsOptional = [ 'templates', ]
+    cmndArgsLen = {'Min': 0, 'Max': 0,}
+
+    @cs.track(fnLoc=True, fnEntry=True, fnExit=True)
+    def cmnd(self,
+             rtInv: cs.RtInvoker,
+             cmndOutcome: b.op.Outcome,
+             templates: typing.Optional[str]=None,   # Cs Optional Param
+    ) -> b.op.Outcome:
+
+        failed = b_io.eh.badOutcome
+        callParamsDict = {'templates': templates, }
+        if self.invocationValidate(rtInv, cmndOutcome, callParamsDict, None).isProblematic():
+            return failed(cmndOutcome)
+        templates = csParam.mappedValue('templates', templates)
+####+END:
+        self.cmndDocStr(f""" #+begin_org
+** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Re-copy safe-copied invariant files from templates.
+Currently refreshes =CLAUDE.md= only. Detects base vs sub mode by walking
+up for a parent =AI-WORKFLOW.org= symlink under templatesBase: if found,
+this is a sub install and =CLAUDE.md= is re-copied from
+=mother/initiateSub/CLAUDE.md=; otherwise from =mother/CLAUDE.md=.
+Upgrades legacy symlinked =CLAUDE.md= installs by unlinking then copying.
+Never touches per-project files (AI-DevStatus.org, AI-WorkPlan.org, or
+files installed with =--noLink=). No provenance line: CLAUDE.md is meant
+to be the equivalent of a symlink.
+        #+end_org """)
+
+        targetDir = pathlib.Path.cwd()
+
+        # Resolve templates base.
+        templatesBaseStr = _resolveTemplatesBase(templates)
+        if templatesBaseStr is None:
+            b_io.eh.problem_usageError(
+                "templates not configured. Run: startAiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/templates")
+            return failed(cmndOutcome)
+        templatesBase = pathlib.Path(templatesBaseStr).resolve()
+        motherDir = templatesBase / 'mother'
+
+        # Detect base vs sub mode by walking up for a parent AI-WORKFLOW.org
+        # symlink that points under templatesBase.
+        subMode = False
+        parent = targetDir.parent
+        while True:
+            parentWorkflow = parent / 'AI-WORKFLOW.org'
+            if parentWorkflow.is_symlink():
+                linkTarget = pathlib.Path(parentWorkflow.readlink())
+                if not linkTarget.is_absolute():
+                    linkTarget = (parentWorkflow.parent / linkTarget).resolve()
+                else:
+                    linkTarget = linkTarget.resolve()
+                try:
+                    linkTarget.relative_to(templatesBase)
+                    subMode = True
+                    b_io.ann.note(f"MODE: sub (parent AI-WORKFLOW.org found at {parent})")
+                    break
+                except ValueError:
+                    pass
+            if parent.parent == parent:
+                break
+            parent = parent.parent
+        if not subMode:
+            b_io.ann.note("MODE: base (no initiated parent found)")
+
+        claudeSrc = (motherDir / 'initiateSub' / 'CLAUDE.md') if subMode else (motherDir / 'CLAUDE.md')
+        if not claudeSrc.exists():
+            b_io.eh.problem_usageError(f"Source CLAUDE.md not found: {claudeSrc}")
+            return failed(cmndOutcome)
+
+        claudeDst = targetDir / 'CLAUDE.md'
+        if claudeDst.is_symlink():
+            # Legacy install: previously symlinked CLAUDE.md. Upgrade to safe-copy.
+            claudeDst.unlink()
+            shutil.copy2(claudeSrc, claudeDst)
+            b_io.ann.note(f"UPGRADED (legacy symlink -> safe-copy): {claudeSrc} -> {claudeDst}")
+        elif claudeDst.is_file():
+            shutil.copy2(claudeSrc, claudeDst)
+            b_io.ann.note(f"REFRESHED: {claudeSrc} -> {claudeDst}")
+        else:
+            shutil.copy2(claudeSrc, claudeDst)
+            b_io.ann.note(f"COPIED (was not present): {claudeSrc} -> {claudeDst}")
+
+        return cmndOutcome.set(
+            opError=b.op.OpError.Success,
+            opResults=f"refresh complete at {targetDir} (mode={'sub' if subMode else 'base'})",
+        )
+
+
 ####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "deClaudify" :comment "Remove AI collaboration files installed by initiate" :extent "verify" :ro "cli" :parsMand "" :parsOpt "" :argsMin 0 :argsMax 0 :pyInv ""
 """ #+begin_org
 *  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<deClaudify>>  =verify= ro=cli   [[elisp:(org-cycle)][| ]]
@@ -1039,7 +1163,10 @@ Removes .claude/ directory if it becomes empty.
         # AI-AGENTS.org is retained here as a legacy cleanup — pre-merge
         # projects have an AI-AGENTS.org symlink that deClaudify should
         # still remove even though initiate no longer installs it.
-        symlinkFiles = ['CLAUDE.md', 'CLAUDE.md.dormant', 'AI-AGENTS.org', 'AI-WORKFLOW.org']
+        # AI-AGENTS.org is retained here as a legacy cleanup — pre-merge
+        # projects have an AI-AGENTS.org symlink that deClaudify should
+        # still remove even though initiate no longer installs it.
+        symlinkFiles = ['AI-AGENTS.org', 'AI-WORKFLOW.org']
         for fname in symlinkFiles:
             dst = targetDir / fname
             if dst.is_symlink():
@@ -1050,11 +1177,13 @@ Removes .claude/ directory if it becomes empty.
             else:
                 b_io.ann.note(f"SKIP (not present): {dst}")
 
+        # CLAUDE.md is now safe-copied by default (was previously symlinked).
         # AI-Activity.org may be either a symlink (default install) or a
-        # regular file (--noLink=AI-Activity.org install). Remove either.
-        # AI-DevStatus.org / AI-WorkPlan.org are always safe-copies.
+        # regular file (--noLink=AI-Activity.org install). Remove either form
+        # for both. AI-DevStatus.org / AI-WorkPlan.org are always safe-copies.
         # Includes .dormant copies in case deClaudify runs while a session is suspended.
-        removableFiles = ['AI-Activity.org', 'AI-Activity.org.dormant',
+        removableFiles = ['CLAUDE.md', 'CLAUDE.md.dormant',
+                          'AI-Activity.org', 'AI-Activity.org.dormant',
                           'AI-DevStatus.org', 'AI-WorkPlan.org',
                           'AI-DevStatus.org.dormant', 'AI-WorkPlan.org.dormant']
         for fname in removableFiles:

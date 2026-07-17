@@ -607,6 +607,79 @@ three prior Stage 10 TODOs.
 ** -
 
 
+* Stage 11: CLAUDE.md safe-copy + refresh command
+
+Goal: Fix a resolution bug discovered in a fresh Claude session against
+=site-status-scripts=. =CLAUDE.md= was symlinked into the templates
+directory. Claude Code resolves symlinks before reading, so
+=@./AI-Activity.org= inside the symlinked =CLAUDE.md= resolved against
+=<templatesBase>/mother/=, pulling in the wrong =AI-Activity.org=
+instead of the project's per-activity one. Silent misinformation ---
+critical to fix.
+
+Two related changes:
+
+1. Make =CLAUDE.md= a safe-copy (like =AI-DevStatus.org= /
+   =AI-WorkPlan.org=) so its =@./= imports resolve at the project.
+   No provenance line --- =CLAUDE.md= must remain equivalent to a
+   symlink in content.
+2. Add a =refresh= command so template changes to =CLAUDE.md= can be
+   pulled in on demand (safe-copy loses the automatic-propagation
+   property of symlinks; =refresh= gives it back explicitly).
+
+
+* Stage 11 TODOs
+** +
+** DONE [#A] <<CLAUDE.md Safe-Copy>> Switch CLAUDE.md from symlink to safe-copy in initiate/initiateSub :ai:
+CLOSED: [2026-07-17 Wed] SCHEDULED: <2026-07-17 Wed>
+=initiate= and =initiateSub= now =shutil.copy2= =CLAUDE.md= from
+=mother/CLAUDE.md= (base) or =mother/initiateSub/CLAUDE.md= (sub)
+instead of symlinking. No provenance line for =CLAUDE.md= --- must be
+byte-identical to the template. =deClaudify= moved =CLAUDE.md= (and
+=CLAUDE.md.dormant=) from the symlink-only list to the removable-files
+list so it removes either form. =aiSuspend= now =rename=-s =CLAUDE.md=
+→ =CLAUDE.md.dormant= (file, not symlink); if a legacy symlink is
+found, it is unlinked. =aiResume= promotes =CLAUDE.md.dormant= back
+if present, or re-copies from templates.
+----- AI Results: ------
+Mode detection needed to change: previously =aiResume= and =initiateSub=
+compared the =CLAUDE.md= symlink target against
+=<templatesBase>/mother/initiateSub/CLAUDE.md= to distinguish sub from
+base. Since =CLAUDE.md= is now a copy, both switched to walking up for
+a parent =AI-WORKFLOW.org= symlink under =templatesBase=. =AI-WORKFLOW.org=
+remains a symlink (harmless --- it has no =@./= back-imports), so this
+signature is still available. =initiateSub= precondition and =aiResume=
+mode-detection both use the same walk-up helper logic (inlined for now;
+extract to a helper if a third caller emerges).
+** DONE [#A] <<refresh Cmnd>> New refresh command to re-copy CLAUDE.md from templates :ai:
+CLOSED: [2026-07-17 Wed] SCHEDULED: <2026-07-17 Wed>
+New =refresh= Cmnd (=parsOpt="templates"=): detects base vs sub via
+parent-AI-WORKFLOW.org walk-up under =templatesBase=, then re-copies
+=CLAUDE.md= from =mother/= or =mother/initiateSub/=. Upgrades legacy
+symlinked =CLAUDE.md= installs by unlinking then copying (this is the
+one-shot migration path for pre-Stage-11 projects). Only touches
+=CLAUDE.md= for now; per-project files (=AI-DevStatus.org=,
+=AI-WorkPlan.org=, and any =--noLink= file) are never touched.
+Multi-file =refresh= (parallel to multi-file =--noLink=) is deferred to
+the same =bisos.b= framework improvement.
+----- AI Results: ------
+Cmnd class added after =aiResume= in =startAiActivity.cs=. Examples
+menu got a new =refresh= chapter between aiSuspend/aiResume and
+deClaudify. Log messages distinguish the three cases: =UPGRADED (legacy
+symlink -> safe-copy)=, =REFRESHED=, =COPIED (was not present)=.
+** DONE [#A] <<Stage 11 Docs>> README + AI-DevStatus + AI-WorkPlan updates :ai:
+CLOSED: [2026-07-17 Wed] SCHEDULED: <2026-07-17 Wed>
+Engine =README.org=: new subsection "Refresh CLAUDE.md From Templates"
+under Usage (placed before Suspend/Resume) + TOC entry. Engine
+=AI-DevStatus.org=: Current State entry describing the change and a
+new Key Design Decision entry explaining why =CLAUDE.md= is
+safe-copied (the =@./= symlink-resolution bug). Engine =AI-WorkPlan.org=:
+this Stage 11 with three DONE TODOs.
+----- AI Results: ------
+Applied in the same session that implemented the code changes.
+** -
+
+
 # Local Variables:
 # eval: (setq-local toc-org-max-depth 4)
 # eval: (setq-local org-log-done 'time)

@@ -28,6 +28,21 @@ overrides. PyPI upload has been done (Stage 9 items are all closed).
 
 Key changes since last status:
 
+- *CLAUDE.md is safe-copied, not symlinked (Stage 11):* Claude Code
+  resolves symlinks before reading, so =@./AI-Activity.org= inside a
+  symlinked =CLAUDE.md= would resolve against the templates directory
+  instead of the project. =initiate= and =initiateSub= now safe-copy
+  =CLAUDE.md= (no provenance line --- pristine template content).
+  =deClaudify= removes it whether symlink (legacy) or file (new).
+  =aiSuspend= renames it aside; =aiResume= promotes the =.dormant=
+  back or re-copies from templates. Mode detection in =aiResume=
+  and =initiateSub= switched from CLAUDE.md-symlink-target to parent
+  =AI-WORKFLOW.org= walk-up (still an invariant symlink).
+- *New =refresh= command:* Re-copies =CLAUDE.md= from templates.
+  Detects base vs sub by walking up for a parent =AI-WORKFLOW.org=
+  symlink under templatesBase. Upgrades legacy symlinked installs by
+  unlinking then copying. Only touches =CLAUDE.md= for now; per-project
+  files and =--noLink= files are never touched.
 - *=--noLink= override for symlinked files:* =initiate= and =initiateSub=
   now accept =--noLink=<filename>=. When present, the named file is
   safe-copied instead of symlinked. Primary use case: =--activity=custom=
@@ -350,6 +365,27 @@ Entry points (=setup.py= console_scripts):
   right after each =--activity=custom= line, and by keeping the
   =custom= activity itself rare (used only when no standard activity
   fits).
+
+- *=CLAUDE.md= is safe-copied, not symlinked.* Claude Code resolves
+  symlinks before reading a file, so =@./AI-Activity.org= inside a
+  symlinked =CLAUDE.md= resolves relative to the templates directory
+  (where the symlink target lives), not the project. That silently pulls
+  in the wrong =AI-Activity.org= --- discovered in a fresh Claude session
+  reading site-status-scripts. Fix: =initiate= and =initiateSub=
+  =shutil.copy2= =CLAUDE.md= from templates instead of =symlink_to=; no
+  provenance line is written (CLAUDE.md must remain equivalent to a
+  symlink in content). The new =refresh= command is the escape hatch:
+  re-copies =CLAUDE.md= from templates on demand, upgrading any legacy
+  symlinked install in place. Alternatives considered: (a) drop =@./=
+  imports from CLAUDE.md and rely on prose --- rejected as fragile;
+  (b) absolute =@/full/path= imports --- doesn't work for per-project
+  files (=AI-Activity.org=, etc.); (c) two-level wrapper --- doesn't
+  solve the underlying resolution. Trade-off: templates changes to
+  CLAUDE.md don't propagate automatically to installed projects ---
+  mitigated by =refresh=. Mode detection in =aiResume= and =initiateSub=
+  switched from CLAUDE.md-symlink-target to parent =AI-WORKFLOW.org=
+  walk-up under templatesBase; =AI-WORKFLOW.org= is still symlinked
+  (it has no back-imports, so symlink resolution is harmless).
 
 - *Provenance is inert text, not a dblock.* The provenance line
   written by =initiate= / =initiateSub= into =AI-DevStatus.org= and

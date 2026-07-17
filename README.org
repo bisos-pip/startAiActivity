@@ -130,6 +130,7 @@ templates base).
   - [[#install-a-subproject-overlay][Install a Subproject Overlay]]
   - [[#customizing-a-shared-template-file---nolink][Customizing a Shared Template File: =--noLink=]]
   - [[#skills][Skills]]
+  - [[#refresh-claudemd-from-templates][Refresh CLAUDE.md From Templates]]
   - [[#suspend-and-resume-ai-collaboration][Suspend and Resume AI Collaboration]]
   - [[#remove-ai-collaboration-files][Remove AI Collaboration Files]]
 - [[#key-files][Key Files]]
@@ -468,6 +469,34 @@ Each =SKILL.md= starts with YAML front-matter (=---=-delimited) containing
 =name:= and =description:= fields. The description drives when Claude
 loads the skill; write it as a concrete trigger ("Use when writing or
 modifying a PyCS =cs.Cmnd= subclass") rather than a topic label.
+
+** Refresh CLAUDE.md From Templates
+
+=CLAUDE.md= is safe-copied (not symlinked) at =initiate= / =initiateSub=
+time. This is deliberate: Claude Code resolves symlinks before reading a
+file, so any =@./AI-Activity.org= import inside a symlinked =CLAUDE.md=
+would resolve against the templates directory instead of the current
+project. Safe-copy pins =CLAUDE.md= to the project.
+
+The tradeoff is that changes to =mother/CLAUDE.md= (or
+=mother/initiateSub/CLAUDE.md=) in the templates directory don't
+automatically propagate to already-installed projects. Use =refresh= to
+pull in an updated CLAUDE.md:
+
+#+begin_src bash
+startAiActivity.cs -i refresh
+#+end_src
+
+The command detects base vs sub mode by walking up for a parent
+=AI-WORKFLOW.org= symlink under templatesBase: if found, sub mode
+(re-copies from =mother/initiateSub/CLAUDE.md=); otherwise base
+(=mother/CLAUDE.md=). Only =CLAUDE.md= is refreshed for now; per-project
+files (=AI-DevStatus.org=, =AI-WorkPlan.org=, and files installed with
+=--noLink=) are never touched.
+
+=refresh= also upgrades legacy installs whose =CLAUDE.md= is still a
+symlink from the pre-safe-copy era: it unlinks the symlink and copies in
+its place.
 
 ** Suspend and Resume AI Collaboration
 
