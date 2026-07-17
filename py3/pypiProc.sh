@@ -5,9 +5,9 @@ SEED="
 *  /[dblock]/ /Seed/ :: [[file:/bisos/core/bsip/bin/seedPypiProc.sh]] |
 "
 FILE="
-*  /This File/ :: /bisos/git/bxRepos/bisos-pip/capability/py3/pypiProc.sh
+*  /This File/ :: /bxRepos/bisos-pip/startAiActivity/py3/pypiProc.sh
 "
-if [ "${loadFiles}" "" ] ; then
+if [ "${loadFiles}" == "" ] ; then
     /bisos/core/bsip/bin/seedPypiProc.sh -l $0 "$@"
     exit $?
 fi

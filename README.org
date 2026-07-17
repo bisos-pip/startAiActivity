@@ -100,13 +100,12 @@ directives). Nested subprojects installed with =initiateSub= use a slim
 =CLAUDE.md= that imports only the local trio; the invariants are
 inherited from an ancestor via the same walk-up, avoiding duplication.
 
-bisos.startAiActivity is a python package that uses the
-[[https://github.com/bisos-pip/pycs][PyCS-Framework]]. It provides the
-=startAiActivity.cs= command with the following operations:
-=userConfig_set/get= (persistent config), =initiate= (base install),
-=initiateSub= (slim subproject overlay), =aiSuspend= / =aiResume=
-(reversible pause/restore), =deClaudify= (permanent removal), and
-=examples= (all invocations with the current templates base).
+bisos.startAiActivity is a python package that uses the [[https://github.com/bisos-pip/pycs][PyCS-Framework]].
+It provides the =startAiActivity.cs= command with the following operations:
+=userConfig_set/get= (persistent config), =initiate= (base install), =initiateSub=
+(slim subproject overlay), =aiSuspend= / =aiResume= (reversible pause/restore),
+=deClaudify= (permanent removal), and =examples= (all invocations with the current
+templates base).
 
 * Table of Contents     :TOC:
 - [[#the-concept-and-model-of-an-ai-activity][The Concept and Model of an AI Activity]]
@@ -117,9 +116,9 @@ bisos.startAiActivity is a python package that uses the
 - [[#two-part-architecture-execution-engine--templates][Two-Part Architecture: Execution Engine + Templates]]
   - [[#part-1-----the-execution-engine-this-package][Part 1 --- the execution engine (this package)]]
   - [[#part-2-----the-templates-a-separate-repo-you-clone][Part 2 --- the templates (a separate repo you clone)]]
-  - [[#bisos-users-templates-are-pre-provisioned][BISOS users: templates are pre-provisioned]]
+  - [[#auto-detection-two-canonical-locations][Auto-detection: two canonical locations]]
 - [[#post-installation-setup][Post-Installation Setup]]
-  - [[#for-non-bisos-users-clone-the-templates-repo-then-configure][For non-BISOS users: clone the templates repo, then configure]]
+  - [[#for-non-bisos-users-canonical-clone-no-config-step][For non-BISOS users: canonical clone, no config step]]
   - [[#for-bisos-users-nothing-to-do-usually][For BISOS users: nothing to do (usually)]]
 - [[#installation][Installation]]
   - [[#installation-with-pip][Installation With pip]]
@@ -129,7 +128,7 @@ bisos.startAiActivity is a python package that uses the
   - [[#set-templates-base-directory][Set Templates Base Directory]]
   - [[#install-templates-into-a-project][Install Templates Into a Project]]
   - [[#install-a-subproject-overlay][Install a Subproject Overlay]]
-  - [[#customizing-a-shared-template-file---nolink][Customizing a Shared Template File: --noLink]]
+  - [[#customizing-a-shared-template-file---nolink][Customizing a Shared Template File: =--noLink=]]
   - [[#skills][Skills]]
   - [[#suspend-and-resume-ai-collaboration][Suspend and Resume AI Collaboration]]
   - [[#remove-ai-collaboration-files][Remove AI Collaboration Files]]
