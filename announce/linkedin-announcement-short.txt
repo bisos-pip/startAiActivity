@@ -22,7 +22,10 @@ collaborative environment — not on top of an industrial one.
 
 Unix is convivial; Windows is industrial. Git is inherently collaborative. Org-mode is a far richer collaborative substrate than Markdown. Build a base of Linux + Git + org-mode first — then shape AI usage within it. Emacs is not required; our own use is Emacs-based, but this works with VS Code too.
 
-Real software and writing work spans many sessions, machines, and teammates. Every new Claude Code session re-explains context. A colleague picking up your work can read the code, but not how you've been collaborating with Claude on it. That's the individualistic default.
+Real software development and writing work spans many sessions, machines, and
+teammates. Every new Claude Code session re-explains context. A colleague
+picking up your work can read the code, but not how you've been collaborating
+with Claude on it. That's the individualistic default.
 
 The linchpin of our alternative revolves around the concept of "AI-Activity" — a
 durable, collaborative effort between humans and Claude, with state living in
