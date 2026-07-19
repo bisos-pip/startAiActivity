@@ -20,7 +20,10 @@ exploitation-oriented — pushing AI usage toward individualistic, industrial
 models. We reject that trajectory. AI belongs inside a cumulative, convivial,
 collaborative environment — not on top of an industrial one.
 
-Unix is convivial; Windows is industrial. Git is inherently collaborative. Org-mode is a far richer collaborative substrate than Markdown. Build a base of Linux + Git + org-mode first — then shape AI usage within it. Emacs is not required; our own use is Emacs-based, but this works with VS Code too.
+Unix is convivial; Windows is industrial. Git is inherently collaborative.
+Org-mode is a far richer collaborative substrate than Markdown. Build a base of
+Linux + Git + org-mode first — then shape AI usage within it. Emacs is not
+required; our own use is Emacs-based, but this works with VS Code too.
 
 Real software development and writing work spans many sessions, machines, and
 teammates. Every new Claude Code session re-explains context. A colleague
@@ -31,10 +34,14 @@ The linchpin of our alternative revolves around the concept of "AI-Activity" —
 durable, collaborative effort between humans and Claude, with state living in
 git-controlled org-mode files rather than session memory. Two files encode it:
 
-• AI-Activity.org — how this kind of work is usually done. Reusable across projects of that kind.
-• AI-WorkPlan.org — this effort's stages and TODOs, paired with AI-DevStatus.org tracking current state.
+• AI-Activity.org — how this kind of work is usually done. Reusable across
+• projects of that kind. AI-WorkPlan.org — this effort's stages and TODOs,
+• paired with AI-DevStatus.org tracking current state.
 
-Human-to-human handoff and human-to-AI resumption are the same problem: continuity across a discontinuity. Org-mode makes both work — real TODO state machines, anchors, archive, scheduled dates. Markdown can only approximate these through convention.
+Human-to-human handoff and human-to-AI resumption are the same problem:
+continuity across a discontinuity. Org-mode makes both work — real TODO state
+machines, anchors, archive, scheduled dates. Markdown can only approximate these
+through convention.
 
 Zero-config setup:
 
@@ -43,7 +50,9 @@ Zero-config setup:
   cd yourProject
   startAiActivity.cs -i initiate --activity=bisos-pip
 
-Claude Code then walks up from your project, reads the CLAUDE.md hierarchy, and knows how you work and where the current effort stands. Fork the templates repo for your team's conventions. Nest subprojects. Suspend and resume activities.
+Claude Code then walks up from your project, reads the CLAUDE.md hierarchy, and
+knows how you work and where the current effort stands. Fork the templates repo
+for your team's conventions. Nest subprojects. Suspend and resume activities.
 
 If you're using Claude Code for real collaborative work, try it. I'd love to hear how it lands.
 
