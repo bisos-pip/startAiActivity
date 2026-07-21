@@ -679,6 +679,24 @@ this Stage 11 with three DONE TODOs.
 Applied in the same session that implemented the code changes.
 ** -
 
+* Stage 12: Maintenance and New Feature Ideas
+
+Goal: Based on usage consider new features, and non-urgent bugs.
+
+* Stage 12 TODOs
+** +
+** TODO [#A] Add a .startAiActicity.cs to the currect directory that captures and defines templates directory :aiAndMe:
+SCHEDULED: <2026-07-21 Tue 13:41>
+In stuations when one works with different template dirs it is possible to confuse recrecreations and resumes.
+This makes it convenient. Also upon creation of the repo this can be planted to move towrds less config.
+----- AI Results: ------
+** TODO [#A]  In ~/.config/bisos/startAiActivity.cs  create and fps directory and  move the fps there
+SCHEDULED: <2026-07-21 Tue 13:41>
+This will then become a stardard for persistent user parameters. Also consider brining current here.
+----- AI Results: ------
+
+** -
+
 
 # Local Variables:
 # eval: (setq-local toc-org-max-depth 4)
