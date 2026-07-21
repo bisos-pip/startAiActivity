@@ -28,6 +28,35 @@ overrides. PyPI upload has been done (Stage 9 items are all closed).
 
 Key changes since last status:
 
+- *Templates trees propagated (2026-07-21):* BISOS canonical tree at
+  =/bisos/apps/defaults/ai-templates= mirrored to the public
+  =bxexamples/aiActivityTemplates= (structural clone; only top-level
+  =README.org= and =LICENSE= diverge). Rana-notes T-Mobile fork
+  received only =aiActivity/= (the newest addition); its =mother/=,
+  =ranaApiUsage/=, =tmoLatex/= remain unchanged; =sbom+cap/=
+  intentionally not included. =rana-notes/basic/AI-Activity.org=
+  deliberately kept rana-adjusted --- do NOT re-sync it from BISOS.
+  Rana-notes =aiActivityTemplates/= directory is intentionally
+  untracked by rana-notes git (Mohsen's decision --- personal notes
+  repo, templates fork is separate WIP).
+- *=aiActivity= activity + =authoring-skills= skill (2026-07-17):*
+  New activity =aiActivity/= at =/bisos/apps/defaults/ai-templates=
+  (and now propagated to bxexamples + rana-notes). Its
+  =AI-Activity.org= is a freestanding orientation to the AI Activity
+  model itself --- concepts, file roles, symlink-vs-copy semantics,
+  lifecycle commands, walk-up mechanics. Designed to be both
+  installed directly (=--activity=aiActivity= at repo level as an
+  alternative to =basic=) and =@=-imported by other activities'
+  =AI-Activity.org= files to inherit model-orientation. Ships with
+  one skill: =authoring-skills/SKILL.md= --- guidance for creating
+  new skills under any activity (frontmatter contract, name
+  conventions, when to write a skill vs extend AI-Activity.org).
+- *New activities beyond the earlier set:* Templates trees now
+  contain =pycs/= and =sbom+cap/= (both BISOS + bxexamples) in
+  addition to =bisos-pip=, =xu-single=, =blee-panels=, =lcnt=,
+  =bisos-core=, =basic=, =custom=, =aiActivity=. Each has an
+  =AI-Activity.org=; =bisos-pip/= and =sbom+cap/= and =aiActivity/=
+  ship =_skills/=.
 - *CLAUDE.md is safe-copied, not symlinked (Stage 11):* Claude Code
   resolves symlinks before reading, so =@./AI-Activity.org= inside a
   symlinked =CLAUDE.md= would resolve against the templates directory
@@ -205,7 +234,9 @@ Key external dependencies (not bundled):
         commands/
       initiateSub/            — slim overlay template (new in Stage 6)
         CLAUDE.md             — imports only local AI-Activity/DevStatus/WorkPlan
-    <activity>/               — e.g. bisos-pip, xu-single, blee-panels, lcnt
+    <activity>/               — e.g. basic, custom, aiActivity, bisos-pip,
+                                xu-single, blee-panels, lcnt, bisos-core,
+                                pycs, sbom+cap
       AI-Activity.org         — always-loaded orientation
       AI-DevStatus.org        — initial-state safe-copy
       AI-WorkPlan.org         — initial-state safe-copy
@@ -222,6 +253,36 @@ Key external dependencies (not bundled):
 Entry points (=setup.py= console_scripts):
 
 - =startAiActivity.cs= → =py3/bin/startAiActivity.cs=
+
+** Templates Trees
+
+Three templates trees are live:
+
+- *BISOS canonical* --- =/bisos/apps/defaults/ai-templates/=. Master
+  source. All new activities and changes originate here.
+- *bxexamples public reference* ---
+  =/bisos/git/bxRepos/bxexamples/aiActivityTemplates/= (a git repo
+  published at https://github.com/bxexamples/aiActivityTemplates).
+  Kept as a full structural mirror of BISOS. Only differences: its
+  own top-level =README.org= (fork-identity) and =LICENSE=. Per-project
+  files at the BISOS templates root (=AI-Activity.org=,
+  =AI-DevStatus.org=, =AI-WorkPlan.org=, symlinked =AI-WORKFLOW.org=,
+  =CLAUDE.md=, and =.claude/=) are intentionally NOT propagated ---
+  BISOS eats its own dogfood by installing =aiActivity= against
+  itself, but bxexamples remains a bare templates repo.
+- *rana-notes T-Mobile fork* ---
+  =/git/rana/rana-notes/aiActivityTemplates/= (untracked in the
+  rana-notes git repo by design). Contains T-Mobile-adjusted
+  =mother/= and T-Mobile-only activities (=ranaApiUsage/=,
+  =tmoLatex/=). Selectively receives updates from BISOS: as of
+  2026-07-21, has =aiActivity/= (the shared model orientation) but
+  intentionally NOT =sbom+cap/= or the BISOS-specific
+  =bisos-pip=/=xu-single=/=bisos-core=/=lcnt= activities.
+  =basic/AI-Activity.org= deliberately diverges from BISOS ---
+  rana-adjusted; do not re-sync.
+
+Sync direction is BISOS → forks (one-way). Between-fork syncs are
+not defined.
 
 * Key Design Decisions
 

@@ -128,7 +128,7 @@ startAiActivity.cs intro, User Config section (userConfig_get/set), initiate sec
 and Design/Evolution TODOs. No RO/service sections (command-only package).
 ** DONE [#A] <<No py-dblock.cs>> in Documentation
 CLOSED: [2026-07-13 Sun] SCHEDULED: <2026-06-09 Tue>
-Now that bisos.pyDblock is in place separate from  startAiActicity. Delete all mention of py-dblock.cs from documentation
+Now that bisos.pyDblock is in place separate from startAiActivity. Delete all mention of py-dblock.cs from documentation
 Show me current mentions before deleting them
 ----- AI Results: ------
 Removed all =py-dblock.cs= mentions from the four documentation files:
@@ -677,6 +677,51 @@ safe-copied (the =@./= symlink-resolution bug). Engine =AI-WorkPlan.org=:
 this Stage 11 with three DONE TODOs.
 ----- AI Results: ------
 Applied in the same session that implemented the code changes.
+** DONE [#A] <<aiActivity Activity>> Create aiActivity activity + authoring-skills skill :ai:
+CLOSED: [2026-07-17 Wed] SCHEDULED: <2026-07-17 Wed>
+New activity directory =/bisos/apps/defaults/ai-templates/aiActivity/=
+containing =AI-Activity.org= (freestanding orientation to the AI
+Activity model itself --- concepts, file roles, symlink-vs-copy
+semantics with the CLAUDE.md exception, initiate/initiateSub/refresh
+mechanics, walk-up, templatesBase resolution) and one skill:
+=_skills/authoring-skills/SKILL.md= (frontmatter contract, weak-vs-
+strong description examples, when to write a skill vs extend
+=AI-Activity.org=, naming conventions, testing loop).
+----- AI Results: ------
+Designed to be used two ways: (1) installed directly with
+=--activity=aiActivity= at repo level as an alternative to =basic=,
+giving fresh Claude sessions in an aiActivity-model-focused project
+correct orientation; (2) =@=-imported by other activities'
+=AI-Activity.org= files so their sessions inherit the model layer.
+Deliberately kept freestanding (no =@./= back-imports) so import-safe.
+Initially BISOS-only per user direction ("use in a large project
+first, then propagate") --- propagated to bxexamples and rana-notes
+on 2026-07-21 (see next TODO).
+** DONE [#A] <<Templates Propagation>> Propagate BISOS templates to bxexamples and rana-notes :ai:
+CLOSED: [2026-07-21 Tue] SCHEDULED: <2026-07-21 Tue>
+Bxexamples: full structural mirror of BISOS canonical tree ---
+overwrote/added all 11 activity directories (=mother/=, =basic/=,
+=custom/=, =bisos-pip/=, =bisos-core/=, =xu-single/=, =blee-panels/=,
+=lcnt/=, =aiActivity/=, =sbom+cap/=, =pycs/=). Preserved bxexamples
+own =README.org=, =LICENSE=, and =.git/=. Did NOT copy the BISOS
+templates-root per-project files --- those are BISOS's own dogfood
+install, not part of the shared template content. Dropped
+=basic/.claude/= and =custom/.claude/= leftover directories.
+Rana-notes: added =aiActivity/= only (BISOS's most recent work);
+existing =mother/=, =ranaApiUsage/=, =tmoLatex/=, =basic/=, =custom/=
+left untouched. Rana-notes =basic/AI-Activity.org= deliberately kept
+rana-adjusted --- differs from BISOS by design. =sbom+cap/= NOT
+propagated per user direction. Rana-notes =aiActivityTemplates/=
+directory is intentionally untracked in rana-notes git.
+----- AI Results: ------
+Applied via a =cp -a= loop (rsync unavailable on this host). Seven
+key files spot-md5-checked BISOS-vs-bxexamples parity: all matched.
+Two git repos have uncommitted changes (bxexamples and rana-notes)
+for user to commit at leisure. During survey, spotted
+=bisos-capabilites.org= (typo, should be =capabilities=) in three
+activities (=bisos-pip=, =pycs=, =sbom+cap=) --- noted, no action
+taken (intentional content, but the typo is a candidate for a
+future filename fix).
 ** -
 
 * Stage 12: Maintenance and New Feature Ideas
@@ -685,14 +730,14 @@ Goal: Based on usage consider new features, and non-urgent bugs.
 
 * Stage 12 TODOs
 ** +
-** TODO [#A] Add a .startAiActicity.cs to the currect directory that captures and defines templates directory :aiAndMe:
+** TODO [#A] Add a .startAiActivity.cs to the current directory that captures and defines templates directory :aiAndMe:
 SCHEDULED: <2026-07-21 Tue 13:41>
-In stuations when one works with different template dirs it is possible to confuse recrecreations and resumes.
-This makes it convenient. Also upon creation of the repo this can be planted to move towrds less config.
+In situations when one works with different template dirs it is possible to confuse re-creations and resumes.
+This makes it convenient. Also upon creation of the repo this can be planted to move towards less config.
 ----- AI Results: ------
-** TODO [#A]  In ~/.config/bisos/startAiActivity.cs  create and fps directory and  move the fps there
+** TODO [#A]  In ~/.config/bisos/startAiActivity.cs  create an fps directory and move the fps there
 SCHEDULED: <2026-07-21 Tue 13:41>
-This will then become a stardard for persistent user parameters. Also consider brining current here.
+This will then become a standard for persistent user parameters. Also consider bringing current here.
 ----- AI Results: ------
 
 ** -
