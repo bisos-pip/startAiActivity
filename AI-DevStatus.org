@@ -19,14 +19,52 @@ This file is maintained by Claude. Updates are typically triggered by the
 
 * Current State
 
-As of 2026-07-16, Stages 1–8 are complete plus post-Stage-8 refinements
-(provenance line, =--noLink= override, =custom= activity). The package
-is functionally working with a full set of lifecycle commands, skills
-integration, subproject overlays, precedence-based templates auto-detection,
-retired-AI-AGENTS.org simplification, and per-invocation provenance/symlink
-overrides. PyPI upload has been done (Stage 9 items are all closed).
+As of 2026-07-27, Stages 1–12 (TODO 4) are complete. Stage 12 adds
+documentation for AI-Activity topologies (Homogeneous/Heterogeneous,
+Hierarchical/Lateral), the =fps= path migration in =userConfig_csu=, and
+per-directory config override via =--cwd=.
 
 Key changes since last status:
+
+- *Root elimination + parPermanence-as-list + activity persistence
+  (Stage 12 TODO 5):* Coordinated redesign following on TODO 4:
+  - =parPermanence= is now a Python list, not a scalar string. Values
+    are combinations of ="userConfig"= and ="cwdConfig"=. =templates= is
+    tagged =["userConfig", "cwdConfig"]=; =activity= is =["cwdConfig"]=.
+    Both CSUs discover params using =in= containment on the list.
+  - The =root= param is *eliminated*. =initiate= and =initiateSub=
+    always operate on =pathlib.Path.cwd()=. The =subprocess= import and
+    the =git rev-parse --show-toplevel= call are gone. Users who used
+    =--root=repo --activity=X= from a subdir now =cd $(git rev-parse
+    --show-toplevel) && initiate --activity=X= (or set once with
+    =cwdConfig_set=).
+  - =activity= is now optional on both =initiate= and =initiateSub=,
+    resolved via new =_resolveActivity()= helper (CLI → cwdConfig).
+  - *Auto-persistence*: successful =initiate= / =initiateSub= write
+    =activity= to cwdConfig as a side effect, so the second invocation
+    can run bare. Deferred until after all preconditions pass (a failed
+    walk-up in =initiateSub= no longer leaves stale state).
+  - Examples menu is now conditional on cwdConfig contents: if
+    =activity= is set, a bare =startAiActivity.cs -i initiate= line
+    appears at the top of the =initiate= chapter; explicit
+    =--activity=<name>= lines follow.
+- *Per-directory config override (Stage 12 TODO 4):* New sibling module
+  =bisos.b.cwdConfig_csu= provides =cwdConfig_get= / =cwdConfig_set=
+  reading and writing =<cwd>/.<csxu-name>/fps/<parName>/value= (hidden
+  dotdir). Symmetric to =userConfig_csu= but for per-directory state.
+  =userConfig_csu= itself is unchanged --- no =cwd= param bloat.
+  =startAiActivity.cs= adds =bisos.b.cwdConfig_csu= to its csuList
+  alongside =bisos.b.userConfig_csu=. =_resolveTemplatesBase()= composes
+  the two: step 2 calls =cwdConfig_csu.parGet('templates')=, step 3
+  calls =userConfig_csu.parGet('templates')=. Both modules present in
+  source repo and installed venv copy.
+- *=fps= path migration (Stage 12 TODO 3):* =_configRoot()= in
+  =userConfig_csu= now appends =/fps=, making the canonical store
+  =~/.config/bisos/<csxu-name>/fps/<parName>/value=. Cold migration — old
+  entries left in place.
+- *AI-Activity topology docs (Stage 12 TODOs 1–2):* =README.org= has a new
+  "AI-Activity Topology" section under Usage covering all four dimensions
+  (Homogeneous/Heterogeneous × Hierarchical/Lateral) with concrete examples.
 
 - *Templates trees propagated (2026-07-21):* BISOS canonical tree at
   =/bisos/apps/defaults/ai-templates= mirrored to the public
@@ -306,6 +344,21 @@ not defined.
   canonical name transparently takes over from the BISOS system copy
   --- no explicit =userConfig_set= needed. This avoids silently storing
   a non-existent path and honors user intent when both are present.
+
+- *Per-directory config is a separate CSU, not a =--cwd= flag on
+  =userConfig_csu=.* =bisos.b.cwdConfig_csu= is the sibling of
+  =bisos.b.userConfig_csu= --- same shape, but its =_configRoot()=
+  returns =<cwd>/.<csxu-name>/fps/= instead of
+  =~/.config/bisos/<csxu-name>/fps/=. Chose composition-of-CSUs over
+  parameter-overload because (a) it matches the existing "one CSU per
+  capability, opt in via csuList" pattern, (b) users who don't want
+  per-directory config don't pay for an extra CLI param in every
+  command signature, (c) each store has a symmetric read/write pair
+  (=cwdConfig_get/set= and =userConfig_get/set=) with no fall-through
+  magic --- precedence policy lives in the caller
+  (=_resolveTemplatesBase=), the stores stay dumb. The dotdir prefix
+  (=.<csxu-name>/=) hides the per-project config from =ls= and clearly
+  attributes it to the tool that manages it.
 
 - *=csuListProc= pattern: elisp block is mandatory* — the
   =b:py3:cs:framework/csuListProc= dblock reads =b:py:cs:csuList= from the

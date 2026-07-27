@@ -22,13 +22,14 @@ TODO below is the standard first step, or use =/bx-confirm0= as the automated eq
 TODOs tagged =:ai:= are assigned to Claude. After completing a TODO, summarize results
 under =----- AI Results: ------= and mark it DONE.
 
-* Stage 1: Confirm AI's Understanding of This Repo's Context
+* Stage 0: Confirm AI's Understanding of This Repo's Context
 
 Goal: Confirm AI's understanding of the context and capture that in [[Context Confirmation]] TODO.
 
 
-* Stage 1 TODOs
+* Stage 0: TODOs
 ** +
+----- AI Results: ------
 ** -
 
 * Stage 2: Fully Implement startAiActivity.cs
@@ -730,16 +731,126 @@ Goal: Based on usage consider new features, and non-urgent bugs.
 
 * Stage 12 TODOs
 ** +
-** TODO [#A] Add a .startAiActivity.cs to the current directory that captures and defines templates directory :aiAndMe:
-SCHEDULED: <2026-07-21 Tue 13:41>
-In situations when one works with different template dirs it is possible to confuse re-creations and resumes.
-This makes it convenient. Also upon creation of the repo this can be planted to move towards less config.
+** DONE [#A] Add to documentation the concept of "Homogenous and Heterogeneous AI-Activities" :aiAndMe:
+CLOSED: [2026-07-27 Sun]
+SCHEDULED: <2026-07-27 Mon 11:56>
+When all the directories and the repo of those directories all have references to a single set of
+ai-templates, we call that Homogenous AI-Activities. Example is that of a group of collaborators
+using one set of templates base for python convention pip package development and latex conventions for documentation.
+------
+When some  directories in the repo have references to different sets of ai-templates, we call that Heterogeneous
+AI-Activities. An example would be when you are developing some proprietary pip packages with one set of ai-templates
+and open-source pip packages with a different set of ai-templates.
+-----
+startAiActivity.cs supports both.
+Add this to the README.org
 ----- AI Results: ------
-** TODO [#A]  In ~/.config/bisos/startAiActivity.cs  create an fps directory and move the fps there
-SCHEDULED: <2026-07-21 Tue 13:41>
-This will then become a standard for persistent user parameters. Also consider bringing current here.
+Added new "AI-Activity Topology" section to =README.org= under Usage, covering
+both dimensions in two subsections (Homogeneous/Heterogeneous and
+Hierarchical/Lateral) with concrete examples. TOC entry added. Notes that the two
+axes are orthogonal and combinable, and that =--templates= / the forthcoming
+per-directory override are the mechanisms for Heterogeneous topologies.
+** DONE [#A] Add to documentation the concept of "Lateral AI-Activities and Hierarchical AI-Activities"  :aiAndMe:
+CLOSED: [2026-07-27 Sun]
+SCHEDULED: <2026-07-27 Mon 11:56>
+When working on a project, you may be working on a set of directories that fall under the same repo.
+We call that Hierarchical AI-Activities. In one directory you do pip pkg dev. And under it you do its latex doc.
+This would be called Hierarchical AI-Activities
+-----
+Work on a project may involve visiting multiple repos. This would be called a Laterial AI-Activity.
+----
+startAiActivity.cs supports both.
+Homogenous and Heterogenous and Lateral and Hierarchical can be combined.
+Add this to the README.org
 ----- AI Results: ------
+Covered in the same "AI-Activity Topology" section as TODO 1 above (combined as
+planned). Hierarchical = nested dirs / =initiate= + =initiateSub=; Lateral =
+multiple independent repos each =initiate=-d, Claude walk-up picks up both.
+Noted that all four variants combine freely.
+** DONE [#A]  In ~/.config/bisos/startAiActivity.cs  create an fps directory and move the fps there
+CLOSED: [2026-07-27 Sun]
+SCHEDULED: <2026-07-21 Tue 13:41>
+This will then become a standard for persistent user parameters.
+Currently the implementation uses ~/.config/bisos/startAiActivity.cs/templates for base of its file param.
+Instead we want to use ~/.config/bisos/startAiActivity.cs/fps/templates
+----- AI Results: ------
+Changed =_configRoot()= in =bisos.b.userConfig_csu= to append =/fps= to the path,
+making the standard store =~/.config/bisos/<csxu-name>/fps/<parName>/value= for all
+bisos-pip packages. Applied to both the source repo
+(=/bisos/git/auth/bxRepos/bisos-pip/b/py3/bisos/b/userConfig_csu.py=) and the
+installed copy in the venv. Cold migration — old entries at the old path are left
+in place; no auto-migration. Verified: =userConfig_set= / =userConfig_get= work
+correctly and the config root log now shows =/fps=.
 
+** DONE [#A] <<Add a .startAiActivity.cs to the current directory>> that captures and defines templates directory :aiAndMe:
+CLOSED: [2026-07-27 Sun]
+SCHEDULED: <2026-07-21 Tue 13:41>
+In the case of Heterogenous AI-Activities, one needs to change the templates parameter for startAiActivity.cs.
+In situations when one works with different template dirs it is possible to confuse re-creations and resumes.
+Existence of a .startAiActivity.cs/fps/templates in the current directory over rides the value in
+~/.config/bisos/startAiActivity.cs/fps/templates
+This makes usafge more  convenient. Also upon creation of the repo this can be configured to move towards less config.
+----- AI Results: ------
+Implemented as a separate CSU rather than a =--cwd= flag on =userConfig_csu=.
+Initial implementation added =--cwd= to =userConfig_csu.parGet/parSet= and
+its two commands; the user reviewed and pushed back --- correctly --- that
+composition-of-CSUs is the better factoring. Redone as follows:
+
+- New module =bisos.b.cwdConfig_csu= (source + venv). Mirrors
+  =userConfig_csu= structurally but its =_configRoot()= returns
+  =<cwd>/.<csxu-name>/fps/= (hidden dotdir) instead of the =~/.config/=
+  path. Exposes =cwdConfig_get= and =cwdConfig_set= commands with the
+  same =--parName= / =--parValue= interface. Reuses the =parName= /
+  =parValue= params declared by =userConfig_csu= (its own
+  =commonParamsSpecify()= is empty).
+- =userConfig_csu= reverted to its pre-Stage-12 shape --- no =cwd=
+  parameter anywhere. No LSP diagnostics remain.
+- =startAiActivity.cs= adds =bisos.b.cwdConfig_csu= to its csuList
+  alongside =bisos.b.userConfig_csu= (both the elisp block and the
+  =csuList= list). Imports both modules. The =examples= command
+  invokes =cwdConfig_csu.examples_csu().pyCmnd()= right after the
+  =userConfig_csu= one, so the top-level =examples= menu shows both
+  =userConfig_get/set= and =cwdConfig_get/set= chapters.
+- =_resolveTemplatesBase()= composes them: step 2 is
+  =cwdConfig_csu.parGet('templates')=, step 3 is
+  =userConfig_csu.parGet('templates')=. Each reads only its own
+  store; the precedence policy lives here, not in the CSUs.
+- End-to-end smoke test verified: =cwdConfig_set --parName=templates=
+  writes to =./.startAiActivity.cs/fps/templates/value=; =cwdConfig_get=
+  reads it back; unset case reports =(not set)=; examples menu shows
+  both CSUs' chapters as expected.
+
+** DONE [#A] <<Eliminate root + parPermanence-as-list + activity persistence>> :aiAndMe:
+CLOSED: [2026-07-27 Sun]
+SCHEDULED: <2026-07-27 Sun>
+Coordinated redesign following on TODO 4:
+- =parPermanence= becomes a Python list (breaking change; only one
+  caller in tree).
+- =templates= tagged =["userConfig", "cwdConfig"]=; =activity= tagged
+  =["cwdConfig"]=.
+- Eliminate the =root= param entirely from =initiate= / =initiateSub=;
+  both always operate on cwd.
+- =activity= becomes optional on both commands, resolved by new
+  =_resolveActivity()= (CLI → cwdConfig).
+- =initiate= / =initiateSub= auto-persist =activity= to cwdConfig on
+  success (deferred until after preconditions pass).
+- Examples menu grows a conditional chapter: if cwdConfig has
+  =activity= set, show a bare =startAiActivity.cs -i initiate= line
+  at the top of the =initiate= chapter.
+- Update =verify.sh= to drop =--root= and add coverage for
+  bare-invocation + auto-persistence trace.
+----- AI Results: ------
+Implemented in a single pass across =startAiActivity.cs= (source repo
+--- venv is a symlink so no separate sync), =b/py3/bisos/b/userConfig_csu.py=
+and =b/py3/bisos/b/cwdConfig_csu.py= (both source + venv), and
+=py3/tests/verify.sh=. Removed =subprocess= import (no longer needed).
+Bug caught during smoke test: initial version wrote =activity= to
+cwdConfig before the =initiateSub= walk-up precondition ran, leaving
+=.startAiActivity.cs/= behind in =/tmp= when the negative-case test
+refused. Fixed by moving the auto-persist call after the walk-up
+succeeds. =verify.sh= confirmed clean: bare =initiate= reads from
+cwdConfig, auto-persistence trace visible, negative-case =/tmp/= dir
+stays clean.
 ** -
 
 

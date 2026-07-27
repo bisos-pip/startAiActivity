@@ -126,7 +126,6 @@ templates base).
   - [[#post-installation-basic-testing][Post-Installation Basic Testing]]
 - [[#usage][Usage]]
   - [[#set-templates-base-directory][Set Templates Base Directory]]
-  - [[#per-directory-templates-override][Per-Directory Templates Override]]
   - [[#install-templates-into-a-project][Install Templates Into a Project]]
   - [[#install-a-subproject-overlay][Install a Subproject Overlay]]
   - [[#customizing-a-shared-template-file---nolink][Customizing a Shared Template File: =--noLink=]]
@@ -331,88 +330,27 @@ startAiActivity.cs -i userConfig_get --parName=templates
 
 ** Set Templates Base Directory
 
-Set the global (machine-wide) default once:
-
 #+begin_src bash
 startAiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/ai-templates
 #+end_src
 
-This writes to =~/.config/bisos/startAiActivity.cs/fps/templates/value= and
-applies whenever you invoke =startAiActivity.cs= without a =--templates=
-override.
-
-** Per-Directory Templates Override
-
-For Heterogeneous AI-Activities — where different directories in the same
-project (or on the same machine) use different template trees — set a
-per-directory override with =cwdConfig_set=:
-
-#+begin_src bash
-cd /path/to/your/project
-startAiActivity.cs -i cwdConfig_set --parName=templates --parValue=/path/to/other-templates
-#+end_src
-
-This writes to =./.startAiActivity.cs/fps/templates/value= (hidden dotdir
-in the current directory). When =startAiActivity.cs= is run in that
-directory, the per-directory value takes precedence over the global
-user-config.
-
-To read the per-directory value:
-
-#+begin_src bash
-startAiActivity.cs -i cwdConfig_get --parName=templates
-#+end_src
-
-=cwdConfig_get= reads *only* the per-directory store (reports =(not set)=
-if nothing is written there). =userConfig_get= reads *only* the global
-store. The two commands are symmetric and independent; the caller
-(=startAiActivity.cs= itself, via =_resolveTemplatesBase=) is what
-composes them into a precedence chain.
-
-*Precedence chain* for =templates= resolution:
-1. =--templates= CLI flag (explicit override for this single invocation)
-2. =./.startAiActivity.cs/fps/templates/value= (=cwdConfig_set=)
-3. =~/.config/bisos/startAiActivity.cs/fps/templates/value= (=userConfig_set=)
-4. Auto-detect: =~/aiActivityTemplates= then =/bisos/apps/defaults/ai-templates=
-
-*Implementation note.* The per-directory feature is provided by a
-separate CSU, =bisos.b.cwdConfig_csu=, added to this csxu's =csuList=
-alongside =bisos.b.userConfig_csu=. Any bisos-pip package that wants
-either or both persistence flavors composes them the same way.
-
 ** Install Templates Into a Project
 
-=initiate= always operates on the *current directory*. To install at a
-different location (e.g. the git repo root), =cd= there first.
-
-Simplest form — pass the activity on the CLI:
+Install into the current directory:
 
 #+begin_src bash
 startAiActivity.cs -i initiate --activity=bisos-pip
 #+end_src
 
-On success, =initiate= *auto-persists* =activity= to cwdConfig at
-=./.startAiActivity.cs/fps/activity/value=. Subsequent invocations in
-the same directory (=refresh=, =aiSuspend=/=aiResume=, or a second
-=initiate= after =deClaudify=) can then run bare, no CLI flags needed:
+Install at the git repo root:
 
 #+begin_src bash
-startAiActivity.cs -i initiate           # activity read from cwdConfig
-#+end_src
-
-Alternatively, set =activity= explicitly with =cwdConfig_set= before
-=initiate=:
-
-#+begin_src bash
-startAiActivity.cs -i cwdConfig_set --parName=activity --parValue=bisos-pip
-startAiActivity.cs -i initiate           # no --activity needed
+startAiActivity.cs -i initiate --root=repo --activity=bisos-pip
 #+end_src
 
 Available activities match subdirectories under the templates base (e.g.
 =bisos-pip=, =bisos-core=, =xu-single=, =blee-panels=, =lcnt=). Run
-=startAiActivity.cs -i examples= to see all available activities. When
-=activity= is already persisted in cwdConfig, the examples menu shows
-the bare =initiate= invocation at the top of the =initiate= chapter.
+=startAiActivity.cs -i examples= to see all available activities.
 
 =initiate= installs the following into the target directory: symlinks for
 the constant files (=CLAUDE.md=, =AI-WORKFLOW.org=,
@@ -625,9 +563,9 @@ tree, so a fresh Claude session in each picks up the correct conventions
 automatically.
 
 The =--templates= parameter (overrides the user-config default for a
-single invocation) and the per-directory
-=.startAiActivity.cs/fps/templates= override (see *Per-Directory Templates
-Override* above) are the mechanisms that enable Heterogeneous topologies.
+single invocation) and the forthcoming per-directory
+=.startAiActivity.cs/fps/templates= override (see *Planned Improvements*)
+are the mechanisms that enable Heterogeneous topologies.
 
 *** Hierarchical vs Lateral
 

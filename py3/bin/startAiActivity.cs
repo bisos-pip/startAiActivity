@@ -87,7 +87,6 @@ import datetime
 import os
 import pathlib
 import shutil
-import subprocess
 import sys
 import typing
 
@@ -100,10 +99,11 @@ import bisos.pyDblock.dblock_particulars  # registers b:ai:file/particulars hand
 (setq  b:py:cs:csuList
   (list
    "bisos.b.userConfig_csu"
+   "bisos.b.cwdConfig_csu"
  ))
 #+END_SRC
 #+RESULTS:
-| bisos.b.userConfig_csu |
+| bisos.b.userConfig_csu | bisos.b.cwdConfig_csu |
 #+end_org """
 
 ####+BEGIN: b:py3:cs:framework/csuListProc :pyImports t :csuImports t :csuParams t :csxuParams nil
@@ -112,8 +112,9 @@ import bisos.pyDblock.dblock_particulars  # registers b:ai:file/particulars hand
 #+end_org """
 
 from bisos.b import userConfig_csu
+from bisos.b import cwdConfig_csu
 
-csuList = [ 'bisos.b.userConfig_csu', ]
+csuList = [ 'bisos.b.userConfig_csu', 'bisos.b.cwdConfig_csu', ]
 
 g_importedCmndsModules = cs.csuList_importedModules(csuList)
 
@@ -159,20 +160,38 @@ def _resolveTemplatesBase(cliOverride: typing.Optional[str]) -> typing.Optional[
     """Resolve the templates base with precedence:
 
     1. Explicit --templates CLI override (if provided by the user)
-    2. Persisted user-config value (from userConfig_set)
-    3. Auto-detect fallback (~/aiActivityTemplates, then BISOS path)
+    2. Per-directory config: <cwd>/.<csxu-name>/fps/templates/value (cwdConfig)
+    3. Global user-config value: ~/.config/bisos/<csxu-name>/fps/templates/value
+    4. Auto-detect fallback (~/aiActivityTemplates, then BISOS path)
 
-    Returns None only if all three fail. The user-config value MUST take
+    Returns None only if all four fail. The user-config value MUST take
     precedence over the auto-detect fallback --- otherwise a userConfig_set
     to a non-canonical path (e.g. a T-Mobile fork) would be silently
     ignored whenever an auto-detectable path also exists on disk.
     """
     if cliOverride:
         return cliOverride
+    cwdStored = cwdConfig_csu.parGet('templates')
+    if cwdStored:
+        return cwdStored
     stored = userConfig_csu.parGet('templates')
     if stored:
         return stored
     return _detectTemplatesDefault()
+
+
+def _resolveActivity(cliOverride: typing.Optional[str]) -> typing.Optional[str]:
+    """Resolve activity with precedence:
+
+    1. Explicit --activity CLI override (if provided)
+    2. Per-directory cwdConfig value at ./.<csxu-name>/fps/activity/value
+
+    Returns None if neither is set; callers should treat that as a
+    usage error.
+    """
+    if cliOverride:
+        return cliOverride
+    return cwdConfig_csu.parGet('activity')
 
 
 def _detectUser() -> str:
@@ -255,15 +274,6 @@ def commonParamsSpecify(
 ) -> None:
 
     csParams.parDictAdd(
-        parName='root',
-        parDescription="Target root: 'repo' for repo base, 'curDir' for current project directory.",
-        parDataType=None,
-        parDefault='curDir',
-        parChoices=['repo', 'curDir'],
-        argparseShortOpt=None,
-        argparseLongOpt='--root',
-    )
-    csParams.parDictAdd(
         parName='activity',
         parDescription="Template activity type matching a directory under <templatesBase>/.",
         parDataType=None,
@@ -271,6 +281,7 @@ def commonParamsSpecify(
         parChoices=[],
         argparseShortOpt=None,
         argparseLongOpt='--activity',
+        parPermanence=["cwdConfig"],
     )
     csParams.parDictAdd(
         parName='templates',
@@ -283,7 +294,7 @@ def commonParamsSpecify(
         parChoices=[],
         argparseShortOpt=None,
         argparseLongOpt='--templates',
-        parPermanence="userConfig",
+        parPermanence=["userConfig", "cwdConfig"],
     )
     csParams.parDictAdd(
         parName='noLink',
@@ -346,6 +357,7 @@ class examples(cs.Cmnd):
         cs.examples.commonBrief()
 
         userConfig_csu.examples_csu().pyCmnd()
+        cwdConfig_csu.examples_csu().pyCmnd()
 
         od = collections.OrderedDict
         cmnd = cs.examples.cmndEnter
@@ -370,36 +382,34 @@ class examples(cs.Cmnd):
              pars=od([]),
              comment="# Remove AI files from current directory")
 
-        cs.examples.menuChapter('=initiate= *root=curDir* (default) -- install into current directory')
+        # Read cwdConfig to decide whether initiate/initiateSub can be invoked bare.
+        cwdActivity = cwdConfig_csu.parGet('activity')
+
+        cs.examples.menuChapter('=initiate= -- install AI templates into current directory')
         if templatesBaseStr is None:
             cmnd('initiate',
-                 pars=od([('root', 'curDir'), ('activity', '<activity>')]),
+                 pars=od([('activity', '<activity>')]),
                  comment="# templates not set — run userConfig_set --parName=templates first")
+            activities = []
         else:
             templatesBase = pathlib.Path(templatesBaseStr)
             excludedDirs = {'mother', 'test'}
             activities = sorted([
                 d.name for d in templatesBase.iterdir()
-                if d.is_dir() and d.name not in excludedDirs
+                if d.is_dir() and d.name not in excludedDirs and not d.name.startswith('.')
             ])
+            if cwdActivity:
+                # cwdConfig supplies activity — show the bare invocation first.
+                cmnd('initiate',
+                     pars=od([]),
+                     comment=f"# activity={cwdActivity} from cwdConfig; no CLI flags needed")
             for activity in activities:
                 cmnd('initiate',
-                     pars=od([('root', 'curDir'), ('activity', activity)]),
-                     comment=f"# Install {activity} templates into current directory")
+                     pars=od([('activity', activity)]),
+                     comment=f"# Install {activity} templates (auto-persists activity to cwdConfig)")
                 if activity == 'custom':
                     cmnd('initiate',
-                         pars=od([('root', 'curDir'), ('activity', activity), ('noLink', 'AI-Activity.org')]),
-                         comment=f"# Same, but safe-copy AI-Activity.org (project-specific, editable)")
-
-        cs.examples.menuChapter('=initiate= *root=repo* -- install at git repo base')
-        if templatesBaseStr is not None:
-            for activity in activities:
-                cmnd('initiate',
-                     pars=od([('root', 'repo'), ('activity', activity)]),
-                     comment=f"# Install {activity} templates at repo base")
-                if activity == 'custom':
-                    cmnd('initiate',
-                         pars=od([('root', 'repo'), ('activity', activity), ('noLink', 'AI-Activity.org')]),
+                         pars=od([('activity', activity), ('noLink', 'AI-Activity.org')]),
                          comment=f"# Same, but safe-copy AI-Activity.org (project-specific, editable)")
 
         cs.examples.menuChapter('=initiateSub= -- slim subproject overlay (requires initiated parent)')
@@ -408,10 +418,14 @@ class examples(cs.Cmnd):
                  pars=od([('activity', '<activity>')]),
                  comment="# templates not set — run userConfig_set --parName=templates first")
         else:
+            if cwdActivity:
+                cmnd('initiateSub',
+                     pars=od([]),
+                     comment=f"# activity={cwdActivity} from cwdConfig; no CLI flags needed")
             for activity in activities:
                 cmnd('initiateSub',
                      pars=od([('activity', activity)]),
-                     comment=f"# Install slim {activity} overlay in current subdir")
+                     comment=f"# Install slim {activity} overlay (auto-persists activity to cwdConfig)")
                 if activity == 'custom':
                     cmnd('initiateSub',
                          pars=od([('activity', activity), ('noLink', 'AI-Activity.org')]),
@@ -421,31 +435,29 @@ class examples(cs.Cmnd):
 
 
 
-####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "initiate" :comment "Install AI templates via symlinks and safe-copy" :extent "verify" :ro "cli" :parsMand "activity" :parsOpt "root templates noLink" :argsMin 0 :argsMax 0 :pyInv ""
+####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "initiate" :comment "Install AI templates via symlinks and safe-copy" :extent "verify" :ro "cli" :parsMand "" :parsOpt "activity templates noLink" :argsMin 0 :argsMax 0 :pyInv ""
 """ #+begin_org
-*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<initiate>>  =verify= parsMand=activity parsOpt="root templates noLink" ro=cli   [[elisp:(org-cycle)][| ]]
+*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<initiate>>  =verify= parsOpt="activity templates noLink" ro=cli   [[elisp:(org-cycle)][| ]]
 #+end_org """
 class initiate(cs.Cmnd):
-    cmndParamsMandatory = [ 'activity', ]
-    cmndParamsOptional = [ 'root', 'templates', 'noLink', ]
+    cmndParamsMandatory = [ ]
+    cmndParamsOptional = [ 'activity', 'templates', 'noLink', ]
     cmndArgsLen = {'Min': 0, 'Max': 0,}
 
     @cs.track(fnLoc=True, fnEntry=True, fnExit=True)
     def cmnd(self,
              rtInv: cs.RtInvoker,
              cmndOutcome: b.op.Outcome,
-             activity: typing.Optional[str]=None,   # Cs Mandatory Param
-             root: typing.Optional[str]=None,        # Cs Optional Param
+             activity: typing.Optional[str]=None,    # Cs Optional Param
              templates: typing.Optional[str]=None,   # Cs Optional Param
              noLink: typing.Optional[str]=None,      # Cs Optional Param
     ) -> b.op.Outcome:
 
         failed = b_io.eh.badOutcome
-        callParamsDict = {'activity': activity, 'root': root, 'templates': templates, 'noLink': noLink, }
+        callParamsDict = {'activity': activity, 'templates': templates, 'noLink': noLink, }
         if self.invocationValidate(rtInv, cmndOutcome, callParamsDict, None).isProblematic():
             return failed(cmndOutcome)
         activity = csParam.mappedValue('activity', activity)
-        root = csParam.mappedValue('root', root)
         templates = csParam.mappedValue('templates', templates)
         noLink = csParam.mappedValue('noLink', noLink)
 ####+END:
@@ -454,7 +466,17 @@ class initiate(cs.Cmnd):
 Symlinks constant files from mother/. Symlinks AI-Activity.org from <activity>/.
 Safe-copies AI-DevStatus.org and AI-WorkPlan.org from <activity>/ (falling back to mother/).
 Expands b:ai:file/particulars dblock in copied files using pure Python.
+Target directory is always cwd. Activity is resolved from --activity CLI arg,
+falling back to cwdConfig at ./.<csxu-name>/fps/activity/value.
         #+end_org """)
+
+        cliActivity = activity
+        activity = _resolveActivity(activity)
+        if not activity:
+            b_io.eh.problem_usageError(
+                "activity not specified. Pass --activity=<name> or set with: "
+                "startAiActivity.cs -i cwdConfig_set --parName=activity --parValue=<name>")
+            return failed(cmndOutcome)
 
         templatesBaseStr = _resolveTemplatesBase(templates)
         if templatesBaseStr is None:
@@ -468,17 +490,13 @@ Expands b:ai:file/particulars dblock in copied files using pure Python.
             b_io.eh.problem_usageError(f"Activity directory not found: {activityDir}")
             return failed(cmndOutcome)
 
-        if root == 'repo':
-            result = subprocess.run(
-                ['git', 'rev-parse', '--show-toplevel'],
-                capture_output=True, text=True,
-            )
-            if result.returncode != 0:
-                b_io.eh.problem_usageError("Could not determine repo root (not in a git repo?)")
-                return failed(cmndOutcome)
-            targetDir = pathlib.Path(result.stdout.strip())
-        else:
-            targetDir = pathlib.Path.cwd()
+        targetDir = pathlib.Path.cwd()
+
+        # Auto-persist activity to cwdConfig when supplied via CLI, so
+        # subsequent invocations in this directory can run bare (no --activity).
+        if cliActivity and cwdConfig_csu.parGet('activity') != activity:
+            cwdConfig_csu.parSet('activity', activity)
+            b_io.ann.note(f"cwdConfig: activity={activity} persisted for {targetDir}")
 
         motherDir = templatesBase / 'mother'
 
@@ -582,31 +600,29 @@ Expands b:ai:file/particulars dblock in copied files using pure Python.
         )
 
 
-####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "initiateSub" :comment "Install slim subproject AI-collaboration overlay (requires initiated parent)" :extent "verify" :ro "cli" :parsMand "activity" :parsOpt "root templates noLink" :argsMin 0 :argsMax 0 :pyInv ""
+####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "initiateSub" :comment "Install slim subproject AI-collaboration overlay (requires initiated parent)" :extent "verify" :ro "cli" :parsMand "" :parsOpt "activity templates noLink" :argsMin 0 :argsMax 0 :pyInv ""
 """ #+begin_org
-*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<initiateSub>>  =verify= parsMand=activity parsOpt="root templates noLink" ro=cli   [[elisp:(org-cycle)][| ]]
+*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<initiateSub>>  =verify= parsOpt="activity templates noLink" ro=cli   [[elisp:(org-cycle)][| ]]
 #+end_org """
 class initiateSub(cs.Cmnd):
-    cmndParamsMandatory = [ 'activity', ]
-    cmndParamsOptional = [ 'root', 'templates', 'noLink', ]
+    cmndParamsMandatory = [ ]
+    cmndParamsOptional = [ 'activity', 'templates', 'noLink', ]
     cmndArgsLen = {'Min': 0, 'Max': 0,}
 
     @cs.track(fnLoc=True, fnEntry=True, fnExit=True)
     def cmnd(self,
              rtInv: cs.RtInvoker,
              cmndOutcome: b.op.Outcome,
-             activity: typing.Optional[str]=None,   # Cs Mandatory Param
-             root: typing.Optional[str]=None,        # Cs Optional Param
+             activity: typing.Optional[str]=None,    # Cs Optional Param
              templates: typing.Optional[str]=None,   # Cs Optional Param
              noLink: typing.Optional[str]=None,      # Cs Optional Param
     ) -> b.op.Outcome:
 
         failed = b_io.eh.badOutcome
-        callParamsDict = {'activity': activity, 'root': root, 'templates': templates, 'noLink': noLink, }
+        callParamsDict = {'activity': activity, 'templates': templates, 'noLink': noLink, }
         if self.invocationValidate(rtInv, cmndOutcome, callParamsDict, None).isProblematic():
             return failed(cmndOutcome)
         activity = csParam.mappedValue('activity', activity)
-        root = csParam.mappedValue('root', root)
         templates = csParam.mappedValue('templates', templates)
         noLink = csParam.mappedValue('noLink', noLink)
 ####+END:
@@ -617,10 +633,20 @@ AI-WorkPlan.org (safe-copy), and a slim CLAUDE.md (symlink to
 mother/initiateSub/CLAUDE.md) that imports only the local trio.
 Does NOT install AI-WORKFLOW.org or .claude/ — those are inherited
 from a parent directory that was previously initiated.
+Target directory is always cwd. Activity is resolved from --activity CLI arg,
+falling back to cwdConfig at ./.<csxu-name>/fps/activity/value.
 Refuses if no initiated parent is found (walks up looking for a
 startAiActivity-signature CLAUDE.md symlink) or if the target directory
 already has a CLAUDE.md.
         #+end_org """)
+
+        cliActivity = activity
+        activity = _resolveActivity(activity)
+        if not activity:
+            b_io.eh.problem_usageError(
+                "activity not specified. Pass --activity=<name> or set with: "
+                "startAiActivity.cs -i cwdConfig_set --parName=activity --parValue=<name>")
+            return failed(cmndOutcome)
 
         templatesBaseStr = _resolveTemplatesBase(templates)
         if templatesBaseStr is None:
@@ -639,17 +665,7 @@ already has a CLAUDE.md.
             b_io.eh.problem_usageError(f"Subproject CLAUDE.md template not found: {subClaudeSrc}")
             return failed(cmndOutcome)
 
-        if root == 'repo':
-            result = subprocess.run(
-                ['git', 'rev-parse', '--show-toplevel'],
-                capture_output=True, text=True,
-            )
-            if result.returncode != 0:
-                b_io.eh.problem_usageError("Could not determine repo root (not in a git repo?)")
-                return failed(cmndOutcome)
-            targetDir = pathlib.Path(result.stdout.strip())
-        else:
-            targetDir = pathlib.Path.cwd()
+        targetDir = pathlib.Path.cwd()
 
         # Refuse if target already has a CLAUDE.md (avoid clobbering existing initiate/initiateSub)
         localClaude = targetDir / 'CLAUDE.md'
@@ -694,6 +710,12 @@ already has a CLAUDE.md.
             return failed(cmndOutcome)
 
         b_io.ann.note(f"Initiated parent found at: {foundBase}")
+
+        # Auto-persist activity to cwdConfig — deferred to here so a failed
+        # walk-up doesn't leave stale state behind.
+        if cliActivity and cwdConfig_csu.parGet('activity') != activity:
+            cwdConfig_csu.parSet('activity', activity)
+            b_io.ann.note(f"cwdConfig: activity={activity} persisted for {targetDir}")
 
         # Install slim CLAUDE.md — always safe-copied (never a symlink).
         # Claude Code resolves symlinks before reading, which would cause

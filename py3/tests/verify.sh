@@ -1,28 +1,33 @@
 #!/bin/bash -i
 #
 
-# Safety check: must run from a directory named "test" — the cleanup step
+# Safety check: must run from a directory named "tests" — the cleanup step
 # rm -rf's AI-collaboration files, which would destroy real work if run
-# from a non-test directory by mistake.
-if [[ "$(basename "$PWD")" != "test" ]]; then
-    echo "ERROR: verify.sh must be run from a directory named 'test'." >&2
+# from a non-tests directory by mistake.
+if [[ "$(basename "$PWD")" != "tests" ]]; then
+    echo "ERROR: verify.sh must be run from a directory named 'tests'." >&2
     echo "  Current PWD: $PWD" >&2
     echo "  The initial cleanup step would delete AI-collaboration files." >&2
     exit 1
 fi
 
-# Start from a known-clean state (silent — matches may be absent)
-lpDo eval rm -rf .claude AI-*.org CLAUDE.md AI-*.dormant CLAUDE.md.dormant 2\>/dev/null
+# Start from a known-clean state (silent — matches may be absent).
+# Also wipe cwdConfig (.startAiActivity.cs/) so bare-invocation tests
+# can distinguish "activity persisted this run" from "leftover from
+# earlier run."
+lpDo eval rm -rf .claude AI-*.org CLAUDE.md AI-*.dormant CLAUDE.md.dormant .startAiActivity.cs 2\>/dev/null
 
 lpDo ls -a -C -F
 
 lpDo startAiActivity.cs -i userConfig_set --parName="templates" --parValue="/bisos/apps/defaults/ai-templates"           # BISOS DEFAULT
 lpDo startAiActivity.cs -i userConfig_get --parName="templates"
-lpDo startAiActivity.cs -i initiate --root="curDir" --activity="xu-single"           # Install xu-single templates into current directory
+lpDo startAiActivity.cs -i initiate --activity="xu-single"           # Install xu-single templates (auto-persists activity to cwdConfig)
 lpDo ls -a -C -F
+lpDo cat .startAiActivity.cs/fps/activity/value           # EXPECT: xu-single (auto-persisted)
 lpDo startAiActivity.cs -i deClaudify           # Remove AI files from current directory
 lpDo ls -a -C -F
-lpDo startAiActivity.cs -i initiate --root="curDir" --activity="xu-single"           # Install xu-single templates into current directory
+# Bare initiate — activity resolved from cwdConfig (no --activity flag).
+lpDo startAiActivity.cs -i initiate           # EXPECT: uses activity=xu-single from cwdConfig
 lpDo ls -a -C -F
 lpDo startAiActivity.cs -i aiSuspend
 lpDo ls -a -C -F
