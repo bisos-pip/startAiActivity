@@ -398,11 +398,6 @@ class examples(cs.Cmnd):
                 d.name for d in templatesBase.iterdir()
                 if d.is_dir() and d.name not in excludedDirs and not d.name.startswith('.')
             ])
-            if cwdActivity:
-                # cwdConfig supplies activity — show the bare invocation first.
-                cmnd('initiate',
-                     pars=od([]),
-                     comment=f"# activity={cwdActivity} from cwdConfig; no CLI flags needed")
             for activity in activities:
                 cmnd('initiate',
                      pars=od([('activity', activity)]),
@@ -418,10 +413,6 @@ class examples(cs.Cmnd):
                  pars=od([('activity', '<activity>')]),
                  comment="# templates not set — run userConfig_set --parName=templates first")
         else:
-            if cwdActivity:
-                cmnd('initiateSub',
-                     pars=od([]),
-                     comment=f"# activity={cwdActivity} from cwdConfig; no CLI flags needed")
             for activity in activities:
                 cmnd('initiateSub',
                      pars=od([('activity', activity)]),
@@ -430,6 +421,22 @@ class examples(cs.Cmnd):
                     cmnd('initiateSub',
                          pars=od([('activity', activity), ('noLink', 'AI-Activity.org')]),
                          comment=f"# Same, but safe-copy AI-Activity.org (project-specific, editable)")
+
+        if cwdActivity:
+            cs.examples.menuChapter('=initiate/initiateSub Based on CWD Setting= -- Based on ./.startAiActivity.cs')
+            # cwdConfig supplies activity — show the bare invocation first.
+            cmnd('initiate',
+                 pars=od([]),
+                 comment=f"# activity={cwdActivity} from cwdConfig; no CLI flags needed")
+            cmnd('initiateSub',
+                 pars=od([]),
+                 comment=f"# activity={cwdActivity} from cwdConfig; no CLI flags needed")
+            cmnd('initiate',
+                 pars=od([('activity', f"{cwdActivity}"), ('templates', f"{templatesBaseStr}"),]),
+                 comment=f"# from cwdConfig")
+            cmnd('initiateSub',
+                 pars=od([('activity', f"{cwdActivity}"), ('templates', f"{templatesBaseStr}"),]),
+                 comment=f"# from cwdConfig")
 
         return(cmndOutcome)
 
