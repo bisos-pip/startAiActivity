@@ -1,0 +1,75 @@
+digraph {
+	rankdir=TB
+	{
+		rank=same
+		tpl_base [label="Templates Base
+(e.g. ~/aiActivityTemplates or
+/bisos/apps/defaults/ai-templates)" fillcolor=lightyellow shape=rectangle style=filled]
+		tpl_mother [label="mother/" fillcolor=khaki1 shape=folder style=filled]
+		tpl_bisospip [label="bisos-pip/" fillcolor=khaki1 shape=folder style=filled]
+		tpl_bleepanels [label="blee-panels/" fillcolor=khaki1 shape=folder style=filled]
+		tpl_custom [label="custom/" fillcolor=khaki1 shape=folder style=filled]
+		tpl_dots [label="..." fillcolor=khaki1 shape=folder style=filled]
+	}
+	tpl_base -> tpl_mother [arrowhead=none constraint=false style=dotted]
+	{
+		rank=same
+		par_activity [label="--activity" fillcolor=lightblue shape=rectangle style=filled]
+		par_templates [label="--templates" fillcolor=lightblue shape=rectangle style=filled]
+		par_nolink [label="--noLink" fillcolor=lightblue shape=rectangle style=filled]
+		par_userconfig [label="userConfig
+(~/.config/bisos/…)" fillcolor=lightsteelblue shape=cylinder style=filled]
+		par_cwdconfig [label="cwdConfig
+(./.startAiActivity.cs/…)" fillcolor=lightsteelblue shape=cylinder style=filled]
+	}
+	tpl_base -> par_templates [arrowhead=vee style=dashed]
+	tpl_base -> par_activity [arrowhead=vee style=dashed]
+	engine [label="startAiActivity.cs
+
+initiate  |  initiateSub
+refresh  |  aiSuspend  |  aiResume
+deClaudify" fillcolor=darkseagreen3 fontsize=14 shape=rectangle style="filled,bold"]
+	par_activity -> engine
+	par_templates -> engine
+	par_nolink -> engine
+	par_userconfig -> engine [color=dodgerblue dir=both]
+	par_cwdconfig -> engine [color=dodgerblue dir=both]
+	{
+		rank=same
+		gen_claude [label="CLAUDE.md
+[safe-copy]" fillcolor=mistyrose shape=note style=filled]
+		gen_workflow [label="AI-WORKFLOW.org
+[symlink]" fillcolor=lightgoldenrod1 shape=note style=filled]
+		gen_activity [label="AI-Activity.org
+[symlink]" fillcolor=lightgoldenrod1 shape=note style=filled]
+		gen_devstatus [label="AI-DevStatus.org
+[safe-copy+dblock]" fillcolor=mistyrose shape=note style=filled]
+		gen_workplan [label="AI-WorkPlan.org
+[safe-copy+dblock]" fillcolor=mistyrose shape=note style=filled]
+		gen_claudedir [label=".claude/
+settings.json
+[symlink]" fillcolor=lightgoldenrod1 shape=folder style=filled]
+	}
+	{
+		rank=same
+		cld_commands [label="commands/
+[symlink]" fillcolor=lightgoldenrod1 shape=folder style=filled]
+		cld_skills [label="skills/
+[symlink]" fillcolor=lightgoldenrod1 shape=folder style=filled]
+	}
+	gen_claudedir -> cld_commands [arrowhead=none style=solid]
+	gen_claudedir -> cld_skills [arrowhead=none style=solid]
+	engine -> gen_claude
+	engine -> gen_workflow [style=dashed]
+	engine -> gen_activity [style=dashed]
+	engine -> gen_devstatus
+	engine -> gen_workplan
+	engine -> gen_claudedir [style=dashed]
+	claude [label="Claude Code
+(LLM-AI session)" fillcolor=thistle fontsize=13 shape=ellipse style="filled,bold"]
+	gen_claude -> claude [label="  1  " color=purple fontcolor=purple penwidth=1.6]
+	gen_workflow -> claude [label="  2  " color=purple fontcolor=purple style=dotted]
+	gen_activity -> claude [label="  3  " color=purple fontcolor=purple style=dotted]
+	gen_devstatus -> claude [label="  4  " color=purple fontcolor=purple style=dotted]
+	gen_workplan -> claude [label="  5  " color=purple fontcolor=purple style=dotted]
+}

@@ -45,18 +45,61 @@ Prompt the user to confirm that the desired/appropriate model (/model) is being 
 ----- AI Results: ------
 ** -
 
-* Stage 1: Description of This Stage Comes Here
+* Stage 1: Capture the flow of startAiActivity as graphviz.pcs
 
-Goal: Describe what the goal of this stage is.
+Goal: Capture the flow of startAiActivity in ./aiActivity-graphviz.pcs
 
 
 * Stage 1 TODOs
 ** +
-** TODO [#A] Example of a work-item for AI :ai:
+** TODO [#A] Update ./aiActivity-graphviz.pcs :aiAndMe:
 SCHEDULED: <2026-06-09 Tue>
-Description of a work-item
+Will be done in parallel with Stage 2 and 3.
+Once satisfied with the image include it in the ../../README.org
+What is in ./aiActivity-graphviz.pcs is mostly a copy of
+/bxRepos/bisos-pip/graphviz-cs/py3/images/layered-graphviz.cs
+It is just an example.
 ----- AI Results: ------
 ** -
+
+* Stage 2: Cultivate bisos/git/auth/bxRepos/bisos/defaults/ai-templates/graphviz-pcs/AI-Activity.org
+
+Goal: Based on this activity capture contours of graphviz.pcs usage.
+
+* Stage 2 TODOs
+** +
+** TODO [#A] Update AI-Activity.org :aiAndMe:
+SCHEDULED: <2026-07-28 Tue 14:06>
+/bxRepos/blee/mtdt/panels/mtdt/README/images/mtdt-graphviz.cs
+/bxRepos/blee/mtdt/images/mtdt-graphviz.cs
+/bxRepos/bisos-pip/graphviz-cs/py3/images/layered-graphviz.cs
+/bxRepos/bisos-pip/startAiActivity/py3/images/aiActivity-graphviz.pcs
+
+----- AI Results: ------
+** -
+
+* Stage 3: Cultivate   /bisos/git/auth/bxRepos/bisos/defaults/ai-templates/bisos-pip/_skills/garphviz-authoring
+
+Goal: Based on this activity develope _skills/garphviz-authoring
+
+* Stage 3 TODOs
+** +
+** TODO [#A] Create _skills/garphviz-authoring  :aiAndMe:
+SCHEDULED: <2026-07-28 Tue 14:06>
+----- AI Results: ------
+** -
+
+* Stage 4: Improve /bxRepos/bisos-pip/graphviz-cs
+
+Goal: Based on this activity improve  /bxRepos/bisos-pip/graphviz-cs
+
+* Stage 4 TODOs
+** +
+** TODO [#A] Add latex description files.  :aiAndMe:
+SCHEDULED: <2026-07-28 Tue 14:06>
+----- AI Results: ------
+** -
+
 
 
 # Local Variables:

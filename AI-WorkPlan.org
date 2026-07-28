@@ -851,6 +851,11 @@ refused. Fixed by moving the auto-persist call after the walk-up
 succeeds. =verify.sh= confirmed clean: bare =initiate= reads from
 cwdConfig, auto-persistence trace visible, negative-case =/tmp/= dir
 stays clean.
+** TODO [#A] <<Add Figures To README.org>> :aiAndMe:
+SCHEDULED: <2026-07-27 Sun>
+Continue work at py3/images/AI-WorkPlan.org --- Start by reading its CLAUDE.md
+----- AI Results: ------
+
 ** -
 
 
