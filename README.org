@@ -153,25 +153,22 @@ from templates at the top to a Claude Code session at the bottom.
   follows its =@= imports out to the four org files (edges *2*
   through *5*).
 
-*Legend --- colours and edges:*
+*Legend:*
 
-- Yellow fill = *symlink* to the templates base. Content lives
-  upstream; edits to the template propagate to every installed
-  project automatically.
-- Pink fill = *safe-copy*. A local per-project file, yours to edit.
-- Solid edge from engine to a file = safe-copy write.
-- Dashed edge from engine to a file = symlink write.
-- Blue bidirectional edge = read/write of a persistent store
-  (=userConfig=, =cwdConfig=): read at resolution time, written by
-  the =_set= commands or by =initiate= auto-persistence.
-- Purple numbered edge = Claude reads this file. =1= is the walk-up
-  entry (=CLAUDE.md=); =2=--=5= are the =@= imports fanned out from
-  it.
+| Element                 | Meaning                                                           |
+|-------------------------+-------------------------------------------------------------------|
+| Yellow fill             | Symlink to templates. Upstream edits propagate.                   |
+| Pink fill               | Safe-copy. Per-project, yours to edit.                            |
+| Solid engine → file     | Safe-copy write.                                                  |
+| Dashed engine → file    | Symlink write.                                                    |
+| Blue bidirectional edge | Read/write of a persistent store (=userConfig=, =cwdConfig=).         |
+| Purple edge, numbered   | Claude reads this file. =1= = walk-up to CLAUDE.md; =2=--=5= = imports. |
 
 * Table of Contents     :TOC:
 - [[#the-concept-and-model-of-an-ai-activity][The Concept and Model of an AI-Activity]]
 - [[#collaboration-across-people-and-across-sessions][Collaboration Across People and Across Sessions]]
 - [[#overview][Overview]]
+  - [[#structure-at-a-glance][Structure at a Glance]]
 - [[#part-of-bisos--bystar-internet-services-operating-system][Part of BISOS — ByStar Internet Services Operating System]]
 - [[#bisosstartaiactivity-is-a-command-only-pycs-facility][bisos.startAiActivity is a Command-Only PyCS Facility]]
 - [[#two-part-architecture-execution-engine--templates][Two-Part Architecture: Execution Engine + Templates]]
