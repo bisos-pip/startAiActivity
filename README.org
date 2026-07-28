@@ -130,6 +130,19 @@ the current templates base and cwdConfig state).
 The figure below shows how the pieces fit together --- one static
 picture of everything =bisos.startAiActivity= consumes and produces,
 from templates at the top to a Claude Code session at the bottom.
+The colours and edge styles carry meaning; scan the legend first,
+then the figure.
+
+*Legend:*
+
+| Element                 | Meaning                                                                 |
+|-------------------------+-------------------------------------------------------------------------|
+| Yellow fill             | Symlink to templates. Upstream edits propagate.                         |
+| Pink fill               | Safe-copy. Per-project, yours to edit.                                  |
+| Solid engine → file     | Safe-copy write.                                                        |
+| Dashed engine → file    | Symlink write.                                                          |
+| Blue bidirectional edge | Read/write of a persistent store (=userConfig=, =cwdConfig=).           |
+| Purple edge, numbered   | Claude reads this file. =1= = walk-up to CLAUDE.md; =2=--=5= = imports. |
 
 [[file:py3/images/aiActivityFlow.png]]
 
@@ -152,17 +165,6 @@ from templates at the top to a Claude Code session at the bottom.
   up from your working directory, finds =CLAUDE.md= (edge *1*), and
   follows its =@= imports out to the four org files (edges *2*
   through *5*).
-
-*Legend:*
-
-| Element                 | Meaning                                                           |
-|-------------------------+-------------------------------------------------------------------|
-| Yellow fill             | Symlink to templates. Upstream edits propagate.                   |
-| Pink fill               | Safe-copy. Per-project, yours to edit.                            |
-| Solid engine → file     | Safe-copy write.                                                  |
-| Dashed engine → file    | Symlink write.                                                    |
-| Blue bidirectional edge | Read/write of a persistent store (=userConfig=, =cwdConfig=).         |
-| Purple edge, numbered   | Claude reads this file. =1= = walk-up to CLAUDE.md; =2=--=5= = imports. |
 
 * Table of Contents     :TOC:
 - [[#the-concept-and-model-of-an-ai-activity][The Concept and Model of an AI-Activity]]
