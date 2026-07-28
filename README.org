@@ -5,17 +5,17 @@
 
 #+BEGIN: b:org:pypi:readme/topControls :pkgName "startAiActivity" :comment "basic"
 
-|----------------------+--------------------------------------------------------------------------------|
+|----------------------+------------------------------------------------------------------|
 | ~Blee Panel Controls~: | [[elisp:(show-all)][Show-All]] : [[elisp:(org-shifttab)][Overview]] : [[elisp:(progn (org-shifttab) (org-content))][Content]] : [[elisp:(delete-other-windows)][(1)]] : [[elisp:(progn (save-buffer) (kill-buffer))][S&Q]] : [[elisp:(save-buffer)][Save]]  : [[elisp:(kill-buffer)][Quit]]  : [[elisp:(bury-buffer)][Bury]] |
-| ~Panel Links~:         | [[file:./py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org][Repo Blee Panel]] --  [[file:/bisos/git/bxRepos/bisos-pip/startAiActivity/py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org][Blee Panel]]                         |
-| ~See Also~:            | [[https://pypi.org/project/bisos.startAiActivity][At PYPI]] : [[https://github.com/bisos-pip/pycs][bisos.PyCS]]                                                         |
-|----------------------+--------------------------------------------------------------------------------|
+| ~Panel Links~:         | [[file:./py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org][Repo Blee Panel]] --  [[file:/bxRepos/bisos-pip/startAiActivity/py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org][Blee Panel]]                                   |
+| ~See Also~:            | [[https://pypi.org/project/bisos.startAiActivity][At PYPI]] : [[https://github.com/bisos-pip/pycs][bisos.PyCS]]                                             |
+|----------------------+------------------------------------------------------------------|
 
 #+END:
 
-* The Concept and Model of an AI Activity
+* The Concept and Model of an AI-Activity
 
-An *AI Activity* is a durable, collaborative effort between a human and
+An *AI-Activity* is a durable, collaborative effort between a human and
 an AI assistant (Claude Code) toward a specific purpose --- writing a
 document, building new software, enhancing existing software, and so on.
 Unlike a one-shot chat, an activity is expected to span many sessions,
@@ -45,26 +45,42 @@ as safe-copies (so each effort owns its own state).
 
 * Collaboration Across People and Across Sessions
 
-An AI Activity is collaborative in two symmetric senses. It is
-*human-to-human* --- one person starts the activity, a colleague continues
-it later, possibly on a different machine. And it is *human-to-AI* ---
-one Claude Code session begins the work, another resumes it hours or
-weeks later with no memory of the earlier one. Both are the same
-problem: *continuity across a discontinuity*. The state, conventions,
-and open TODOs must live in files that a fresh reader --- human or AI ---
-can pick up cold.
+The default mode of AI-assisted development today is *individualistic*.
+Every new Claude Code session starts empty and re-explains its context
+from scratch. A colleague picking up your work can read the code, but
+not how you have been collaborating with Claude on it --- the
+conventions, the running plan, the reasoning behind the last decision.
+That information exists only in the session that produced it, and
+disappears when the session ends.
+
+An AI-Activity is collaborative in two symmetric senses that address
+this directly. It is *human-to-human* --- one person starts the
+activity, a colleague continues it later, possibly on a different
+machine. And it is *human-to-AI* --- one Claude Code session begins the
+work, another resumes it hours or weeks later with no memory of the
+earlier one. Both are the same problem: *continuity across a
+discontinuity*. The state, conventions, and open TODOs must live in
+files that a fresh reader --- human or AI --- can pick up cold.
 
 That substrate is *org-mode*, deliberately, not Markdown. Org-mode
 provides what handoffs and resumptions actually need: TODOs with a real
 state machine (=TODO=/=DONE=/=WAITING=/=DEFERRED=), scheduled dates and
 deadlines, named anchors (=<<my-target>>=) that other files can
 cross-reference, org-archive to retire completed subtrees without losing
-history, and dynamic blocks (=begin:=) for machine-generated
-content. Markdown can only approximate these through ad-hoc convention.
-The AI Activity model relies on the structure being real --- not
+history, and *dynamic blocks* (=begin:= ... =end:=) --- machine-generated
+regions inside an otherwise hand-edited file, used here to capture
+install-time context into the installed files.
+Markdown can only approximate these through ad-hoc convention.
+The AI-Activity model relies on the structure being real --- not
 implied --- so that a colleague or a fresh Claude session can act on
 =AI-WorkPlan.org= and =AI-DevStatus.org= with the same reliability the
 original author had.
+
+*Emacs is not required.* This tooling is Emacs-authored and its
+authors' own use is Emacs-based (via Blee), but org-mode files are
+plain text and read equally well in VS Code, IntelliJ, or any editor.
+Claude Code itself is editor-agnostic. The commitment is to org-mode as
+a file format, not to Emacs as an environment.
 
 * Overview
 
@@ -102,13 +118,15 @@ inherited from an ancestor via the same walk-up, avoiding duplication.
 
 bisos.startAiActivity is a python package that uses the [[https://github.com/bisos-pip/pycs][PyCS-Framework]].
 It provides the =startAiActivity.cs= command with the following operations:
-=userConfig_set/get= (persistent config), =initiate= (base install), =initiateSub=
-(slim subproject overlay), =aiSuspend= / =aiResume= (reversible pause/restore),
-=deClaudify= (permanent removal), and =examples= (all invocations with the current
-templates base).
+=userConfig_set/get= (global user persistent config), =cwdConfig_set/get=
+(per-directory persistent config), =initiate= (base install),
+=initiateSub= (slim subproject overlay), =aiSuspend= / =aiResume=
+(reversible pause/restore), =refresh= (re-copy =CLAUDE.md= from templates),
+=deClaudify= (permanent removal), and =examples= (all invocations with
+the current templates base and cwdConfig state).
 
 * Table of Contents     :TOC:
-- [[#the-concept-and-model-of-an-ai-activity][The Concept and Model of an AI Activity]]
+- [[#the-concept-and-model-of-an-ai-activity][The Concept and Model of an AI-Activity]]
 - [[#collaboration-across-people-and-across-sessions][Collaboration Across People and Across Sessions]]
 - [[#overview][Overview]]
 - [[#part-of-bisos--bystar-internet-services-operating-system][Part of BISOS — ByStar Internet Services Operating System]]
@@ -117,6 +135,7 @@ templates base).
   - [[#part-1-----the-execution-engine-this-package][Part 1 --- the execution engine (this package)]]
   - [[#part-2-----the-templates-a-separate-repo-you-clone][Part 2 --- the templates (a separate repo you clone)]]
   - [[#auto-detection-two-canonical-locations][Auto-detection: two canonical locations]]
+- [[#dynamic-block-content-in-installed-files][Dynamic Block Content in Installed Files]]
 - [[#post-installation-setup][Post-Installation Setup]]
   - [[#for-non-bisos-users-canonical-clone-no-config-step][For non-BISOS users: canonical clone, no config step]]
   - [[#for-bisos-users-nothing-to-do-usually][For BISOS users: nothing to do (usually)]]
@@ -125,6 +144,7 @@ templates base).
   - [[#installation-with-pipx][Installation With pipx]]
   - [[#post-installation-basic-testing][Post-Installation Basic Testing]]
 - [[#usage][Usage]]
+  - [[#self-discovery-the-examples-menu][Self-Discovery: the examples Menu]]
   - [[#set-templates-base-directory][Set Templates Base Directory]]
   - [[#per-directory-templates-override][Per-Directory Templates Override]]
   - [[#install-templates-into-a-project][Install Templates Into a Project]]
@@ -135,11 +155,10 @@ templates base).
   - [[#suspend-and-resume-ai-collaboration][Suspend and Resume AI Collaboration]]
   - [[#remove-ai-collaboration-files][Remove AI Collaboration Files]]
   - [[#ai-activity-topology-homogeneous-heterogeneous-hierarchical-lateral][AI-Activity Topology: Homogeneous, Heterogeneous, Hierarchical, Lateral]]
+    - [[#homogeneous-vs-heterogeneous][Homogeneous vs Heterogeneous]]
+    - [[#hierarchical-vs-lateral][Hierarchical vs Lateral]]
 - [[#key-files][Key Files]]
-    - [[#py3binstartaiactivitycs][=py3/bin/startAiActivity.cs=]]
-    - [[#py3bisosstartaiactivityupdatedblockpy][=py3/bisos/startAiActivity/updateDblock.py=]]
-    - [[#][]]
-    - [[#py3bisosstartaiactivitydblock_particularspy][=py3/bisos/startAiActivity/dblock_particulars.py=]]
+    - [[#startaiactivitycs][startAiActivity.cs]]
     - [[#pypi-and-github-packaging][PyPi and Github Packaging]]
 - [[#documentation-and-blee-panels][Documentation and Blee-Panels]]
   - [[#bisosstartaiactivity-blee-panels][bisos.startAiActivity Blee-Panels]]
@@ -162,7 +181,7 @@ is described as a cure for losses of autonomy and privacy in a book titled:
 be used independently of the full BISOS environment.
 
 Within BISOS and Blee specifically, the same org-mode substrate that
-underpins the AI Activity state files extends further --- to source-code
+underpins the AI-Activity state files extends further --- to source-code
 authorship itself --- through *COMEEGA* (Collaborative Org-Mode Enhanced
 Emacs Generalized Authorship). Under COMEEGA, =.cs= / =.py= / =.sh= /
 =.el= source files carry org-mode structure (dblocks, headings,
@@ -247,6 +266,20 @@ present. This lets a user working on a BISOS system point the engine at
 their own fork simply by cloning it to the canonical name, with no
 =userConfig_set= call needed.
 
+* Dynamic Block Content in Installed Files
+
+When =initiate= safe-copies =AI-DevStatus.org= and =AI-WorkPlan.org=,
+the copies contain a =b:ai:file/particulars= dynamic block that is
+expanded at install time to record the working directory, activity, and
+companion docs --- the context a cold reader (colleague or fresh Claude
+session) needs to orient itself.
+
+The block is a snapshot: not regenerated by =refresh= or any normal
+workflow. The dblock engine itself lives in a separate package,
+[[https://github.com/bisos-pip/pyDblock][=bisos.pyDblock=]], which
+=bisos.startAiActivity= consumes at install time. Manual regeneration
+and authoring of new dblock signatures are documented there.
+
 * Post-Installation Setup
 
 ** For non-BISOS users: canonical clone, no config step
@@ -327,7 +360,53 @@ startAiActivity.cs
 startAiActivity.cs -i userConfig_get --parName=templates
 #+end_src
 
+The first line invokes =startAiActivity.cs= with no arguments and
+produces the *examples menu* --- the self-documenting list of common
+invocations, generated from the current environment (resolved templates
+base, persisted =userConfig= and =cwdConfig= values, discovered
+activities). See
+[[#self-discovery-the-examples-menu][Self-Discovery: the =examples= Menu]]
+below for what to look for in the output.
+
 * Usage
+
+** Self-Discovery: the examples Menu
+
+Like every PyCS csxu, =startAiActivity.cs= is *self-documenting* --- running
+it with no arguments produces a menu of the common expected CLI
+invocations for this csxu:
+
+#+begin_src bash
+startAiActivity.cs
+#+end_src
+
+The menu is not static. It is generated at invocation time from the
+csxu's own definition and from the *current environment*:
+
+- Persistent params (=templates=, =activity=) are read from
+  =userConfig= and =cwdConfig= and echoed in the menu as
+  =# current: <value>= comments, so you can see at a glance what
+  will apply.
+- The =initiate= / =initiateSub= chapters iterate the actual set of
+  activities discovered under the resolved templates base, so the menu
+  reflects what is really installable right now.
+- When cwdConfig has an =activity= set, an additional chapter
+  =initiate/initiateSub Based on CWD Setting= appears at the end,
+  showing the bare (zero-flag) invocations that are enabled by the
+  persisted state.
+
+The =examples= command produces the same output --- =startAiActivity.cs=
+with no =-i <cmnd>= implicitly invokes it:
+
+#+begin_src bash
+startAiActivity.cs -i examples
+#+end_src
+
+Reading the =examples= menu is the recommended first step in any
+directory --- it is the fastest way to see what is currently configured
+and what invocations are available. All subsections below describe the
+same commands the menu advertises; this section is the *narrative*
+counterpart to that menu.
 
 ** Set Templates Base Directory
 
@@ -602,12 +681,12 @@ has created or converted manually is left intact.
 
 ** AI-Activity Topology: Homogeneous, Heterogeneous, Hierarchical, Lateral
 
-AI Activities have two independent structural dimensions. They can be
+AI-Activities have two independent structural dimensions. They can be
 combined freely, and =startAiActivity.cs= supports all combinations.
 
 *** Homogeneous vs Heterogeneous
 
-An *AI Activity* is *Homogeneous* when every directory in a repo (and
+An *AI-Activity* is *Homogeneous* when every directory in a repo (and
 every repo in a project) references the same templates base. All
 participants share the same conventions, skills, and =mother/= invariants.
 A typical example: a team developing Python pip packages where every
@@ -615,7 +694,7 @@ repo is =initiate=-d with =--activity=bisos-pip= against the same
 =aiActivityTemplates= clone, and all LaTeX documentation subprojects use
 =--activity=lcnt= from the same clone.
 
-An *AI Activity* is *Heterogeneous* when different directories or repos
+An *AI-Activity* is *Heterogeneous* when different directories or repos
 reference *different* templates bases. A typical example: proprietary
 pip packages are =initiate=-d against a private templates fork (with
 company-specific conventions), while open-source packages in the same
@@ -631,7 +710,7 @@ Override* above) are the mechanisms that enable Heterogeneous topologies.
 
 *** Hierarchical vs Lateral
 
-An *AI Activity* is *Hierarchical* when the work spans *nested
+An *AI-Activity* is *Hierarchical* when the work spans *nested
 directories within one repo* (or a set of repos in a single filesystem
 tree). The base directory is =initiate=-d; subdirectories that need their
 own work plan and dev status are =initiateSub=-d. Claude Code's =CLAUDE.md=
@@ -641,7 +720,7 @@ base's =AI-WORKFLOW.org= and =.claude/= while carrying its own local
 example: a =bisos-pip= repo (base) with a =blee-panels= subproject
 (sub-directory overlay).
 
-An *AI Activity* is *Lateral* when the work spans *multiple independent
+An *AI-Activity* is *Lateral* when the work spans *multiple independent
 repos* worked on in the same session or sprint — for example, a pip
 package repo and its companion Blee-panel repo that live at the same
 filesystem level and have no parent/child relationship. Each repo is
@@ -657,26 +736,11 @@ and Heterogeneous in templates (different bases for different subtrees).
 
 An overview of the relevant files of the bisos.startAiActivity package:
 
-*** =py3/bin/startAiActivity.cs=
+*** startAiActivity.cs
 
-The main CS-MU (Command-Services Multi-Unit). Provides the =initiate=,
+=py3/bin/startAiActivity.cs=: The main CS-MU (Command-Services Multi-Unit). Provides the =initiate=,
 =aiSuspend=, =aiResume=, =deClaudify=, =userConfig_get=, and =userConfig_set=
-commands. Uses =bisos.b.userConfig_csu= for persistent parameter management.
-
-*** =py3/bisos/startAiActivity/updateDblock.py=
-
-General dblock dispatch engine. Handlers register under a signature string
-via =registerHandler(sig, fn)=. =expandAll(filePath)= does a single-pass
-regex substitution over the file, dispatching each =begin: <signature>=
-block to its registered handler.
-
-*** 
-
-*** =py3/bisos/startAiActivity/dblock_particulars.py=
-
-Self-registering handler for the =b:ai:file/particulars= dblock signature.
-Derives the =activity= from the =AI-Activity.org= symlink and builds the
-companion-docs list by scanning the directory.
+commands. Uses =bisos.b.userConfig_csu= and =bisos.b.cwdConfig_csu= for persistent parameter management.
 
 *** PyPi and Github Packaging
 
