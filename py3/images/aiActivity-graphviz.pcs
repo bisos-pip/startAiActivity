@@ -22,6 +22,31 @@ from bisos.graphviz import graphvizSeed
 ng = graphvizSeed.namedGraph
 
 
+####+BEGIN: b:py3:cs:orgItem/basic :type "=Seed Setup= " :title "*Common Facilities*" :comment "General"
+""" #+begin_org
+*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  =Seed Setup=  [[elisp:(outline-show-subtree+toggle)][||]] *Common Facilities* General  [[elisp:(org-cycle)][| ]]
+#+end_org """
+####+END:
+
+namedGraphsList = [
+    # Forward reference: aiActivityFlow is defined below this block.
+    ng("aiActivityFlow",
+       func=lambda: aiActivityFlow(),
+       title="AI-Activity Structure",
+       caption="Static structure of startAiActivity.cs showing "
+               "templates, parameters, engine, generated files, "
+               "and Claude Code as consumer. Yellow-filled nodes "
+               "are symlinks to the templates base; pink-filled "
+               "nodes are per-project safe-copies. Purple numbered "
+               "edges (1-5) mark Claude Code's read order from "
+               "walk-up to import fan-out."),
+]
+
+graphvizSeed.setup(
+    seedType="common",
+    namedGraphsList=namedGraphsList,
+    # examplesHook=qmail_binsPrep.examples_csu,
+)
 
 ####+BEGIN: b:py3:cs:func/typing :funcName "aiActivityFlow" :funcType "Typed" :deco "track"
 """ #+begin_org
@@ -160,67 +185,6 @@ def aiActivityFlow(
 
     return d
 
-
-####+BEGIN: b:py3:cs:func/typing :funcName "graphvizLayers" :funcType "Typed" :deco "track"
-""" #+begin_org
-*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  F-T-Typed  [[elisp:(outline-show-subtree+toggle)][||]] /graphvizLayers/  deco=track  [[elisp:(org-cycle)][| ]]
-#+end_org """
-@cs.track(fnLoc=True, fnEntry=True, fnExit=True)
-def graphvizLayers(
-####+END:
-) -> graphviz.Digraph:
-    """ #+begin_org
-** [[elisp:(org-cycle)][| *DocStr | ]  Kept as a reference layout example from graphviz-cs.
-    #+end_org """
-
-    d = graphviz.Digraph()
-
-    with d.subgraph() as s:
-        s.attr(rank='same')
-        s.node('seededCsSpec1', 'Graphviz-Specifications-1\n\nhttps://github.com/bisos-pip/graphviz-cs\npy3/examples', shape='rectangle', style='filled', fillcolor='green')
-        s.node('seededCsSpecDots', 'Graphviz-Specifications-...\n\nhttps://github.com/bisos-pip/graphviz-cs\npy3/examples', shape='rectangle', style='filled', fillcolor='green')
-        s.node('seededCsSpecN', 'Graphviz-Specifications-N\n\nhttps://github.com/bisos-pip/graphviz-cs\npy3/examples', shape='rectangle', style='filled', fillcolor='green')
-
-    with d.subgraph() as s:
-        s.attr(rank='same')
-        s.node('graphvizSeed', 'Seeded-PyCS\nGraphviz\n\nhttps://github.com/bisos-pip/graphviz-cs', style='filled', fillcolor='darkseagreen3')
-        s.node('pycs', 'Python\nCommand Services\n (PyCS)\nhttps://github.com/bisos-pip/pycs', style='filled', fillcolor='darkseagreen3')
-
-    with d.subgraph() as s:
-        s.attr(rank='same')
-        s.node('pyGraphviz', 'Python Graphviz\n\nhttps://github.com/xflr6/graphviz', style='filled', fillcolor='deepskyblue')
-
-    with d.subgraph() as s:
-        s.attr(rank='same')
-        s.node('graphviz', 'Graphviz.org', style='filled', fillcolor='cyan2')
-
-    with d.subgraph() as s:
-        s.attr(rank='same')
-        s.node('pdf', 'pdf', shape='cylinder', style='filled', fillcolor='darksalmon')
-        s.node('svg', 'svg', shape='cylinder', style='filled', fillcolor='darksalmon')
-        s.node('etcOutput', '...', shape='cylinder', style='filled', fillcolor='darksalmon')
-        s.node('png', 'png', shape='cylinder', style='filled', fillcolor='darksalmon')
-        s.node('jpeg', 'jpeg', shape='cylinder', style='filled', fillcolor='darksalmon')
-        s.node('gv', 'gv', shape='cylinder', style='filled', fillcolor='darksalmon')
-
-    d.edge('seededCsSpec1', 'graphvizSeed')
-    d.edge('seededCsSpecDots', 'graphvizSeed')
-    d.edge('seededCsSpecN', 'graphvizSeed')
-
-    d.edge('graphvizSeed', 'pycs')
-    d.edge('graphvizSeed', 'pyGraphviz')
-
-    d.edge('pyGraphviz', 'graphviz')
-
-    d.edge('graphviz', 'pdf')
-    d.edge('graphviz', 'svg')
-    d.edge('graphviz', 'png')
-    d.edge('graphviz', 'jpeg')
-    d.edge('graphviz', 'etcOutput')
-    d.edge('graphviz', 'gv')
-
-    return d
-
 """ #+begin_org
 #+begin_src sh :results output :session shared
 aiActivity-graphviz.pcs --format=evince  -i ngProcess aiActivityFlow
@@ -231,20 +195,3 @@ aiActivity-graphviz.pcs --format=evince  -i ngProcess aiActivityFlow
 : ngProcess: Processed All
 #+end_org """
 
-
-####+BEGIN: b:py3:cs:orgItem/basic :type "=Seed Setup= " :title "*Common Facilities*" :comment "General"
-""" #+begin_org
-*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  =Seed Setup=  [[elisp:(outline-show-subtree+toggle)][||]] *Common Facilities* General  [[elisp:(org-cycle)][| ]]
-#+end_org """
-####+END:
-
-namedGraphsList = [
-    ng("aiActivityFlow",  func=aiActivityFlow),
-    ng("graphvizLayers",  func=graphvizLayers),   # kept as reference
-]
-
-graphvizSeed.setup(
-    seedType="common",
-    namedGraphsList=namedGraphsList,
-    # examplesHook=qmail_binsPrep.examples_csu,
-)
