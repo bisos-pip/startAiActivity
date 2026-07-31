@@ -856,6 +856,27 @@ SCHEDULED: <2026-07-27 Sun>
 Continue work at py3/images/AI-WorkPlan.org --- Start by reading its CLAUDE.md
 ----- AI Results: ------
 
+** TODO [#A] <<Add cwdConfig_record>> :aiAndMe:
+SCHEDULED: <2026-07-31 Fri 11:29>
+Looks at end of symlink of AI-WORKFLOW.org if it exists and determines --templates base.
+If ./.startAiActivity.cs does not exist create it and record it.
+If AI-WORKPLAN.org does not exist look at AI-Activity.org end of symlink.
+The above applies to exisiting dirs. Moving forward we will be doing this at initiate and initiateSub.
+----- AI Results: ------
+
+** TODO [#A] <<Add ./.startAiActivity.cs at -i initiate and initiateSub>> :aiAndMe:
+SCHEDULED: <2026-07-31 Fri 11:29>
+Execution of -i initiate and initiateSub, should do the equivalent of cwdConfig_record if ./.startAiActivity.cs does not exist.
+----- AI Results: ------
+
+** TODO [#A] <<Add Table of Commands to README.org>> :aiAndMe:
+SCHEDULED: <2026-07-31 Fri 11:29>
+Perhaps two separate tables. One for xxConfig_yy commands and one for the rest of the usage commands.
+The noLink param should be included in initiate and initiateSub.
+----- AI Results: ------
+
+
+
 ** -
 
 
