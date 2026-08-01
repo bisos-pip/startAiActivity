@@ -194,6 +194,78 @@ def _resolveActivity(cliOverride: typing.Optional[str]) -> typing.Optional[str]:
     return cwdConfig_csu.parGet('activity')
 
 
+def _deduceCwdConfig(
+        targetDir: pathlib.Path,
+) -> typing.Tuple[typing.Optional[str], typing.Optional[str]]:
+    """Deduce (templatesBase, activity) for an already-initiated directory
+    by reading its =AI-WORKFLOW.org= and =AI-Activity.org= symlink targets.
+
+    AI-WORKFLOW.org points at =<templatesBase>/mother/AI-WORKFLOW.org=,
+    so the templates base is the target's parent's parent.
+
+    AI-Activity.org points at =<templatesBase>/<activity>/AI-Activity.org=,
+    so the activity is the target's parent name.
+
+    Fallback: if AI-WORKFLOW.org is missing or not a symlink, derive the
+    templates base from AI-Activity.org too (its target's parent's parent).
+
+    Returns =(None, None)= for either field it could not deduce.
+    """
+    templatesBase: typing.Optional[str] = None
+    activity: typing.Optional[str] = None
+
+    workflowOrg = targetDir / 'AI-WORKFLOW.org'
+    if workflowOrg.is_symlink():
+        wfTarget = pathlib.Path(workflowOrg.readlink())
+        if not wfTarget.is_absolute():
+            wfTarget = (workflowOrg.parent / wfTarget).resolve()
+        # <templatesBase>/mother/AI-WORKFLOW.org --> two parents up.
+        templatesBase = str(wfTarget.parent.parent)
+
+    activityOrg = targetDir / 'AI-Activity.org'
+    if activityOrg.is_symlink():
+        aTarget = pathlib.Path(activityOrg.readlink())
+        if not aTarget.is_absolute():
+            aTarget = (activityOrg.parent / aTarget).resolve()
+        # <templatesBase>/<activity>/AI-Activity.org --> activity is parent
+        # dir name; templatesBase is parent's parent (fallback).
+        activity = aTarget.parent.name
+        if templatesBase is None:
+            templatesBase = str(aTarget.parent.parent)
+
+    return (templatesBase, activity)
+
+
+def _recordCwdConfig(
+        templatesBase: typing.Optional[str],
+        activity: typing.Optional[str],
+) -> typing.List[str]:
+    """Write =templates= and =activity= to cwdConfig if not already at
+    the given values. Skips =None= fields. Returns a list of
+    human-readable notes describing what was written or skipped ---
+    caller reports them via =b_io.ann.note=.
+
+    Idempotent: writes only when the stored value differs, so repeat
+    invocations after the first one produce =SKIP (unchanged)= lines.
+    """
+    notes: typing.List[str] = []
+    if templatesBase is not None:
+        current = cwdConfig_csu.parGet('templates')
+        if current != templatesBase:
+            cwdConfig_csu.parSet('templates', templatesBase)
+            notes.append(f"cwdConfig: templates={templatesBase}")
+        else:
+            notes.append(f"cwdConfig: templates unchanged ({templatesBase})")
+    if activity is not None:
+        current = cwdConfig_csu.parGet('activity')
+        if current != activity:
+            cwdConfig_csu.parSet('activity', activity)
+            notes.append(f"cwdConfig: activity={activity}")
+        else:
+            notes.append(f"cwdConfig: activity unchanged ({activity})")
+    return notes
+
+
 def _detectUser() -> str:
     """Best-effort user identity for the provenance line.
 
@@ -377,6 +449,11 @@ class examples(cs.Cmnd):
              pars=od([]),
              comment="# Re-copy CLAUDE.md from templates; upgrades legacy symlinks")
 
+        cs.examples.menuChapter('=cwdConfig_record= -- deduce & record cwdConfig for an already-initiated directory')
+        cmnd('cwdConfig_record',
+             pars=od([]),
+             comment="# Deduce templates/activity from symlinks; write to ./.startAiActivity.cs/")
+
         cs.examples.menuChapter('=deClaudify= -- remove AI collaboration files')
         cmnd('deClaudify',
              pars=od([]),
@@ -477,7 +554,6 @@ Target directory is always cwd. Activity is resolved from --activity CLI arg,
 falling back to cwdConfig at ./.<csxu-name>/fps/activity/value.
         #+end_org """)
 
-        cliActivity = activity
         activity = _resolveActivity(activity)
         if not activity:
             b_io.eh.problem_usageError(
@@ -499,11 +575,13 @@ falling back to cwdConfig at ./.<csxu-name>/fps/activity/value.
 
         targetDir = pathlib.Path.cwd()
 
-        # Auto-persist activity to cwdConfig when supplied via CLI, so
-        # subsequent invocations in this directory can run bare (no --activity).
-        if cliActivity and cwdConfig_csu.parGet('activity') != activity:
-            cwdConfig_csu.parSet('activity', activity)
-            b_io.ann.note(f"cwdConfig: activity={activity} persisted for {targetDir}")
+        # Auto-record cwdConfig from the templates base and activity actually
+        # used. Unconditional on successful install: the ground truth for
+        # "this directory was initiated with these values." Filter unchanged
+        # notes so common re-initiate paths stay quiet.
+        for _n in _recordCwdConfig(str(templatesBase), activity):
+            if 'unchanged' not in _n:
+                b_io.ann.note(_n)
 
         motherDir = templatesBase / 'mother'
 
@@ -647,7 +725,6 @@ startAiActivity-signature CLAUDE.md symlink) or if the target directory
 already has a CLAUDE.md.
         #+end_org """)
 
-        cliActivity = activity
         activity = _resolveActivity(activity)
         if not activity:
             b_io.eh.problem_usageError(
@@ -718,11 +795,12 @@ already has a CLAUDE.md.
 
         b_io.ann.note(f"Initiated parent found at: {foundBase}")
 
-        # Auto-persist activity to cwdConfig — deferred to here so a failed
-        # walk-up doesn't leave stale state behind.
-        if cliActivity and cwdConfig_csu.parGet('activity') != activity:
-            cwdConfig_csu.parSet('activity', activity)
-            b_io.ann.note(f"cwdConfig: activity={activity} persisted for {targetDir}")
+        # Auto-record cwdConfig from the templates base and activity actually
+        # used. Deferred to here so a failed walk-up doesn't leave stale
+        # state behind. Filter unchanged notes so re-runs stay quiet.
+        for _n in _recordCwdConfig(str(templatesBase), activity):
+            if 'unchanged' not in _n:
+                b_io.ann.note(_n)
 
         # Install slim CLAUDE.md — always safe-copied (never a symlink).
         # Claude Code resolves symlinks before reading, which would cause
@@ -1153,6 +1231,58 @@ to be the equivalent of a symlink.
         return cmndOutcome.set(
             opError=b.op.OpError.Success,
             opResults=f"refresh complete at {targetDir} (mode={'sub' if subMode else 'base'})",
+        )
+
+
+####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "cwdConfig_record" :comment "Record deduced cwdConfig for an already-initiated directory" :extent "verify" :ro "cli" :parsMand "" :parsOpt "" :argsMin 0 :argsMax 0 :pyInv ""
+""" #+begin_org
+*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<cwdConfig_record>>  =verify= ro=cli   [[elisp:(org-cycle)][| ]]
+#+end_org """
+class cwdConfig_record(cs.Cmnd):
+    cmndParamsMandatory = [ ]
+    cmndParamsOptional = [ ]
+    cmndArgsLen = {'Min': 0, 'Max': 0,}
+
+    @cs.track(fnLoc=True, fnEntry=True, fnExit=True)
+    def cmnd(self,
+             rtInv: cs.RtInvoker,
+             cmndOutcome: b.op.Outcome,
+    ) -> b.op.Outcome:
+
+        failed = b_io.eh.badOutcome
+        callParamsDict = {}
+        if self.invocationValidate(rtInv, cmndOutcome, callParamsDict, None).isProblematic():
+            return failed(cmndOutcome)
+####+END:
+        self.cmndDocStr(f""" #+begin_org
+** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Deduce cwdConfig (=templates=, =activity=) from the
+current directory's =AI-WORKFLOW.org= and =AI-Activity.org= symlink targets
+and write it to =./.startAiActivity.cs/fps/=.
+
+Retrofits existing initiated directories that predate cwdConfig auto-persistence,
+or repairs a cwdConfig that has been lost. For new installs, =initiate= and
+=initiateSub= do this automatically on success.
+
+Writes only when the deduced value differs from what is already in cwdConfig
+(idempotent). Reports each deduction/write/skip on stderr.
+        #+end_org """)
+
+        targetDir = pathlib.Path.cwd()
+        templatesBase, activity = _deduceCwdConfig(targetDir)
+
+        if templatesBase is None and activity is None:
+            b_io.eh.problem_usageError(
+                f"cwdConfig_record: no AI-WORKFLOW.org or AI-Activity.org symlink "
+                f"found at {targetDir}. Nothing to deduce. Run 'initiate' here first.")
+            return failed(cmndOutcome)
+
+        notes = _recordCwdConfig(templatesBase, activity)
+        for note in notes:
+            b_io.ann.note(note)
+
+        return cmndOutcome.set(
+            opError=b.op.OpError.Success,
+            opResults=f"cwdConfig_record complete at {targetDir}",
         )
 
 

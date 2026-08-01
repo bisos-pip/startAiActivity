@@ -856,24 +856,139 @@ SCHEDULED: <2026-07-27 Sun>
 Continue work at py3/images/AI-WorkPlan.org --- Start by reading its CLAUDE.md
 ----- AI Results: ------
 
-** TODO [#A] <<Add cwdConfig_record>> :aiAndMe:
+** DONE [#A] <<Add cwdConfig_record>> :aiAndMe:
+CLOSED: [2026-07-31 Fri]
 SCHEDULED: <2026-07-31 Fri 11:29>
 Looks at end of symlink of AI-WORKFLOW.org if it exists and determines --templates base.
 If ./.startAiActivity.cs does not exist create it and record it.
 If AI-WORKPLAN.org does not exist look at AI-Activity.org end of symlink.
 The above applies to exisiting dirs. Moving forward we will be doing this at initiate and initiateSub.
 ----- AI Results: ------
+Added two reusable helpers and one new Cmnd class in
+=py3/bin/startAiActivity.cs=:
 
-** TODO [#A] <<Add ./.startAiActivity.cs at -i initiate and initiateSub>> :aiAndMe:
+- =_deduceCwdConfig(targetDir)= --- returns =(templatesBase, activity)=
+  by reading =AI-WORKFLOW.org= and =AI-Activity.org= symlink targets.
+  =AI-WORKFLOW.org= target's parent's parent is the templates base;
+  =AI-Activity.org= target's parent name is the activity; the same
+  target's parent's parent is a fallback for =templatesBase= when
+  =AI-WORKFLOW.org= is absent. Returns =(None, None)= when neither
+  symlink exists.
+- =_recordCwdConfig(templatesBase, activity)= --- writes both to
+  cwdConfig via =cwdConfig_csu.parSet=, skipping =None= fields and
+  writing only when the stored value would change. Returns a list of
+  human-readable notes (=cwdConfig: templates=X= or =cwdConfig:
+  templates unchanged (X)=) for the caller to report. Idempotent.
+- =cwdConfig_record= Cmnd class --- no params, no args. Runs on
+  =pathlib.Path.cwd()=, calls =_deduceCwdConfig=, then
+  =_recordCwdConfig=, reports notes via =b_io.ann.note=. Refuses with
+  a clear message if neither symlink is found ("Nothing to deduce.
+  Run 'initiate' here first."). Placed between =refresh= and
+  =deClaudify= in the source file.
+
+Examples menu grew a new chapter for =cwdConfig_record= between
+=refresh= and =deClaudify=.
+
+Verified end-to-end:
+- Fresh-initiated dir has =activity= in cwdConfig but not =templates=
+  (current pre-TODO-3 behaviour). Running =cwdConfig_record= writes
+  =templates= (deduced from =AI-WORKFLOW.org=) and reports =activity
+  unchanged=.
+- Idempotent second run reports both as unchanged.
+- With =AI-WORKFLOW.org= deleted but =AI-Activity.org= symlink intact,
+  fallback deduces both correctly from just =AI-Activity.org='s
+  target.
+- Empty directory (no symlinks) refuses with the "Nothing to deduce"
+  message; no traceback.
+
+The =_recordCwdConfig= helper is reusable for TODO 3 which will wire
+it into =initiate= and =initiateSub= to auto-record on every install.
+
+** DONE [#A] <<Add ./.startAiActivity.cs at -i initiate and initiateSub>> :aiAndMe:
+CLOSED: [2026-07-31 Fri]
 SCHEDULED: <2026-07-31 Fri 11:29>
 Execution of -i initiate and initiateSub, should do the equivalent of cwdConfig_record if ./.startAiActivity.cs does not exist.
 ----- AI Results: ------
+Replaced the two ad-hoc auto-persist blocks in =initiate= (line 579)
+and =initiateSub= (line 798) with a single call each to
+=_recordCwdConfig= (the helper factored out in TODO 2). Behaviour
+changes:
 
-** TODO [#A] <<Add Table of Commands to README.org>> :aiAndMe:
+- *Both* =templates= and =activity= are now persisted, not just
+  =activity=. The previous behaviour wrote only =activity= (leaving
+  =templates= unset in cwdConfig, which required a separate
+  =cwdConfig_record= run to backfill).
+- Persist is *unconditional on successful install* --- previously it
+  was gated on =cliActivity= (only when user supplied =--activity= on
+  CLI). New behaviour records the templates base and activity actually
+  used, regardless of resolution source. Ground truth: "this directory
+  was initiated with these values."
+- Notes filter: =_recordCwdConfig= returns both "cwdConfig: X=..."
+  (changed) and "cwdConfig: X unchanged (...)" lines. In =initiate=
+  and =initiateSub= the "unchanged" lines are filtered out so bare
+  re-initiates stay quiet; only genuine writes produce output.
+- Deferred placement in =initiateSub= preserved --- the persist call
+  is still after the walk-up succeeds, so a failed walk-up leaves no
+  =.startAiActivity.cs/= behind (verified with a fresh =/tmp= dir).
+
+Dead-code cleanup: =cliActivity = activity= capture was used only for
+the removed gate. Deleted both assignments (=initiate= and
+=initiateSub=).
+
+Verified end-to-end (under the BISOS venv where all imports resolve):
+- Fresh =initiate --activity=xu-single= in an empty dir produces both
+  "cwdConfig: templates=..." and "cwdConfig: activity=xu-single"
+  notes. Both files land under =./.startAiActivity.cs/fps/=.
+- Second invocation (=deClaudify= then bare =initiate=) uses cwdConfig
+  and produces no cwdConfig noise --- filter working.
+- =initiateSub --activity=bisos-pip= in a nested subdir persists both
+  values.
+- Negative case: =initiateSub= in an orphan =/tmp= dir refuses cleanly
+  (no initiated parent) and leaves no =.startAiActivity.cs/= behind.
+
+Flagged for follow-up (unrelated to TODO 3 but surfaced by running
+verify.sh): =verify.sh= uses =#!/bin/bash -i= which activates the
+=tmoBisos= venv on this box; that venv lacks =bisos.pyDblock=, so
+=startAiActivity.cs= crashes on its =from bisos.pyDblock import= line
+93. Not caused by TODO 3 --- the same failure predates it. Fixes:
+either install =bisos.pyDblock= in tmoBisos, or change verify.sh's
+python resolution to the BISOS venv explicitly, or gate the pyDblock
+import. Worth a separate TODO in a maintenance stage.
+
+** DONE [#A] <<Add Table of Commands to README.org>> :aiAndMe:
+CLOSED: [2026-07-31 Fri]
 SCHEDULED: <2026-07-31 Fri 11:29>
 Perhaps two separate tables. One for xxConfig_yy commands and one for the rest of the usage commands.
 The noLink param should be included in initiate and initiateSub.
 ----- AI Results: ------
+Added a new =Table of Commands= subsection under =Usage=, placed
+between =Self-Discovery: the examples Menu= and =Set Templates Base
+Directory=. This lands it in the reader's first Usage screen so the
+detail subsections that follow can be scanned against the table
+overview.
+
+Two tables per your direction:
+
+- *Config commands* --- three-column (Command, Store, Purpose):
+  =userConfig_get=, =userConfig_set=, =cwdConfig_get=, =cwdConfig_set=,
+  =cwdConfig_record= (Store column names =userConfig= vs =cwdConfig=,
+  clarifying which persistent store each command touches).
+- *Lifecycle commands* --- three-column (Command, Purpose, Notable
+  options): =initiate=, =initiateSub=, =refresh=, =aiSuspend=,
+  =aiResume=, =deClaudify=, =examples=. The =initiate= and
+  =initiateSub= rows list =--activity=, =--templates=, =--noLink=<file>=
+  in the Notable options column per your ask.
+
+Two short paragraphs follow the tables: (a) a pointer to the
+=--noLink= section for readers who want the "when to use it"
+narrative, (b) a note that =initiate= / =initiateSub= auto-record
+templates + activity into cwdConfig on success --- explaining why
+subsequent invocations in the same directory don't need CLI flags.
+
+Also updated: the operations-list paragraph in Overview (line 119)
+now includes =cwdConfig_record= and ends with a pointer to the
+Table of Commands. TOC gained a new entry
+=table-of-commands= under Usage.
 
 
 

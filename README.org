@@ -119,11 +119,14 @@ inherited from an ancestor via the same walk-up, avoiding duplication.
 bisos.startAiActivity is a python package that uses the [[https://github.com/bisos-pip/pycs][PyCS-Framework]].
 It provides the =startAiActivity.cs= command with the following operations:
 =userConfig_set/get= (global user persistent config), =cwdConfig_set/get=
-(per-directory persistent config), =initiate= (base install),
-=initiateSub= (slim subproject overlay), =aiSuspend= / =aiResume=
-(reversible pause/restore), =refresh= (re-copy =CLAUDE.md= from templates),
-=deClaudify= (permanent removal), and =examples= (all invocations with
-the current templates base and cwdConfig state).
+(per-directory persistent config), =cwdConfig_record= (deduce
+per-directory config from local symlinks and record it), =initiate= (base
+install), =initiateSub= (slim subproject overlay), =aiSuspend= /
+=aiResume= (reversible pause/restore), =refresh= (re-copy =CLAUDE.md= from
+templates), =deClaudify= (permanent removal), and =examples= (all
+invocations with the current templates base and cwdConfig state). A
+comprehensive command table appears under
+[[#table-of-commands][Table of Commands]] in Usage.
 
 ** Structure at a Glance
 
@@ -187,6 +190,7 @@ then the figure.
   - [[#post-installation-basic-testing][Post-Installation Basic Testing]]
 - [[#usage][Usage]]
   - [[#self-discovery-the-examples-menu][Self-Discovery: the examples Menu]]
+  - [[#table-of-commands][Table of Commands]]
   - [[#set-templates-base-directory][Set Templates Base Directory]]
   - [[#per-directory-templates-override][Per-Directory Templates Override]]
   - [[#install-templates-into-a-project][Install Templates Into a Project]]
@@ -449,6 +453,46 @@ directory --- it is the fastest way to see what is currently configured
 and what invocations are available. All subsections below describe the
 same commands the menu advertises; this section is the *narrative*
 counterpart to that menu.
+
+** Table of Commands
+
+The command surface falls into two groups. *Config commands* read and
+write the two persistent stores (userConfig for machine-wide defaults;
+cwdConfig for per-directory overrides). *Lifecycle commands* install,
+manage, and remove AI-collaboration state in a project directory.
+
+*Config commands:*
+
+| Command             | Store     | Purpose                                                                     |
+|---------------------+-----------+-----------------------------------------------------------------------------|
+| =userConfig_get=    | userConfig| Read a global persistent value (=~/.config/bisos/startAiActivity.cs/fps/=). |
+| =userConfig_set=    | userConfig| Write a global persistent value. Typically used for =templates=.            |
+| =cwdConfig_get=     | cwdConfig | Read a per-directory persistent value (=./.startAiActivity.cs/fps/=).       |
+| =cwdConfig_set=     | cwdConfig | Write a per-directory persistent value. Overrides userConfig for that dir.  |
+| =cwdConfig_record=  | cwdConfig | Deduce =templates= + =activity= from local symlinks; write to cwdConfig. Retrofits directories initiated before cwdConfig auto-persist. |
+
+*Lifecycle commands:*
+
+| Command         | Purpose                                                                    | Notable options       |
+|-----------------+----------------------------------------------------------------------------+-----------------------|
+| =initiate=      | Install AI-collaboration templates into cwd (base install).                | =--activity=, =--templates=, =--noLink=<file>= |
+| =initiateSub=   | Install a slim subproject overlay in cwd (requires an =initiate=-d parent).| =--activity=, =--templates=, =--noLink=<file>= |
+| =refresh=       | Re-copy safe-copied invariants (currently =CLAUDE.md=) from templates.     |                       |
+| =aiSuspend=     | Suspend AI collaboration --- stash editable files as =.dormant=, remove symlinks + =.claude/=. Reversible. |    |
+| =aiResume=      | Restore a suspended install.                                               |                       |
+| =deClaudify=    | Permanently remove all AI-collaboration files. Irreversible.               |                       |
+| =examples=      | Print the self-documenting examples menu. Default when no =-i= is passed.  |                       |
+
+The =--noLink=<file>= option on =initiate= / =initiateSub= converts a
+would-be symlink into a safe-copy for the named file. See
+[[#customizing-a-shared-template-file---nolink][Customizing a Shared
+Template File]] below for when to use it.
+
+Both =initiate= and =initiateSub= *auto-record* the templates base
+and activity actually used into cwdConfig on success, so subsequent
+invocations in the same directory (=refresh=, =aiSuspend= /
+=aiResume=, or a second =initiate= after =deClaudify=) can run with
+no CLI flags.
 
 ** Set Templates Base Directory
 
