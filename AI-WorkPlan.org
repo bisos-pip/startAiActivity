@@ -990,13 +990,51 @@ now includes =cwdConfig_record= and ends with a pointer to the
 Table of Commands. TOC gained a new entry
 =table-of-commands= under Usage.
 
-** TODO [#A] <<What if AI systems weren’t chatbots?>> :aiAndMe:
+** DONE [#A] <<What if AI systems weren’t chatbots?>> :aiAndMe:
+CLOSED: [2026-08-02 Sun]
 SCHEDULED: <2026-07-31 Fri 11:29>
 Add the following as a short paragraph towards the begining of README.org
 Read /bisos/panels/bisos-core/AI/AiGeneralInfo /bisos/panels/bisos-core/AI/AiGeneralInfo/3805689.3812232.pdf
 The idea is that natural language interactions are better outside of a chatbox paradigm.
 So, define your own workflow, define your own activity and define your own workplan -- then make Claude/etc conform to your model.
 ----- AI Results: ------
+Added a new top-level section =Why AI-Activity, Not Chatbot?= between
+=Collaboration Across People and Across Sessions= and =Overview=.
+Placement rationale: practical framings (concept + model, human/AI
+continuity) are established first, so the philosophical section reads
+as reflection rather than manifesto, and it lands cleanly into the
+concrete Overview that follows.
+
+Iterated with user through three drafts: initial (~8 sentences,
+Ghosh et al. named explicitly + full Illich unpacking), user's own
+denser edit (dropped Illich unpacking, added an =AI-Activity=
+identity claim), and final tight version. Final is six sentences,
+one paragraph:
+
+- Opening claim: the chatbot has quietly become the default
+  interface for AI.
+- Diagnostic pivot: this is not a neutral choice.
+- Citation carrying epistemic weight: the paper title
+  =/What if AI systems weren't chatbots?/= is the DOI link
+  (=https://doi.org/10.1145/3805689.3812232=); Ghosh et al. are
+  reachable through the link but not named in prose. "A
+  peer-reviewed argument" flags the epistemic register without
+  paraphrasing further.
+- Three harms in one clause: agency erosion, deskilling, knowledge
+  homogenization. Contrast: task-specific workflow-integrated systems
+  largely avoid these.
+- The =AI-Activity= identity claim: "our move toward /convivial
+  tools/ --- shaped by their user rather than the reverse --- and
+  away from the industrial default." =convivial tools= is a link to
+  the Wikipedia entry for Illich's =Tools for Conviviality=, so
+  readers who want the philosophical grounding can follow the link;
+  the six-word unpacking ("shaped by their user rather than the
+  reverse") keeps the definition on-page without a name-drop.
+- Transitional close: "What follows is the concrete mechanics of
+  that inversion" --- graceful hinge into Overview.
+
+TOC entry added at the appropriate position between the two
+neighbouring sections.
 
 ** -
 

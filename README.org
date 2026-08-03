@@ -82,6 +82,20 @@ plain text and read equally well in VS Code, IntelliJ, or any editor.
 Claude Code itself is editor-agnostic. The commitment is to org-mode as
 a file format, not to Emacs as an environment.
 
+* Why AI-Activity, Not Chatbot?
+
+The chatbot has quietly become the default interface for AI. Every
+session starts fresh, the conversation is the unit of work, and the
+interface funnels users toward whatever the model chooses to surface.
+This is not a neutral choice. [[https://doi.org/10.1145/3805689.3812232][/What if AI systems weren't chatbots?/]]
+is a peer-reviewed argument that the chatbot paradigm systematically
+erodes user agency, deskills its users, and homogenizes knowledge ---
+harms that task-specific, workflow-integrated AI systems largely
+avoid. The *AI-Activity* is our move toward [[https://en.wikipedia.org/wiki/Tools_for_Conviviality][/convivial tools/]] ---
+shaped by their user rather than the reverse --- and away from the
+industrial default. What follows is the concrete mechanics of that
+inversion.
+
 * Overview
 
 /bisos.startAiActivity/ installs the ByStar AI collaborative development
@@ -172,6 +186,7 @@ then the figure.
 * Table of Contents     :TOC:
 - [[#the-concept-and-model-of-an-ai-activity][The Concept and Model of an AI-Activity]]
 - [[#collaboration-across-people-and-across-sessions][Collaboration Across People and Across Sessions]]
+- [[#why-ai-activity-not-chatbot][Why AI-Activity, Not Chatbot?]]
 - [[#overview][Overview]]
   - [[#structure-at-a-glance][Structure at a Glance]]
 - [[#part-of-bisos--bystar-internet-services-operating-system][Part of BISOS — ByStar Internet Services Operating System]]
