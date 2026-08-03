@@ -1,4 +1,4 @@
-#+title: bisos.startAiActivity: Install AI Collaborative Development Templates
+#+title: bisos.startAiActivity: Bootstrap an AI-Activity
 #+DATE: <2026-07-12 Sat>
 #+AUTHOR: Mohsen BANAN
 #+OPTIONS: toc:4
