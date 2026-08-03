@@ -425,16 +425,21 @@ class examples(cs.Cmnd):
 ***** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Conventional top level example.
         #+end_org """)
 
+        od = collections.OrderedDict
+        cmnd = cs.examples.cmndEnter
+
+        templatesBaseStr = _resolveTemplatesBase(None)
+
         cs.examples.myName(cs.G.icmMyName(), cs.G.icmMyFullName())
         cs.examples.commonBrief()
 
         userConfig_csu.examples_csu().pyCmnd()
         cwdConfig_csu.examples_csu().pyCmnd()
 
-        od = collections.OrderedDict
-        cmnd = cs.examples.cmndEnter
-
-        templatesBaseStr = _resolveTemplatesBase(None)
+        cs.examples.menuChapter('=cwdConfig_record= -- deduce & record cwdConfig for an already-initiated directory')
+        cmnd('cwdConfig_record',
+             pars=od([]),
+             comment="# Deduce templates/activity from symlinks; write to ./.startAiActivity.cs/")
 
         cs.examples.menuChapter('=aiSuspend= / =aiResume= -- suspend and resume AI collaboration')
         cmnd('aiSuspend',
@@ -449,10 +454,6 @@ class examples(cs.Cmnd):
              pars=od([]),
              comment="# Re-copy CLAUDE.md from templates; upgrades legacy symlinks")
 
-        cs.examples.menuChapter('=cwdConfig_record= -- deduce & record cwdConfig for an already-initiated directory')
-        cmnd('cwdConfig_record',
-             pars=od([]),
-             comment="# Deduce templates/activity from symlinks; write to ./.startAiActivity.cs/")
 
         cs.examples.menuChapter('=deClaudify= -- remove AI collaboration files')
         cmnd('deClaudify',
@@ -501,13 +502,7 @@ class examples(cs.Cmnd):
 
         if cwdActivity:
             cs.examples.menuChapter('=initiate/initiateSub Based on CWD Setting= -- Based on ./.startAiActivity.cs')
-            # cwdConfig supplies activity — show the bare invocation first.
-            cmnd('initiate',
-                 pars=od([]),
-                 comment=f"# activity={cwdActivity} from cwdConfig; no CLI flags needed")
-            cmnd('initiateSub',
-                 pars=od([]),
-                 comment=f"# activity={cwdActivity} from cwdConfig; no CLI flags needed")
+            # cwdConfig supplies activity — But dont show the bare invocation.
             cmnd('initiate',
                  pars=od([('activity', f"{cwdActivity}"), ('templates', f"{templatesBaseStr}"),]),
                  comment=f"# from cwdConfig")
