@@ -990,7 +990,13 @@ now includes =cwdConfig_record= and ends with a pointer to the
 Table of Commands. TOC gained a new entry
 =table-of-commands= under Usage.
 
-
+** TODO [#A] <<What if AI systems weren’t chatbots?>> :aiAndMe:
+SCHEDULED: <2026-07-31 Fri 11:29>
+Add the following as a short paragraph towards the begining of README.org
+Read /bisos/panels/bisos-core/AI/AiGeneralInfo /bisos/panels/bisos-core/AI/AiGeneralInfo/3805689.3812232.pdf
+The idea is that natural language interactions are better outside of a chatbox paradigm.
+So, define your own workflow, define your own activity and define your own workplan -- then make Claude/etc conform to your model.
+----- AI Results: ------
 
 ** -
 
