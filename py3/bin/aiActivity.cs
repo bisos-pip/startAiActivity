@@ -427,6 +427,7 @@ class examples(cs.Cmnd):
 
         od = collections.OrderedDict
         cmnd = cs.examples.cmndEnter
+        literal = cs.examples.execInsert
 
         templatesBaseStr = _resolveTemplatesBase(None)
 
@@ -459,14 +460,6 @@ class examples(cs.Cmnd):
         cmnd('deClaudify',
              pars=od([]),
              comment="# Remove AI files from current directory")
-
-        # Migration reminder: old dotdir present but new one absent
-        oldDotdir = pathlib.Path.cwd() / '.startAiActivity.cs'
-        newDotdir = pathlib.Path.cwd() / '.aiActivity.cs'
-        if oldDotdir.exists() and not newDotdir.exists():
-            cs.examples.menuChapter('=MIGRATION NEEDED= -- rename dotdir from old startAiActivity name')
-            b_io.ann.note("  Run:  mv .startAiActivity.cs .aiActivity.cs")
-            b_io.ann.note("  Then: aiActivity.cs -i cwdConfig_record")
 
         # Read cwdConfig to decide whether initiate/initiateSub can be invoked bare.
         cwdActivity = cwdConfig_csu.parGet('activity')
@@ -522,6 +515,13 @@ class examples(cs.Cmnd):
         cmnd('listClaudesPath',
              pars=od([]),
              comment="# Walk up to git repo root; list each CLAUDE.md + AI-Activity.org target")
+
+        # Migration reminder: old dotdir present but new one absent — shown last
+        oldDotdir = pathlib.Path.cwd() / '.startAiActivity.cs'
+        newDotdir = pathlib.Path.cwd() / '.aiActivity.cs'
+        if oldDotdir.exists() and not newDotdir.exists():
+            cs.examples.menuChapter('=MIGRATION NEEDED= -- rename dotdir from old startAiActivity name')
+            literal(f"mv .startAiActivity.cs .aiActivity.cs")
 
         return(cmndOutcome)
 
