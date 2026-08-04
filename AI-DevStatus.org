@@ -3,8 +3,8 @@
 
 ####+BEGIN: b:ai:file/particulars
 * AI Working Context
-  Working Directory: /bisos/git/auth/bxRepos/bisos-pip/startAiActivity
-  File: /bisos/git/auth/bxRepos/bisos-pip/startAiActivity/AI-DevStatus.org
+  Working Directory: /bisos/git/auth/bxRepos/bisos-pip/aiActivity
+  File: /bisos/git/auth/bxRepos/bisos-pip/aiActivity/AI-DevStatus.org
   Activity: bisos-pip
   Companion Docs: AI-WORKFLOW.org, AI-Activity.org, AI-DevStatus.org, README.org
 
@@ -45,7 +45,7 @@ Key changes since last status:
     can run bare. Deferred until after all preconditions pass (a failed
     walk-up in =initiateSub= no longer leaves stale state).
   - Examples menu is now conditional on cwdConfig contents: if
-    =activity= is set, a bare =startAiActivity.cs -i initiate= line
+    =activity= is set, a bare =aiActivity.cs -i initiate= line
     appears at the top of the =initiate= chapter; explicit
     =--activity=<name>= lines follow.
 - *Per-directory config override (Stage 12 TODO 4):* New sibling module
@@ -53,7 +53,7 @@ Key changes since last status:
   reading and writing =<cwd>/.<csxu-name>/fps/<parName>/value= (hidden
   dotdir). Symmetric to =userConfig_csu= but for per-directory state.
   =userConfig_csu= itself is unchanged --- no =cwd= param bloat.
-  =startAiActivity.cs= adds =bisos.b.cwdConfig_csu= to its csuList
+  =aiActivity.cs= adds =bisos.b.cwdConfig_csu= to its csuList
   alongside =bisos.b.userConfig_csu=. =_resolveTemplatesBase()= composes
   the two: step 2 calls =cwdConfig_csu.parGet('templates')=, step 3
   calls =userConfig_csu.parGet('templates')=. Both modules present in
@@ -142,7 +142,7 @@ Key changes since last status:
   =AI-WorkPlan.org=) in a subdirectory. The invariants
   (=AI-WORKFLOW.org=, =.claude/=) are inherited from an already-=initiate=-d
   ancestor via Claude Code's walk-up. Preconditions: a
-  startAiActivity-signature CLAUDE.md must exist in some ancestor, AND the
+  aiActivity-signature CLAUDE.md must exist in some ancestor, AND the
   target directory must not already have a CLAUDE.md. =aiSuspend= /
   =aiResume= are now mode-aware: =aiSuspend= preserves CLAUDE.md as
   =CLAUDE.md.dormant= (keeping its symlink target as the mode signature);
@@ -165,28 +165,28 @@ Key changes since last status:
 
 * What Works
 
-- =startAiActivity.cs -i examples= — shows all available activities when
+- =aiActivity.cs -i examples= — shows all available activities when
   templates base is configured; shows placeholder when not yet set.
-- =startAiActivity.cs -i userConfig_set --parName=templates --parValue=<path>=
-  — persists templates base to =~/.config/bisos/startAiActivity.cs/templates/value=.
-- =startAiActivity.cs -i userConfig_get --parName=templates= — reads and
+- =aiActivity.cs -i userConfig_set --parName=templates --parValue=<path>=
+  — persists templates base to =~/.config/bisos/aiActivity.cs/templates/value=.
+- =aiActivity.cs -i userConfig_get --parName=templates= — reads and
   displays current value.
-- =startAiActivity.cs -i initiate --activity=bisos-pip= — installs templates
+- =aiActivity.cs -i initiate --activity=bisos-pip= — installs templates
   into current directory. Now also installs =.claude/skills/= symlink when
   the activity ships a =_skills/= directory (bisos-pip currently ships 5
   skills — see Architecture).
-- =startAiActivity.cs -i initiate --root=repo --activity=bisos-pip= — installs
+- =aiActivity.cs -i initiate --root=repo --activity=bisos-pip= — installs
   at git repo root.
-- =startAiActivity.cs -i initiateSub --activity=bisos-pip= — installs slim
+- =aiActivity.cs -i initiateSub --activity=bisos-pip= — installs slim
   subproject overlay in current directory. Requires an ancestor to have been
-  =initiate=-d first (walks up looking for a startAiActivity-signature
+  =initiate=-d first (walks up looking for a aiActivity-signature
   =CLAUDE.md=). Does NOT install =AI-WORKFLOW.org=, or
   =.claude/= (all inherited from the ancestor).
-- =startAiActivity.cs -i deClaudify= — permanently removes all AI files from
+- =aiActivity.cs -i deClaudify= — permanently removes all AI files from
   current directory.
-- =startAiActivity.cs -i aiSuspend= — stashes editable files as =.dormant= and
+- =aiActivity.cs -i aiSuspend= — stashes editable files as =.dormant= and
   removes symlinks/=.claude/= from current directory.
-- =startAiActivity.cs -i aiResume= — restores =.dormant= files and re-installs
+- =aiActivity.cs -i aiResume= — restores =.dormant= files and re-installs
   symlinks/=.claude/=; infers activity automatically.
 - Auto-default for templates: if =/bisos/apps/defaults/ai-templates= exists,
   it is written to the user-config store on first run (via =parDictAdd= hook).
@@ -216,7 +216,7 @@ Key changes since last status:
 
 * What Is Untested
 
-- PyPI upload and =pipx install bisos.startAiActivity= end-to-end test.
+- PyPI upload and =pipx install bisos.aiActivity= end-to-end test.
 - =py3/README.rst= rendering on PyPI (RST formatting not yet verified in PyPI
   preview).
 - Behavior of auto-default hook when neither =~/aiActivityTemplates= nor
@@ -237,17 +237,17 @@ Key changes since last status:
 #+begin_example
 py3/
   bin/
-    startAiActivity.cs      — main csxu; initiate, initiateSub, deClaudify,
+    aiActivity.cs      — main csxu; initiate, initiateSub, deClaudify,
                               aiSuspend, aiResume, userConfig_get/set, examples
   bisos/
-    startAiActivity/
+    aiActivity/
       updateDblock.py       — general dblock dispatch engine (registerHandler / expandAll)
       dblock_particulars.py — self-registering handler for b:ai:file/particulars
   test/
     verify.sh               — end-to-end verification harness (run via bash -i;
                               uses lpDo from ~/.bashrc for uniform logging)
 panels/
-  bisos.startAiActivity/
+  bisos.aiActivity/
     _nodeBase_/
       fullUsagePanel-en.org — primary Blee panel
 README.org                  — human-oriented repo README (org-mode source)
@@ -290,7 +290,7 @@ Key external dependencies (not bundled):
 
 Entry points (=setup.py= console_scripts):
 
-- =startAiActivity.cs= → =py3/bin/startAiActivity.cs=
+- =aiActivity.cs= → =py3/bin/aiActivity.cs=
 
 ** Templates Trees
 

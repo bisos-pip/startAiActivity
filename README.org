@@ -1,14 +1,14 @@
-#+title: bisos.startAiActivity: Bootstrap an AI-Activity
+#+title: bisos.aiActivity: Bootstrap an AI-Activity
 #+DATE: <2026-07-12 Sat>
 #+AUTHOR: Mohsen BANAN
 #+OPTIONS: toc:4
 
-#+BEGIN: b:org:pypi:readme/topControls :pkgName "startAiActivity" :comment "basic"
+#+BEGIN: b:org:pypi:readme/topControls :pkgName "aiActivity" :comment "basic"
 
 |----------------------+------------------------------------------------------------------|
 | ~Blee Panel Controls~: | [[elisp:(show-all)][Show-All]] : [[elisp:(org-shifttab)][Overview]] : [[elisp:(progn (org-shifttab) (org-content))][Content]] : [[elisp:(delete-other-windows)][(1)]] : [[elisp:(progn (save-buffer) (kill-buffer))][S&Q]] : [[elisp:(save-buffer)][Save]]  : [[elisp:(kill-buffer)][Quit]]  : [[elisp:(bury-buffer)][Bury]] |
-| ~Panel Links~:         | [[file:./py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org][Repo Blee Panel]] --  [[file:/bxRepos/bisos-pip/startAiActivity/py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org][Blee Panel]]                                   |
-| ~See Also~:            | [[https://pypi.org/project/bisos.startAiActivity][At PYPI]] : [[https://github.com/bisos-pip/pycs][bisos.PyCS]]                                             |
+| ~Panel Links~:         | [[file:./py3/panels/bisos.aiActivity/_nodeBase_/fullUsagePanel-en.org][Repo Blee Panel]] --  [[file:/bxRepos/bisos-pip/aiActivity/py3/panels/bisos.aiActivity/_nodeBase_/fullUsagePanel-en.org][Blee Panel]]                                   |
+| ~See Also~:            | [[https://pypi.org/project/bisos.aiActivity][At PYPI]] : [[https://github.com/bisos-pip/pycs][bisos.PyCS]]                                             |
 |----------------------+------------------------------------------------------------------|
 
 #+END:
@@ -38,7 +38,7 @@ Two org-mode files encode the activity, playing distinct roles:
   =AI-DevStatus.org= which records where the effort stands right now.
 
 Activities are classes of work; WorkPlans are instances. The templates
-=/bisos.startAiActivity/= installs are what encode this distinction on
+=/bisos.aiActivity/= installs are what encode this distinction on
 disk --- shared invariants and activity conventions are symlinked from a
 templates repo (so improvements propagate); WorkPlan and DevStatus start
 as safe-copies (so each effort owns its own state).
@@ -98,7 +98,7 @@ inversion.
 
 * Overview
 
-/bisos.startAiActivity/ installs the ByStar AI collaborative development
+/bisos.aiActivity/ installs the ByStar AI collaborative development
 template set --- =CLAUDE.md=, =AI-WORKFLOW.org=,
 =AI-Activity.org=, =AI-DevStatus.org=, =AI-WorkPlan.org=, plus a =.claude/=
 directory with =settings.json=, =commands/=, and optionally =skills/= ---
@@ -130,8 +130,8 @@ directives). Nested subprojects installed with =initiateSub= use a slim
 =CLAUDE.md= that imports only the local trio; the invariants are
 inherited from an ancestor via the same walk-up, avoiding duplication.
 
-bisos.startAiActivity is a python package that uses the [[https://github.com/bisos-pip/pycs][PyCS-Framework]].
-It provides the =startAiActivity.cs= command with the following operations:
+bisos.aiActivity is a python package that uses the [[https://github.com/bisos-pip/pycs][PyCS-Framework]].
+It provides the =aiActivity.cs= command with the following operations:
 =userConfig_set/get= (global user persistent config), =cwdConfig_set/get=
 (per-directory persistent config), =cwdConfig_record= (deduce
 per-directory config from local symlinks and record it), =initiate= (base
@@ -145,7 +145,7 @@ comprehensive command table appears under
 ** Structure at a Glance
 
 The figure below shows how the pieces fit together --- one static
-picture of everything =bisos.startAiActivity= consumes and produces,
+picture of everything =bisos.aiActivity= consumes and produces,
 from templates at the top to a Claude Code session at the bottom.
 The colours and edge styles carry meaning; scan the legend first,
 then the figure.
@@ -173,7 +173,7 @@ then the figure.
 - *Parameters layer.* =--activity=, =--templates=, =--noLink= are
   CLI inputs; =userConfig= and =cwdConfig= are persistent stores that
   supply the same values when the CLI flags are omitted.
-- *Engine.* =startAiActivity.cs= with its six operations. All
+- *Engine.* =aiActivity.cs= with its six operations. All
   parameter inputs converge here.
 - *Generated files.* What lands in the project directory when
   =initiate= runs. Six items --- five org files plus =.claude/=
@@ -190,7 +190,7 @@ then the figure.
 - [[#overview][Overview]]
   - [[#structure-at-a-glance][Structure at a Glance]]
 - [[#part-of-bisos--bystar-internet-services-operating-system][Part of BISOS — ByStar Internet Services Operating System]]
-- [[#bisosstartaiactivity-is-a-command-only-pycs-facility][bisos.startAiActivity is a Command-Only PyCS Facility]]
+- [[#bisosstartaiactivity-is-a-command-only-pycs-facility][bisos.aiActivity is a Command-Only PyCS Facility]]
 - [[#two-part-architecture-execution-engine--templates][Two-Part Architecture: Execution Engine + Templates]]
   - [[#part-1-----the-execution-engine-this-package][Part 1 --- the execution engine (this package)]]
   - [[#part-2-----the-templates-a-separate-repo-you-clone][Part 2 --- the templates (a separate repo you clone)]]
@@ -219,10 +219,10 @@ then the figure.
     - [[#homogeneous-vs-heterogeneous][Homogeneous vs Heterogeneous]]
     - [[#hierarchical-vs-lateral][Hierarchical vs Lateral]]
 - [[#key-files][Key Files]]
-    - [[#startaiactivitycs][startAiActivity.cs]]
+    - [[#startaiactivitycs][aiActivity.cs]]
     - [[#pypi-and-github-packaging][PyPi and Github Packaging]]
 - [[#documentation-and-blee-panels][Documentation and Blee-Panels]]
-  - [[#bisosstartaiactivity-blee-panels][bisos.startAiActivity Blee-Panels]]
+  - [[#bisosstartaiactivity-blee-panels][bisos.aiActivity Blee-Panels]]
 - [[#support][Support]]
 - [[#planned-improvements][Planned Improvements]]
 
@@ -238,7 +238,7 @@ for information about getting started with BISOS.
 is described as a cure for losses of autonomy and privacy in a book titled:
 [[https://github.com/bxplpc/120033][Nature of Polyexistentials]]
 
-/bisos.startAiActivity/ is part of BISOS. It is a standalone package that can
+/bisos.aiActivity/ is part of BISOS. It is a standalone package that can
 be used independently of the full BISOS environment.
 
 Within BISOS and Blee specifically, the same org-mode substrate that
@@ -252,13 +252,13 @@ to documentation. COMEEGA is a BISOS/Blee integration detail; outside
 Blee the source files still work as ordinary Python (etc.), and the AI
 Activity model itself does not depend on COMEEGA.
 
-* bisos.startAiActivity is a Command-Only PyCS Facility
+* bisos.aiActivity is a Command-Only PyCS Facility
 
-bisos.startAiActivity is a command-line tool. It is a PyCS single-unit
+bisos.aiActivity is a command-line tool. It is a PyCS single-unit
 command service. PyCS is a framework that converges development of CLI tools
 and services. PyCS is an alternative to FastAPI, Typer and Click.
 
-bisos.startAiActivity uses the PyCS-Framework to:
+bisos.aiActivity uses the PyCS-Framework to:
 
 1) Install AI collaborative development templates (symlinks and safe-copies)
    from a *templates repo you clone separately* (see *Two-Part Architecture*
@@ -266,20 +266,20 @@ bisos.startAiActivity uses the PyCS-Framework to:
 2) Expand =b:ai:file/particulars= org-mode dynamic blocks in installed files
    using pure Python, without requiring Emacs or =bx-dblock=.
 3) Manage persistent user-config parameters (e.g. the templates-clone path)
-   via =~/.config/bisos/startAiActivity.cs/=.
+   via =~/.config/bisos/aiActivity.cs/=.
 
 The core of PyCS-Framework is the /bisos.b/ package (the PyCS-Foundation).
 See [[https://github.com/bisos-pip/b][bisos.b]] for an overview.
 
 * Two-Part Architecture: Execution Engine + Templates
 
-/bisos.startAiActivity/ is deliberately split into two independently
+/bisos.aiActivity/ is deliberately split into two independently
 versioned parts. Understanding this split is essential before installing.
 
 ** Part 1 --- the execution engine (this package)
 
-This =bisos.startAiActivity= pip package contains only the *execution
-engine* --- the =startAiActivity.cs= command and its supporting Python
+This =bisos.aiActivity= pip package contains only the *execution
+engine* --- the =aiActivity.cs= command and its supporting Python
 modules. It knows how to symlink, copy, expand dblocks, and manage user
 config, but it *ships with no template content*.
 
@@ -292,7 +292,7 @@ lives in a separate repo:
 [[https://github.com/bxexamples/aiActivityTemplates]]
 
 This is an integral part of the package. Clone it (or fork it) somewhere
-on your filesystem, then point =startAiActivity.cs= at it via user config
+on your filesystem, then point =aiActivity.cs= at it via user config
 (see *Post-Installation Setup* below).
 
 Because the templates are versioned separately from the engine, you can:
@@ -300,15 +300,15 @@ Because the templates are versioned separately from the engine, you can:
 - *Customize for your own conventions* --- fork
   =bxexamples/aiActivityTemplates=, edit the =mother/= invariants
   (CLAUDE.md contents, AI-WORKFLOW.org) or add your own
-  activities, and point =startAiActivity.cs= at your fork. Your changes
+  activities, and point =aiActivity.cs= at your fork. Your changes
   propagate to every project you =initiate= without touching the engine.
 - *Update engine and templates independently* --- =pipx upgrade
-  bisos.startAiActivity= and =git pull= on your templates clone are two
+  bisos.aiActivity= and =git pull= on your templates clone are two
   separate operations.
 
 ** Auto-detection: two canonical locations
 
-=startAiActivity.cs= probes two well-known locations *in this order* and
+=aiActivity.cs= probes two well-known locations *in this order* and
 persists the first one that exists as the default templates base:
 
 1. =~/aiActivityTemplates= --- the canonical per-user clone path. If you
@@ -338,7 +338,7 @@ session) needs to orient itself.
 The block is a snapshot: not regenerated by =refresh= or any normal
 workflow. The dblock engine itself lives in a separate package,
 [[https://github.com/bisos-pip/pyDblock][=bisos.pyDblock=]], which
-=bisos.startAiActivity= consumes at install time. Manual regeneration
+=bisos.aiActivity= consumes at install time. Manual regeneration
 and authoring of new dblock signatures are documented there.
 
 * Post-Installation Setup
@@ -355,7 +355,7 @@ That's it. The engine auto-detects =~/aiActivityTemplates= on first
 invocation and persists it as the templates base. You can verify:
 
 #+begin_src bash
-startAiActivity.cs -i userConfig_get --parName=templates
+aiActivity.cs -i userConfig_get --parName=templates
 #+end_src
 
 If you prefer a different path, clone there instead and run
@@ -363,7 +363,7 @@ If you prefer a different path, clone there instead and run
 
 #+begin_src bash
 git clone https://github.com/bxexamples/aiActivityTemplates /some/other/path
-startAiActivity.cs -i userConfig_set --parName=templates --parValue=/some/other/path
+aiActivity.cs -i userConfig_set --parName=templates --parValue=/some/other/path
 #+end_src
 
 If you later want to customize the templates for your own conventions,
@@ -382,46 +382,46 @@ fork to =~/aiActivityTemplates= (which then takes precedence) or run
 
 * Installation
 
-The sources for the bisos.startAiActivity pip package are maintained at:
-https://github.com/bisos-pip/startAiActivity.
+The sources for the bisos.aiActivity pip package are maintained at:
+https://github.com/bisos-pip/aiActivity.
 
-The bisos.startAiActivity pip package is available at PYPI as
-https://pypi.org/project/bisos.startAiActivity
+The bisos.aiActivity pip package is available at PYPI as
+https://pypi.org/project/bisos.aiActivity
 
-You can install bisos.startAiActivity with pip or pipx.
+You can install bisos.aiActivity with pip or pipx.
 
 ** Installation With pip
 
-If you need access to bisos.startAiActivity as a python module, you can
+If you need access to bisos.aiActivity as a python module, you can
 install it with pip:
 
 #+begin_src bash
-pip install bisos.startAiActivity
+pip install bisos.aiActivity
 #+end_src
 
 ** Installation With pipx
 
-If you only need access to bisos.startAiActivity on command-line, you can
+If you only need access to bisos.aiActivity on command-line, you can
 install it with pipx:
 
 #+begin_src bash
-pipx install bisos.startAiActivity
+pipx install bisos.aiActivity
 #+end_src
 
 The following commands are made available:
 
-- =startAiActivity.cs= — installs AI collaborative development templates
+- =aiActivity.cs= — installs AI collaborative development templates
 
 ** Post-Installation Basic Testing
 
 After installation, run:
 
 #+begin_src bash
-startAiActivity.cs
-startAiActivity.cs -i userConfig_get --parName=templates
+aiActivity.cs
+aiActivity.cs -i userConfig_get --parName=templates
 #+end_src
 
-The first line invokes =startAiActivity.cs= with no arguments and
+The first line invokes =aiActivity.cs= with no arguments and
 produces the *examples menu* --- the self-documenting list of common
 invocations, generated from the current environment (resolved templates
 base, persisted =userConfig= and =cwdConfig= values, discovered
@@ -433,12 +433,12 @@ below for what to look for in the output.
 
 ** Self-Discovery: the examples Menu
 
-Like every PyCS csxu, =startAiActivity.cs= is *self-documenting* --- running
+Like every PyCS csxu, =aiActivity.cs= is *self-documenting* --- running
 it with no arguments produces a menu of the common expected CLI
 invocations for this csxu:
 
 #+begin_src bash
-startAiActivity.cs
+aiActivity.cs
 #+end_src
 
 The menu is not static. It is generated at invocation time from the
@@ -456,11 +456,11 @@ csxu's own definition and from the *current environment*:
   showing the bare (zero-flag) invocations that are enabled by the
   persisted state.
 
-The =examples= command produces the same output --- =startAiActivity.cs=
+The =examples= command produces the same output --- =aiActivity.cs=
 with no =-i <cmnd>= implicitly invokes it:
 
 #+begin_src bash
-startAiActivity.cs -i examples
+aiActivity.cs -i examples
 #+end_src
 
 Reading the =examples= menu is the recommended first step in any
@@ -480,9 +480,9 @@ manage, and remove AI-collaboration state in a project directory.
 
 | Command             | Store     | Purpose                                                                     |
 |---------------------+-----------+-----------------------------------------------------------------------------|
-| =userConfig_get=    | userConfig| Read a global persistent value (=~/.config/bisos/startAiActivity.cs/fps/=). |
+| =userConfig_get=    | userConfig| Read a global persistent value (=~/.config/bisos/aiActivity.cs/fps/=). |
 | =userConfig_set=    | userConfig| Write a global persistent value. Typically used for =templates=.            |
-| =cwdConfig_get=     | cwdConfig | Read a per-directory persistent value (=./.startAiActivity.cs/fps/=).       |
+| =cwdConfig_get=     | cwdConfig | Read a per-directory persistent value (=./.aiActivity.cs/fps/=).       |
 | =cwdConfig_set=     | cwdConfig | Write a per-directory persistent value. Overrides userConfig for that dir.  |
 | =cwdConfig_record=  | cwdConfig | Deduce =templates= + =activity= from local symlinks; write to cwdConfig. Retrofits directories initiated before cwdConfig auto-persist. |
 
@@ -515,11 +515,11 @@ no CLI flags.
 Set the global (machine-wide) default once:
 
 #+begin_src bash
-startAiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/ai-templates
+aiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/ai-templates
 #+end_src
 
-This writes to =~/.config/bisos/startAiActivity.cs/fps/templates/value= and
-applies whenever you invoke =startAiActivity.cs= without a =--templates=
+This writes to =~/.config/bisos/aiActivity.cs/fps/templates/value= and
+applies whenever you invoke =aiActivity.cs= without a =--templates=
 override.
 
 ** Per-Directory Templates Override
@@ -530,30 +530,30 @@ per-directory override with =cwdConfig_set=:
 
 #+begin_src bash
 cd /path/to/your/project
-startAiActivity.cs -i cwdConfig_set --parName=templates --parValue=/path/to/other-templates
+aiActivity.cs -i cwdConfig_set --parName=templates --parValue=/path/to/other-templates
 #+end_src
 
-This writes to =./.startAiActivity.cs/fps/templates/value= (hidden dotdir
-in the current directory). When =startAiActivity.cs= is run in that
+This writes to =./.aiActivity.cs/fps/templates/value= (hidden dotdir
+in the current directory). When =aiActivity.cs= is run in that
 directory, the per-directory value takes precedence over the global
 user-config.
 
 To read the per-directory value:
 
 #+begin_src bash
-startAiActivity.cs -i cwdConfig_get --parName=templates
+aiActivity.cs -i cwdConfig_get --parName=templates
 #+end_src
 
 =cwdConfig_get= reads *only* the per-directory store (reports =(not set)=
 if nothing is written there). =userConfig_get= reads *only* the global
 store. The two commands are symmetric and independent; the caller
-(=startAiActivity.cs= itself, via =_resolveTemplatesBase=) is what
+(=aiActivity.cs= itself, via =_resolveTemplatesBase=) is what
 composes them into a precedence chain.
 
 *Precedence chain* for =templates= resolution:
 1. =--templates= CLI flag (explicit override for this single invocation)
-2. =./.startAiActivity.cs/fps/templates/value= (=cwdConfig_set=)
-3. =~/.config/bisos/startAiActivity.cs/fps/templates/value= (=userConfig_set=)
+2. =./.aiActivity.cs/fps/templates/value= (=cwdConfig_set=)
+3. =~/.config/bisos/aiActivity.cs/fps/templates/value= (=userConfig_set=)
 4. Auto-detect: =~/aiActivityTemplates= then =/bisos/apps/defaults/ai-templates=
 
 *Implementation note.* The per-directory feature is provided by a
@@ -569,29 +569,29 @@ different location (e.g. the git repo root), =cd= there first.
 Simplest form — pass the activity on the CLI:
 
 #+begin_src bash
-startAiActivity.cs -i initiate --activity=bisos-pip
+aiActivity.cs -i initiate --activity=bisos-pip
 #+end_src
 
 On success, =initiate= *auto-persists* =activity= to cwdConfig at
-=./.startAiActivity.cs/fps/activity/value=. Subsequent invocations in
+=./.aiActivity.cs/fps/activity/value=. Subsequent invocations in
 the same directory (=refresh=, =aiSuspend=/=aiResume=, or a second
 =initiate= after =deClaudify=) can then run bare, no CLI flags needed:
 
 #+begin_src bash
-startAiActivity.cs -i initiate           # activity read from cwdConfig
+aiActivity.cs -i initiate           # activity read from cwdConfig
 #+end_src
 
 Alternatively, set =activity= explicitly with =cwdConfig_set= before
 =initiate=:
 
 #+begin_src bash
-startAiActivity.cs -i cwdConfig_set --parName=activity --parValue=bisos-pip
-startAiActivity.cs -i initiate           # no --activity needed
+aiActivity.cs -i cwdConfig_set --parName=activity --parValue=bisos-pip
+aiActivity.cs -i initiate           # no --activity needed
 #+end_src
 
 Available activities match subdirectories under the templates base (e.g.
 =bisos-pip=, =bisos-core=, =xu-single=, =blee-panels=, =lcnt=). Run
-=startAiActivity.cs -i examples= to see all available activities. When
+=aiActivity.cs -i examples= to see all available activities. When
 =activity= is already persisted in cwdConfig, the examples menu shows
 the bare =initiate= invocation at the top of the =initiate= chapter.
 
@@ -610,7 +610,7 @@ work plan and dev status without duplicating the invariant files
 (=AI-WORKFLOW.org=, =.claude/=), use =initiateSub=:
 
 #+begin_src bash
-startAiActivity.cs -i initiateSub --activity=bisos-pip
+aiActivity.cs -i initiateSub --activity=bisos-pip
 #+end_src
 
 This installs only the subproject-specific state — a slim =CLAUDE.md=
@@ -621,7 +621,7 @@ inherited from an ancestor directory via Claude Code's =CLAUDE.md= walk-up.
 
 *Preconditions* (=initiateSub= refuses if either fails):
 1. An ancestor directory must have been =initiate=-d already (=initiateSub=
-   walks up looking for a startAiActivity-signature =CLAUDE.md= symlink).
+   walks up looking for a aiActivity-signature =CLAUDE.md= symlink).
 2. The target directory must not already have a =CLAUDE.md=.
 
 The =--activity= flag is required — a subproject may be a different
@@ -655,13 +655,13 @@ override the default. When passed, the named file is safe-copied
 instead of symlinked:
 
 #+begin_src bash
-startAiActivity.cs -i initiate --activity=custom --noLink=AI-Activity.org
+aiActivity.cs -i initiate --activity=custom --noLink=AI-Activity.org
 #+end_src
 
 Or for a subproject overlay:
 
 #+begin_src bash
-startAiActivity.cs -i initiateSub --activity=custom --noLink=AI-Activity.org
+aiActivity.cs -i initiateSub --activity=custom --noLink=AI-Activity.org
 #+end_src
 
 Result: =AI-Activity.org= in the target directory is a real file
@@ -728,7 +728,7 @@ automatically propagate to already-installed projects. Use =refresh= to
 pull in an updated CLAUDE.md:
 
 #+begin_src bash
-startAiActivity.cs -i refresh
+aiActivity.cs -i refresh
 #+end_src
 
 The command detects base vs sub mode by walking up for a parent
@@ -753,7 +753,7 @@ the editable files =AI-DevStatus.org= and =AI-WorkPlan.org= to =.dormant=
 suffixes so that the collaboration state survives.
 
 #+begin_src bash
-startAiActivity.cs -i aiSuspend
+aiActivity.cs -i aiSuspend
 #+end_src
 
 =aiResume= restores the =.dormant= files, re-installs the symlinks, and
@@ -761,7 +761,7 @@ re-installs =.claude/=. The activity is inferred from the =AI-Activity.org=
 symlink target or from the =Activity:= header inside =AI-WorkPlan.org=.
 
 #+begin_src bash
-startAiActivity.cs -i aiResume
+aiActivity.cs -i aiResume
 #+end_src
 
 Both commands operate on the current directory.
@@ -774,7 +774,7 @@ editable =AI-DevStatus.org= and =AI-WorkPlan.org= files along with the
 symlinks and =.claude/= entries.
 
 #+begin_src bash
-startAiActivity.cs -i deClaudify
+aiActivity.cs -i deClaudify
 #+end_src
 
 The command is safe: symlinks are only removed if they are actually symlinks,
@@ -784,7 +784,7 @@ has created or converted manually is left intact.
 ** AI-Activity Topology: Homogeneous, Heterogeneous, Hierarchical, Lateral
 
 AI-Activities have two independent structural dimensions. They can be
-combined freely, and =startAiActivity.cs= supports all combinations.
+combined freely, and =aiActivity.cs= supports all combinations.
 
 *** Homogeneous vs Heterogeneous
 
@@ -807,7 +807,7 @@ automatically.
 
 The =--templates= parameter (overrides the user-config default for a
 single invocation) and the per-directory
-=.startAiActivity.cs/fps/templates= override (see *Per-Directory Templates
+=.aiActivity.cs/fps/templates= override (see *Per-Directory Templates
 Override* above) are the mechanisms that enable Heterogeneous topologies.
 
 *** Hierarchical vs Lateral
@@ -836,11 +836,11 @@ and Heterogeneous in templates (different bases for different subtrees).
 
 * Key Files
 
-An overview of the relevant files of the bisos.startAiActivity package:
+An overview of the relevant files of the bisos.aiActivity package:
 
-*** startAiActivity.cs
+*** aiActivity.cs
 
-=py3/bin/startAiActivity.cs=: The main CS-MU (Command-Services Multi-Unit). Provides the =initiate=,
+=py3/bin/aiActivity.cs=: The main CS-MU (Command-Services Multi-Unit). Provides the =initiate=,
 =aiSuspend=, =aiResume=, =deClaudify=, =userConfig_get=, and =userConfig_set=
 commands. Uses =bisos.b.userConfig_csu= and =bisos.b.cwdConfig_csu= for persistent parameter management.
 
@@ -852,18 +852,18 @@ follow the same structure. They all have [[file:./py3/setup.py][setup.py]] files
 
 * Documentation and Blee-Panels
 
-bisos.startAiActivity is part of ByStar Digital Ecosystem [[http://www.by-star.net]].
+bisos.aiActivity is part of ByStar Digital Ecosystem [[http://www.by-star.net]].
 
 This module's primary documentation is in the form of Blee-Panels.
 Additional information is also available in: [[http://www.by-star.net/PLPC/180047]]
 
-** bisos.startAiActivity Blee-Panels
+** bisos.aiActivity Blee-Panels
 
-bisos.startAiActivity Blee-Panels are in the =./py3/panels= directory. From
+bisos.aiActivity Blee-Panels are in the =./py3/panels= directory. From
 within Blee and BISOS these panels are accessible under the Blee "Panels"
 menu.
 
-See [[file:./py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org]]
+See [[file:./py3/panels/bisos.aiActivity/_nodeBase_/fullUsagePanel-en.org]]
 for a starting point.
 
 * Support

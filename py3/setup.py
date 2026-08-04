@@ -66,7 +66,7 @@ requires = [
 ####+BEGIN: b:py3:pypi:setup/scripts :comment ""
 
 scripts = [
-'bin/startAiActivity.cs',
+'bin/aiActivity.cs',
 ]
 ####+END:
 
@@ -82,7 +82,7 @@ data_files = [
 ####+BEGIN: b:py3:pypi:setup/funcArgs :comment "defaults to --auto--"
 
 setuptools.setup(
-    name=pkgName(),  # 'bisos.startAiActivity'
+    name=pkgName(),  # 'bisos.aiActivity'
     version=pkgVersion(),
     packages=setuptools.find_packages(),
     scripts=scripts,

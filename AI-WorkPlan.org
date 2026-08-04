@@ -7,7 +7,7 @@
 ####+BEGIN: b:ai:file/particulars
 * AI Working Context
   Working Directory: ../..
-  File: /bisos/git/auth/bxRepos/bisos-pip/startAiActivity/AI-WorkPlan.org
+  File: /bisos/git/auth/bxRepos/bisos-pip/aiActivity/AI-WorkPlan.org
   Activity: bisos-pip
   Companion Docs: AI-WORKFLOW.org, AI-Activity.org, AI-DevStatus.org, README.org
 ###+END:
@@ -32,7 +32,7 @@ Goal: Confirm AI's understanding of the context and capture that in [[Context Co
 ----- AI Results: ------
 ** -
 
-* Stage 2: Fully Implement startAiActivity.cs
+* Stage 2: Fully Implement aiActivity.cs
 
 Goal: A functioning implementation with starting point files for py-dblock and userConfigFileParams
 
@@ -44,9 +44,9 @@ SCHEDULED: <2026-06-09 Tue>
 - updateDblock.expandParticulars(dst, targetDir, activity)  is the specific approach.
 - The general approach is to mimic org-mode's model for dblocks.
 - create  a py-dblock.cs file. It will have a command named updateDblocks. And takes args that are in files. For each input file it will call updateDblock.expandAll(dst,)
-- Each dblock processor, registers a signature with a function in a file like ./py3/bisos/startAiActivity/dblock_particulars.py
-- then ./py3/bisos/startAiActivity/updateDblock.py looks for the signatures and applies the function to each.
-- Re-read the "Modularization" section of startAiActivity.org to see my intent from the beginning
+- Each dblock processor, registers a signature with a function in a file like ./py3/bisos/aiActivity/dblock_particulars.py
+- then ./py3/bisos/aiActivity/updateDblock.py looks for the signatures and applies the function to each.
+- Re-read the "Modularization" section of aiActivity.org to see my intent from the beginning
 ----- AI Results: ------
 Generalized the dblock engine across three files:
 
@@ -85,17 +85,17 @@ SCHEDULED: <2026-06-09 Tue>
 - Existing setup Cmnd, should become userConfig_set, userConfig_get -- With the example including
   current values.
 - The  userConfig_set etc Cmnds will be in a general purpose file which is imported.
-- The ~/.config/bisos/csxu/param/value should become generic. So startAiActivity should become startAiActivity.cs
+- The ~/.config/bisos/csxu/param/value should become generic. So aiActivity should become aiActivity.cs
 ----- AI Results: ------
 Merged =userConfigFileParam_csu.py= (deleted) into a single new =userConfig_csu.py=:
 
 - =parGet(parName, override)= / =parSet(parName, value)= :: generic read/write helpers using
   =bisos.b fp=. Config root is =~/.config/bisos/<csxu-name>/= where =<csxu-name>= comes from
-  =pathlib.Path(sys.argv[0]).name= — so =startAiActivity.cs= → =~/.config/bisos/startAiActivity.cs/=.
+  =pathlib.Path(sys.argv[0]).name= — so =aiActivity.cs= → =~/.config/bisos/aiActivity.cs/=.
 - =userConfig_get= / =userConfig_set= :: CS command classes taking =--parName= and =--parValue=.
   Available on the CLI for any parameter, not just =templatesBase=.
 
-In =startAiActivity.cs=:
+In =aiActivity.cs=:
 - =userConfig_csu= added to =csuList= so its commands are imported automatically.
 - =parName= / =parValue= added to =commonParamsSpecify=.
 - =setup= command removed; replaced by =userConfig_set= / =userConfig_get= in =examples=.
@@ -119,24 +119,24 @@ PyCS Facility, Post-Installation Setup, Installation (pip + pipx), Usage
 (userConfig_set, initiate, py-dblock), Key Files, Documentation/Blee-Panels,
 Support, Planned Improvements. Also wrote =py3/README.rst= as the converted
 PyPI form, following RST conventions matching pandoc/ox-rst output.
-** DONE [#A] Based on this ai context, Write ./py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org
+** DONE [#A] Based on this ai context, Write ./py3/panels/bisos.aiActivity/_nodeBase_/fullUsagePanel-en.org
 CLOSED: [2026-07-12 Sat] SCHEDULED: <2026-06-09 Tue>
 ----- AI Results: ------
-Wrote the full Blee panel at =py3/panels/bisos.startAiActivity/_nodeBase_/fullUsagePanel-en.org=
+Wrote the full Blee panel at =py3/panels/bisos.aiActivity/_nodeBase_/fullUsagePanel-en.org=
 with standard header dblocks, Overview, Pip/Pipx Installation (runResult dblocks),
-startAiActivity.cs intro, User Config section (userConfig_get/set), initiate section
+aiActivity.cs intro, User Config section (userConfig_get/set), initiate section
 (bisos-pip, repo, xu-single, blee-panels, lcnt activities), py-dblock.cs section,
 and Design/Evolution TODOs. No RO/service sections (command-only package).
 ** DONE [#A] <<No py-dblock.cs>> in Documentation
 CLOSED: [2026-07-13 Sun] SCHEDULED: <2026-06-09 Tue>
-Now that bisos.pyDblock is in place separate from startAiActivity. Delete all mention of py-dblock.cs from documentation
+Now that bisos.pyDblock is in place separate from aiActivity. Delete all mention of py-dblock.cs from documentation
 Show me current mentions before deleting them
 ----- AI Results: ------
 Removed all =py-dblock.cs= mentions from the four documentation files:
 - =README.org= — removed from Overview paragraph, Installation commands list, "Update Dblocks" Usage section, and Key Files section
 - =AI-DevStatus.org= — removed from Architecture listing, Entry points, What Works, and What Is Untested
 - =fullUsagePanel-en.org= — removed Overview bullet and entire "py-dblock.cs --- Update Org Dblocks" section
-Historical references in =AI-WorkPlan.org= (DONE task bodies) and =startAiActivity.org= were left intact as they are part of the development record.
+Historical references in =AI-WorkPlan.org= (DONE task bodies) and =aiActivity.org= were left intact as they are part of the development record.
 =py3/README.rst= was not touched — it is machine-generated from =README.org=.
 ** -
 
@@ -156,7 +156,7 @@ AI-Activity.org, .claude/settings.json, .claude/commands), copied files
 (AI-DevStatus.org, AI-WorkPlan.org), and the .claude/ dir if empty.
 No =--root= param needed — always operates on the current directory.
 ----- AI Results: ------
-Implemented =deClaudify= in =startAiActivity.cs=. Removes symlinks only if they
+Implemented =deClaudify= in =aiActivity.cs=. Removes symlinks only if they
 are symlinks (leaves regular files intact), removes copied files only if they are
 regular files (leaves symlinks intact), removes =.claude/= if empty after cleanup.
 Added to =examples= command output.
@@ -169,7 +169,7 @@ Add =aiSuspend= and =aiResume= command pair. =aiSuspend= removes symlinks and
 entries, inferring the activity from the =AI-Activity.org= symlink target or the
 =Activity:= header in =AI-WorkPlan.org=. Neither command takes =--root=.
 ----- AI Results: ------
-Implemented =aiSuspend= and =aiResume= in =startAiActivity.cs=. End-to-end tested:
+Implemented =aiSuspend= and =aiResume= in =aiActivity.cs=. End-to-end tested:
 suspend/resume cycle leaves the directory identical to its pre-suspend state.
 Activity inference works from =AI-WorkPlan.org= dblock header when the symlink
 is absent (which it is after suspend). Added both to =examples= output.
@@ -191,7 +191,7 @@ Two variants:
 - *Custom skills* — user/org-defined; these are what we distribute through
   the templates tree.
 
-The natural fit with startAiActivity's existing =mother/= + activity-specific
+The natural fit with aiActivity's existing =mother/= + activity-specific
 override pattern:
 - =mother/_skills/= — skills available to every activity (baseline).
 - =<activity>/_skills/= — activity-specific skills (e.g. a =bisos-pip-release=
@@ -226,13 +226,13 @@ side-by-side merging) — same semantics as the existing =_claude/=
 handling.
 ** DONE [#B] <<initiate Skills Symlink>> Extend =initiate= to symlink =.claude/skills= :ai:
 CLOSED: [2026-07-13 Sun] SCHEDULED: <2026-07-13 Sun>
-Update =initiate= in =startAiActivity.cs= to symlink =.claude/skills= from
+Update =initiate= in =aiActivity.cs= to symlink =.claude/skills= from
 =<activity>/_skills/= (falling back to =mother/_skills/=) the same way
 =settings.json= and =commands= are handled. Ensure that empty or missing
 =_skills/= directories are handled gracefully (no symlink created).
 ----- AI Results: ------
 Added a =.claude/skills/= block to =initiate= after the existing
-=settings.json= / =commands= loop in =py3/bin/startAiActivity.cs=. Uses
+=settings.json= / =commands= loop in =py3/bin/aiActivity.cs=. Uses
 the same "activity else mother" fallback. If neither has a =_skills/=
 directory, no symlink is created (silent no-op). Verified end-to-end
 against =bisos-pip/_skills/= which currently has 5 skill folders:
@@ -333,7 +333,7 @@ Install: slim =CLAUDE.md= (symlink to =mother/initiateSub/CLAUDE.md=),
 (safe-copy with dblock expansion). Does NOT install 
 =AI-WORKFLOW.org=, or =.claude/=.
 ----- AI Results: ------
-Implemented in =py3/bin/startAiActivity.cs=. New template at
+Implemented in =py3/bin/aiActivity.cs=. New template at
 =mother/initiateSub/CLAUDE.md= imports only =@./AI-Activity.org=,
 =@./AI-DevStatus.org=, =@./AI-WorkPlan.org=. Precondition uses symlink-
 target check (readlink + relative_to templatesBase) — no content parsing.
@@ -416,12 +416,12 @@ personal clone at =~/aiActivityTemplates= wins over the BISOS system
 copy even when both are present. Uses =pathlib.Path(...).expanduser()=
 for tilde resolution and stores the expanded absolute path.
 ----- AI Results: ------
-Implemented =_detectTemplatesDefault()= in =startAiActivity.cs=
+Implemented =_detectTemplatesDefault()= in =aiActivity.cs=
 immediately before =commonParamsSpecify=; the =parDictAdd= call for
 =templates= now uses =parDefault=_detectTemplatesDefault()=. Verified:
 on this BISOS machine (no =~/aiActivityTemplates=, BISOS path present),
 the function returns =/bisos/apps/defaults/ai-templates= (fallback
-correct); running =startAiActivity.cs -i userConfig_get --parName=templates=
+correct); running =aiActivity.cs -i userConfig_get --parName=templates=
 through the CLI returns the same. Precedence path (both exist) not
 directly testable on this machine but the loop order guarantees it.
 ** DONE [#A] <<Precedence Docs>> Update three docs :ai:
@@ -466,7 +466,7 @@ Merge steps:
    =/git/rana/rana-notes/aiActivityTemplates/=) to =@import= the four
    subordinate files directly.
 2. Delete =mother/AI-AGENTS.org= from all three trees.
-3. Update =startAiActivity.cs=: remove =AI-AGENTS.org= from =initiate='s
+3. Update =aiActivity.cs=: remove =AI-AGENTS.org= from =initiate='s
    =constantFiles= and =aiResume='s constant-symlink loop. *Keep* it in
    =aiSuspend= and =deClaudify= symlink-lists as legacy cleanup (with
    explanatory comment) so pre-merge projects can still be cleaned up
@@ -496,7 +496,7 @@ each activity ships exactly the files it should, no dead indirection.
 
 * Stage 9: pipx outside of bisos testing
 
-Goal: Make sure that startAiActivity works fine outside of bisos
+Goal: Make sure that aiActivity works fine outside of bisos
 
 
 * Stage 9 TODOs
@@ -518,7 +518,7 @@ Verified.
 
 * Stage 10: Post-launch refinements --- provenance, --noLink, custom activity
 
-Goal: Address rough edges that emerged when using =bisos.startAiActivity=
+Goal: Address rough edges that emerged when using =bisos.aiActivity=
 on a real hierarchical project (site-status-scripts) --- three related
 changes bundled together because they came out of the same field-usage
 session:
@@ -546,7 +546,7 @@ after the last =#+= directive at the top of the file. Not a dblock
 Rationale: elisp dblock expanders can't recover invocation context;
 provenance must be birth-certificate data.
 ----- AI Results: ------
-Implemented in =py3/bin/startAiActivity.cs=. New helpers
+Implemented in =py3/bin/aiActivity.cs=. New helpers
 =_detectUser()= (4-tier fallback chain, handles nohup/detached shells
 where =os.getlogin()= raises) and =_writeProvenanceLine()= (scans for
 last =#+= header, inserts multi-line comment block). Called from
@@ -664,7 +664,7 @@ one-shot migration path for pre-Stage-11 projects). Only touches
 Multi-file =refresh= (parallel to multi-file =--noLink=) is deferred to
 the same =bisos.b= framework improvement.
 ----- AI Results: ------
-Cmnd class added after =aiResume= in =startAiActivity.cs=. Examples
+Cmnd class added after =aiResume= in =aiActivity.cs=. Examples
 menu got a new =refresh= chapter between aiSuspend/aiResume and
 deClaudify. Log messages distinguish the three cases: =UPGRADED (legacy
 symlink -> safe-copy)=, =REFRESHED=, =COPIED (was not present)=.
@@ -742,7 +742,7 @@ When some  directories in the repo have references to different sets of ai-templ
 AI-Activities. An example would be when you are developing some proprietary pip packages with one set of ai-templates
 and open-source pip packages with a different set of ai-templates.
 -----
-startAiActivity.cs supports both.
+aiActivity.cs supports both.
 Add this to the README.org
 ----- AI Results: ------
 Added new "AI-Activity Topology" section to =README.org= under Usage, covering
@@ -759,7 +759,7 @@ This would be called Hierarchical AI-Activities
 -----
 Work on a project may involve visiting multiple repos. This would be called a Laterial AI-Activity.
 ----
-startAiActivity.cs supports both.
+aiActivity.cs supports both.
 Homogenous and Heterogenous and Lateral and Hierarchical can be combined.
 Add this to the README.org
 ----- AI Results: ------
@@ -767,12 +767,12 @@ Covered in the same "AI-Activity Topology" section as TODO 1 above (combined as
 planned). Hierarchical = nested dirs / =initiate= + =initiateSub=; Lateral =
 multiple independent repos each =initiate=-d, Claude walk-up picks up both.
 Noted that all four variants combine freely.
-** DONE [#A]  In ~/.config/bisos/startAiActivity.cs  create an fps directory and move the fps there
+** DONE [#A]  In ~/.config/bisos/aiActivity.cs  create an fps directory and move the fps there
 CLOSED: [2026-07-27 Sun]
 SCHEDULED: <2026-07-21 Tue 13:41>
 This will then become a standard for persistent user parameters.
-Currently the implementation uses ~/.config/bisos/startAiActivity.cs/templates for base of its file param.
-Instead we want to use ~/.config/bisos/startAiActivity.cs/fps/templates
+Currently the implementation uses ~/.config/bisos/aiActivity.cs/templates for base of its file param.
+Instead we want to use ~/.config/bisos/aiActivity.cs/fps/templates
 ----- AI Results: ------
 Changed =_configRoot()= in =bisos.b.userConfig_csu= to append =/fps= to the path,
 making the standard store =~/.config/bisos/<csxu-name>/fps/<parName>/value= for all
@@ -782,13 +782,13 @@ installed copy in the venv. Cold migration — old entries at the old path are l
 in place; no auto-migration. Verified: =userConfig_set= / =userConfig_get= work
 correctly and the config root log now shows =/fps=.
 
-** DONE [#A] <<Add a .startAiActivity.cs to the current directory>> that captures and defines templates directory :aiAndMe:
+** DONE [#A] <<Add a .aiActivity.cs to the current directory>> that captures and defines templates directory :aiAndMe:
 CLOSED: [2026-07-27 Sun]
 SCHEDULED: <2026-07-21 Tue 13:41>
-In the case of Heterogenous AI-Activities, one needs to change the templates parameter for startAiActivity.cs.
+In the case of Heterogenous AI-Activities, one needs to change the templates parameter for aiActivity.cs.
 In situations when one works with different template dirs it is possible to confuse re-creations and resumes.
-Existence of a .startAiActivity.cs/fps/templates in the current directory over rides the value in
-~/.config/bisos/startAiActivity.cs/fps/templates
+Existence of a .aiActivity.cs/fps/templates in the current directory over rides the value in
+~/.config/bisos/aiActivity.cs/fps/templates
 This makes usafge more  convenient. Also upon creation of the repo this can be configured to move towards less config.
 ----- AI Results: ------
 Implemented as a separate CSU rather than a =--cwd= flag on =userConfig_csu=.
@@ -805,7 +805,7 @@ composition-of-CSUs is the better factoring. Redone as follows:
   =commonParamsSpecify()= is empty).
 - =userConfig_csu= reverted to its pre-Stage-12 shape --- no =cwd=
   parameter anywhere. No LSP diagnostics remain.
-- =startAiActivity.cs= adds =bisos.b.cwdConfig_csu= to its csuList
+- =aiActivity.cs= adds =bisos.b.cwdConfig_csu= to its csuList
   alongside =bisos.b.userConfig_csu= (both the elisp block and the
   =csuList= list). Imports both modules. The =examples= command
   invokes =cwdConfig_csu.examples_csu().pyCmnd()= right after the
@@ -816,7 +816,7 @@ composition-of-CSUs is the better factoring. Redone as follows:
   =userConfig_csu.parGet('templates')=. Each reads only its own
   store; the precedence policy lives here, not in the CSUs.
 - End-to-end smoke test verified: =cwdConfig_set --parName=templates=
-  writes to =./.startAiActivity.cs/fps/templates/value=; =cwdConfig_get=
+  writes to =./.aiActivity.cs/fps/templates/value=; =cwdConfig_get=
   reads it back; unset case reports =(not set)=; examples menu shows
   both CSUs' chapters as expected.
 
@@ -835,18 +835,18 @@ Coordinated redesign following on TODO 4:
 - =initiate= / =initiateSub= auto-persist =activity= to cwdConfig on
   success (deferred until after preconditions pass).
 - Examples menu grows a conditional chapter: if cwdConfig has
-  =activity= set, show a bare =startAiActivity.cs -i initiate= line
+  =activity= set, show a bare =aiActivity.cs -i initiate= line
   at the top of the =initiate= chapter.
 - Update =verify.sh= to drop =--root= and add coverage for
   bare-invocation + auto-persistence trace.
 ----- AI Results: ------
-Implemented in a single pass across =startAiActivity.cs= (source repo
+Implemented in a single pass across =aiActivity.cs= (source repo
 --- venv is a symlink so no separate sync), =b/py3/bisos/b/userConfig_csu.py=
 and =b/py3/bisos/b/cwdConfig_csu.py= (both source + venv), and
 =py3/tests/verify.sh=. Removed =subprocess= import (no longer needed).
 Bug caught during smoke test: initial version wrote =activity= to
 cwdConfig before the =initiateSub= walk-up precondition ran, leaving
-=.startAiActivity.cs/= behind in =/tmp= when the negative-case test
+=.aiActivity.cs/= behind in =/tmp= when the negative-case test
 refused. Fixed by moving the auto-persist call after the walk-up
 succeeds. =verify.sh= confirmed clean: bare =initiate= reads from
 cwdConfig, auto-persistence trace visible, negative-case =/tmp/= dir
@@ -860,12 +860,12 @@ Continue work at py3/images/AI-WorkPlan.org --- Start by reading its CLAUDE.md
 CLOSED: [2026-07-31 Fri]
 SCHEDULED: <2026-07-31 Fri 11:29>
 Looks at end of symlink of AI-WORKFLOW.org if it exists and determines --templates base.
-If ./.startAiActivity.cs does not exist create it and record it.
+If ./.aiActivity.cs does not exist create it and record it.
 If AI-WORKPLAN.org does not exist look at AI-Activity.org end of symlink.
 The above applies to exisiting dirs. Moving forward we will be doing this at initiate and initiateSub.
 ----- AI Results: ------
 Added two reusable helpers and one new Cmnd class in
-=py3/bin/startAiActivity.cs=:
+=py3/bin/aiActivity.cs=:
 
 - =_deduceCwdConfig(targetDir)= --- returns =(templatesBase, activity)=
   by reading =AI-WORKFLOW.org= and =AI-Activity.org= symlink targets.
@@ -904,10 +904,10 @@ Verified end-to-end:
 The =_recordCwdConfig= helper is reusable for TODO 3 which will wire
 it into =initiate= and =initiateSub= to auto-record on every install.
 
-** DONE [#A] <<Add ./.startAiActivity.cs at -i initiate and initiateSub>> :aiAndMe:
+** DONE [#A] <<Add ./.aiActivity.cs at -i initiate and initiateSub>> :aiAndMe:
 CLOSED: [2026-07-31 Fri]
 SCHEDULED: <2026-07-31 Fri 11:29>
-Execution of -i initiate and initiateSub, should do the equivalent of cwdConfig_record if ./.startAiActivity.cs does not exist.
+Execution of -i initiate and initiateSub, should do the equivalent of cwdConfig_record if ./.aiActivity.cs does not exist.
 ----- AI Results: ------
 Replaced the two ad-hoc auto-persist blocks in =initiate= (line 579)
 and =initiateSub= (line 798) with a single call each to
@@ -929,7 +929,7 @@ changes:
   re-initiates stay quiet; only genuine writes produce output.
 - Deferred placement in =initiateSub= preserved --- the persist call
   is still after the walk-up succeeds, so a failed walk-up leaves no
-  =.startAiActivity.cs/= behind (verified with a fresh =/tmp= dir).
+  =.aiActivity.cs/= behind (verified with a fresh =/tmp= dir).
 
 Dead-code cleanup: =cliActivity = activity= capture was used only for
 the removed gate. Deleted both assignments (=initiate= and
@@ -938,18 +938,18 @@ the removed gate. Deleted both assignments (=initiate= and
 Verified end-to-end (under the BISOS venv where all imports resolve):
 - Fresh =initiate --activity=xu-single= in an empty dir produces both
   "cwdConfig: templates=..." and "cwdConfig: activity=xu-single"
-  notes. Both files land under =./.startAiActivity.cs/fps/=.
+  notes. Both files land under =./.aiActivity.cs/fps/=.
 - Second invocation (=deClaudify= then bare =initiate=) uses cwdConfig
   and produces no cwdConfig noise --- filter working.
 - =initiateSub --activity=bisos-pip= in a nested subdir persists both
   values.
 - Negative case: =initiateSub= in an orphan =/tmp= dir refuses cleanly
-  (no initiated parent) and leaves no =.startAiActivity.cs/= behind.
+  (no initiated parent) and leaves no =.aiActivity.cs/= behind.
 
 Flagged for follow-up (unrelated to TODO 3 but surfaced by running
 verify.sh): =verify.sh= uses =#!/bin/bash -i= which activates the
 =tmoBisos= venv on this box; that venv lacks =bisos.pyDblock=, so
-=startAiActivity.cs= crashes on its =from bisos.pyDblock import= line
+=aiActivity.cs= crashes on its =from bisos.pyDblock import= line
 93. Not caused by TODO 3 --- the same failure predates it. Fixes:
 either install =bisos.pyDblock= in tmoBisos, or change verify.sh's
 python resolution to the BISOS venv explicitly, or gate the pyDblock
@@ -1047,7 +1047,7 @@ flush-left; each ancestor level adds one indent step, so the repo root is the mo
 indented entry. The purpose is to show the user which AI Activities are in effect across
 the =initiate= / =initiateSub= hierarchy.
 ----- AI Results: ------
-Implemented =listClaudesPath= in =py3/bin/startAiActivity.cs=. The command walks upward
+Implemented =listClaudesPath= in =py3/bin/aiActivity.cs=. The command walks upward
 from cwd to the git repo root (via =git rev-parse --show-toplevel=; falls back to
 filesystem root if not in a git repo), collecting every directory containing a =CLAUDE.md=.
 For each hit, prints =CLAUDE.md: <path>= and the resolved =AI-Activity.org= symlink target

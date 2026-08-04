@@ -38,7 +38,7 @@
 ####+BEGIN: b:prog:file/particulars :authors ("./inserts/authors-mb.org")
 """ #+begin_org
 * *[[elisp:(org-cycle)][| Particulars |]]* :: Authors, version
-** This File: /bisos/git/auth/bxRepos/bisos-pip/startAiActivity/py3/bin/startAiActivity.cs
+** This File: /bisos/git/auth/bxRepos/bisos-pip/aiActivity/py3/bin/aiActivity.cs
 ** Authors: Mohsen BANAN, http://mohsen.banan.1.byname.net/contact
 #+end_org """
 ####+END:
@@ -48,10 +48,10 @@
 * *[[elisp:(org-cycle)][| Particulars-csInfo |]]*
 #+end_org """
 import typing
-csInfo: typing.Dict[str, typing.Any] = { 'moduleName': ['startAiActivity'], }
-csInfo['version'] = '202507111200'
+csInfo: typing.Dict[str, typing.Any] = { 'moduleName': ['aiActivity'], }
+csInfo['version'] = '202508030000'
 csInfo['status']  = 'inUse'
-csInfo['panel'] = 'startAiActivity-Panel.org'
+csInfo['panel'] = 'aiActivity-Panel.org'
 csInfo['groupingType'] = 'IcmGroupingType-pkged'
 csInfo['cmndParts'] = 'IcmCmndParts[common] IcmCmndParts[param]'
 ####+END:
@@ -325,7 +325,7 @@ def _writeProvenanceLine(dst: pathlib.Path, templatesBase: str) -> None:
     provCommand = ' '.join(sys.argv)
     provenance = (
         "\n"
-        "# Provenance (installed once by startAiActivity.cs --- not regenerated):\n"
+        "# Provenance (installed once by aiActivity.cs --- not regenerated):\n"
         f"#   Date:      {provDate}\n"
         f"#   User:      {provUser}\n"
         f"#   Templates: {templatesBase}\n"
@@ -439,7 +439,7 @@ class examples(cs.Cmnd):
         cs.examples.menuChapter('=cwdConfig_record= -- deduce & record cwdConfig for an already-initiated directory')
         cmnd('cwdConfig_record',
              pars=od([]),
-             comment="# Deduce templates/activity from symlinks; write to ./.startAiActivity.cs/")
+             comment="# Deduce templates/activity from symlinks; write to ./.aiActivity.cs/")
 
         cs.examples.menuChapter('=aiSuspend= / =aiResume= -- suspend and resume AI collaboration')
         cmnd('aiSuspend',
@@ -459,6 +459,14 @@ class examples(cs.Cmnd):
         cmnd('deClaudify',
              pars=od([]),
              comment="# Remove AI files from current directory")
+
+        # Migration reminder: old dotdir present but new one absent
+        oldDotdir = pathlib.Path.cwd() / '.startAiActivity.cs'
+        newDotdir = pathlib.Path.cwd() / '.aiActivity.cs'
+        if oldDotdir.exists() and not newDotdir.exists():
+            cs.examples.menuChapter('=MIGRATION NEEDED= -- rename dotdir from old startAiActivity name')
+            b_io.ann.note("  Run:  mv .startAiActivity.cs .aiActivity.cs")
+            b_io.ann.note("  Then: aiActivity.cs -i cwdConfig_record")
 
         # Read cwdConfig to decide whether initiate/initiateSub can be invoked bare.
         cwdActivity = cwdConfig_csu.parGet('activity')
@@ -501,7 +509,7 @@ class examples(cs.Cmnd):
                          comment=f"# Same, but safe-copy AI-Activity.org (project-specific, editable)")
 
         if cwdActivity:
-            cs.examples.menuChapter('=initiate/initiateSub Based on CWD Setting= -- Based on ./.startAiActivity.cs')
+            cs.examples.menuChapter('=initiate/initiateSub Based on CWD Setting= -- Based on ./.aiActivity.cs')
             # cwdConfig supplies activity — But dont show the bare invocation.
             cmnd('initiate',
                  pars=od([('activity', f"{cwdActivity}"), ('templates', f"{templatesBaseStr}"),]),
@@ -558,13 +566,13 @@ falling back to cwdConfig at ./.<csxu-name>/fps/activity/value.
         if not activity:
             b_io.eh.problem_usageError(
                 "activity not specified. Pass --activity=<name> or set with: "
-                "startAiActivity.cs -i cwdConfig_set --parName=activity --parValue=<name>")
+                "aiActivity.cs -i cwdConfig_set --parName=activity --parValue=<name>")
             return failed(cmndOutcome)
 
         templatesBaseStr = _resolveTemplatesBase(templates)
         if templatesBaseStr is None:
             b_io.eh.problem_usageError(
-                "templates not configured. Run: startAiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/templates")
+                "templates not configured. Run: aiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/templates")
             return failed(cmndOutcome)
         templatesBase = pathlib.Path(templatesBaseStr)
 
@@ -721,7 +729,7 @@ from a parent directory that was previously initiated.
 Target directory is always cwd. Activity is resolved from --activity CLI arg,
 falling back to cwdConfig at ./.<csxu-name>/fps/activity/value.
 Refuses if no initiated parent is found (walks up looking for a
-startAiActivity-signature CLAUDE.md symlink) or if the target directory
+aiActivity-signature CLAUDE.md symlink) or if the target directory
 already has a CLAUDE.md.
         #+end_org """)
 
@@ -729,13 +737,13 @@ already has a CLAUDE.md.
         if not activity:
             b_io.eh.problem_usageError(
                 "activity not specified. Pass --activity=<name> or set with: "
-                "startAiActivity.cs -i cwdConfig_set --parName=activity --parValue=<name>")
+                "aiActivity.cs -i cwdConfig_set --parName=activity --parValue=<name>")
             return failed(cmndOutcome)
 
         templatesBaseStr = _resolveTemplatesBase(templates)
         if templatesBaseStr is None:
             b_io.eh.problem_usageError(
-                "templates not configured. Run: startAiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/templates")
+                "templates not configured. Run: aiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/templates")
             return failed(cmndOutcome)
         templatesBase = pathlib.Path(templatesBaseStr).resolve()
 
@@ -759,7 +767,7 @@ already has a CLAUDE.md.
                 "Run deClaudify first if you meant to reinstall.")
             return failed(cmndOutcome)
 
-        # Precondition: walk up looking for a startAiActivity-signature parent.
+        # Precondition: walk up looking for a aiActivity-signature parent.
         # CLAUDE.md is now safe-copied (not a symlink), so we can't identify a
         # parent by symlink target. Instead we look for the AI-WORKFLOW.org
         # symlink (still an invariant symlink), whose target must land under
@@ -1004,7 +1012,7 @@ target or the =Activity:= header in =AI-WorkPlan.org=.
         templatesBaseStr = _resolveTemplatesBase(templates)
         if templatesBaseStr is None:
             b_io.eh.problem_usageError(
-                "templates not configured. Run: startAiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/templates")
+                "templates not configured. Run: aiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/templates")
             return failed(cmndOutcome)
         templatesBase = pathlib.Path(templatesBaseStr).resolve()
         motherDir = templatesBase / 'mother'
@@ -1180,7 +1188,7 @@ to be the equivalent of a symlink.
         templatesBaseStr = _resolveTemplatesBase(templates)
         if templatesBaseStr is None:
             b_io.eh.problem_usageError(
-                "templates not configured. Run: startAiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/templates")
+                "templates not configured. Run: aiActivity.cs -i userConfig_set --parName=templates --parValue=/path/to/templates")
             return failed(cmndOutcome)
         templatesBase = pathlib.Path(templatesBaseStr).resolve()
         motherDir = templatesBase / 'mother'
@@ -1257,7 +1265,7 @@ class cwdConfig_record(cs.Cmnd):
         self.cmndDocStr(f""" #+begin_org
 ** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Deduce cwdConfig (=templates=, =activity=) from the
 current directory's =AI-WORKFLOW.org= and =AI-Activity.org= symlink targets
-and write it to =./.startAiActivity.cs/fps/=.
+and write it to =./.aiActivity.cs/fps/=.
 
 Retrofits existing initiated directories that predate cwdConfig auto-persistence,
 or repairs a cwdConfig that has been lost. For new installs, =initiate= and
