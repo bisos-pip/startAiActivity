@@ -19,11 +19,38 @@ This file is maintained by Claude. Updates are typically triggered by the
 
 * Current State
 
-As of 2026-08-03, Stages 1–12 are complete plus post-Stage-12 refinements:
-rename from =startAiActivity= → =aiActivity= throughout, and README additions
-strengthening the collaborative/cumulative templates framing.
+As of 2026-08-04, Stages 1–12 are complete plus post-Stage-12 refinements.
+All three Stage 12 remaining TODOs are now done. README substantially
+strengthened on the philosophical/framing dimension.
 
 Key changes since last status:
+
+- *README — "Why AI-Activity, Not Chatbot?" expanded (Stage 12 TODOs 2+3):*
+  Section now has three paragraphs. The original paragraph (chatbot as
+  default, Ghosh et al., convivial tools) is unchanged. New second paragraph
+  names concrete industrial examples: Google's Gemini Notebook (formerly
+  NotebookLM) as the most sympathetic industrial form --- solves amnesia but
+  within Google's platform/structure/UI --- and Claude's Plan mode as a
+  subtler case --- a better chatbot, not a different paradigm, ends with
+  nothing durable on the filesystem. Closes with the AI-Activity contrast:
+  plan in =AI-WorkPlan.org=, conventions in =AI-Activity.org=, AI works
+  within the structure the human defines. New third paragraph introduces the
+  recommended foundation: Linux + Git + org-mode as a cumulative, convivial,
+  collaborative substrate, with "Our own use is Emacs-based via Blee; yours
+  need not be." as a positioned close (distinct from the existing line-79
+  reassurance).
+- *README — "Two-Part Architecture: Part 2" reframed (Stage 12 TODO 1):*
+  Part 2 subsection now leads with "*This is where the value accumulates.*"
+  making the asymmetry explicit: Part 1 is stable infrastructure, Part 2 is
+  the living knowledge base. New "Refine shared conventions" bullet makes the
+  symlink-propagation point concrete in this section. "Customize" bullet
+  reframed around organizational conventions encoded once and available
+  everywhere. Mechanics follow value framing rather than leading it.
+- *AI-WORKFLOW.org symlink corrected:* Was pointing to legacy
+  =bystar/AI-WORKFLOW.org= target; corrected to
+  =mother/AI-WORKFLOW.org=.
+
+Earlier key changes (still current):
 
 - *Rename =startAiActivity= → =aiActivity=:* Executable renamed from
   =startAiActivity.cs= to =aiActivity.cs=. Python package directory renamed
@@ -260,6 +287,27 @@ Earlier key changes (still current):
 - =deClaudify= / =aiSuspend= / =aiResume= on a repo where =.claude/= contains
   non-symlink files (e.g. =settings.local.json=) — those are intentionally left
   intact but not explicitly tested.
+
+* Known Gaps (not bugs — areas for future work)
+
+- *Templates content is thin.* The mechanics are complete but the value
+  proposition depends on =AI-Activity.org= files accumulating real domain
+  knowledge. Currently =bisos-pip= has five skills and a solid orientation
+  file; most other activities are skeletal. The tool is ahead of its content.
+- *verify.sh venv issue.* The test harness uses =#!/bin/bash -i= which
+  activates the =tmoBisos= venv on BISOS machines; that venv lacks
+  =bisos.pyDblock=, so =aiActivity.cs= crashes on import. Fix: install
+  =bisos.pyDblock= in =tmoBisos=, or gate the import, or pin verify.sh to
+  the BISOS venv explicitly.
+- *No contribution/governance story.* The README explains how to fork and
+  use the templates but not how improvements flow back — who reviews a PR to
+  =bxexamples/aiActivityTemplates=, what the bar is for a new activity, how
+  organizations coordinate between forks. The collaborative model is
+  architecturally sound but socially underdefined.
+- *Two-part install friction.* New users must install the pip package and
+  separately clone the templates repo. The README covers this clearly but
+  the friction is real, especially for non-BISOS users without the
+  auto-detection path.
 
 * Architecture
 
