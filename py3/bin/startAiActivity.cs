@@ -510,6 +510,11 @@ class examples(cs.Cmnd):
                  pars=od([('activity', f"{cwdActivity}"), ('templates', f"{templatesBaseStr}"),]),
                  comment=f"# from cwdConfig")
 
+        cs.examples.menuChapter('=listClaudesPath= -- show AI Activities in effect from cwd to repo root')
+        cmnd('listClaudesPath',
+             pars=od([]),
+             comment="# Walk up to git repo root; list each CLAUDE.md + AI-Activity.org target")
+
         return(cmndOutcome)
 
 
@@ -1278,6 +1283,92 @@ Writes only when the deduced value differs from what is already in cwdConfig
         return cmndOutcome.set(
             opError=b.op.OpError.Success,
             opResults=f"cwdConfig_record complete at {targetDir}",
+        )
+
+
+####+BEGIN: b:py3:cs:cmnd/classHead :cmndName "listClaudesPath" :comment "Walk up to git repo root and list CLAUDE.md + AI-Activity.org at each level" :extent "verify" :ro "cli" :parsMand "" :parsOpt "" :argsMin 0 :argsMax 0 :pyInv ""
+""" #+begin_org
+*  _[[elisp:(blee:menu-sel:outline:popupMenu)][±]]_ _[[elisp:(blee:menu-sel:navigation:popupMenu)][Ξ]]_ [[elisp:(outline-show-branches+toggle)][|=]] [[elisp:(bx:orgm:indirectBufOther)][|>]] *[[elisp:(blee:ppmm:org-mode-toggle)][|N]]*  CmndSvc-   [[elisp:(outline-show-subtree+toggle)][||]] <<listClaudesPath>>  =verify= ro=cli   [[elisp:(org-cycle)][| ]]
+#+end_org """
+class listClaudesPath(cs.Cmnd):
+    cmndParamsMandatory = [ ]
+    cmndParamsOptional = [ ]
+    cmndArgsLen = {'Min': 0, 'Max': 0,}
+
+    @cs.track(fnLoc=True, fnEntry=True, fnExit=True)
+    def cmnd(self,
+             rtInv: cs.RtInvoker,
+             cmndOutcome: b.op.Outcome,
+    ) -> b.op.Outcome:
+
+        failed = b_io.eh.badOutcome
+        callParamsDict = {}
+        if self.invocationValidate(rtInv, cmndOutcome, callParamsDict, None).isProblematic():
+            return failed(cmndOutcome)
+####+END:
+        self.cmndDocStr(f""" #+begin_org
+** [[elisp:(org-cycle)][| *CmndDesc:* | ]]  Walk upward from cwd to git repo root, listing every
+directory that contains a =CLAUDE.md=. For each, prints the full path of
+=CLAUDE.md= and the resolved target of the =AI-Activity.org= symlink (if
+present). cwd is printed flush-left; each ancestor level adds one indent
+step so the repo root appears most-indented. Stops at the git repo root
+(determined via =git rev-parse --show-toplevel=); if cwd is not inside a
+git repo, stops at the filesystem root.
+        #+end_org """)
+
+        import subprocess
+
+        cwd = pathlib.Path.cwd()
+
+        # Determine git repo root (stop boundary).
+        repoRoot: typing.Optional[pathlib.Path] = None
+        try:
+            result = subprocess.run(
+                ['git', 'rev-parse', '--show-toplevel'],
+                capture_output=True, text=True, check=True,
+            )
+            repoRoot = pathlib.Path(result.stdout.strip())
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            pass  # not a git repo; walk to filesystem root
+
+        # Collect directories from cwd upward (inclusive) stopping at repoRoot.
+        dirs: typing.List[pathlib.Path] = []
+        current = cwd
+        while True:
+            dirs.append(current)
+            if repoRoot is not None and current == repoRoot:
+                break
+            if current.parent == current:
+                break  # filesystem root
+            current = current.parent
+
+        # Print entries: dirs[0] = cwd (indent 0), dirs[1] = parent (indent 1), etc.
+        found = 0
+        for depth, directory in enumerate(dirs):
+            claudeMd = directory / 'CLAUDE.md'
+            if not (claudeMd.exists() or claudeMd.is_symlink()):
+                continue
+            found += 1
+            indent = '  ' * depth
+            activityOrg = directory / 'AI-Activity.org'
+            if activityOrg.is_symlink():
+                rawTarget = pathlib.Path(activityOrg.readlink())
+                if not rawTarget.is_absolute():
+                    rawTarget = (activityOrg.parent / rawTarget).resolve()
+                activityLine = f"{indent}AI-Activity.org -> {rawTarget}"
+            elif activityOrg.is_file():
+                activityLine = f"{indent}AI-Activity.org (file, no symlink target)"
+            else:
+                activityLine = f"{indent}AI-Activity.org (not present)"
+            b_io.ann.note(f"{indent}CLAUDE.md: {claudeMd}")
+            b_io.ann.note(activityLine)
+
+        if found == 0:
+            b_io.ann.note("No CLAUDE.md found between cwd and repo root.")
+
+        return cmndOutcome.set(
+            opError=b.op.OpError.Success,
+            opResults=f"listClaudesPath complete: {found} CLAUDE.md(s) found",
         )
 
 

@@ -495,8 +495,9 @@ manage, and remove AI-collaboration state in a project directory.
 | =refresh=       | Re-copy safe-copied invariants (currently =CLAUDE.md=) from templates.     |                       |
 | =aiSuspend=     | Suspend AI collaboration --- stash editable files as =.dormant=, remove symlinks + =.claude/=. Reversible. |    |
 | =aiResume=      | Restore a suspended install.                                               |                       |
-| =deClaudify=    | Permanently remove all AI-collaboration files. Irreversible.               |                       |
-| =examples=      | Print the self-documenting examples menu. Default when no =-i= is passed.  |                       |
+| =deClaudify=      | Permanently remove all AI-collaboration files. Irreversible.               |                       |
+| =listClaudesPath= | Walk up from cwd to git repo root; list each =CLAUDE.md= + resolved =AI-Activity.org= target, cwd flush-left and each ancestor indented one step further. |  |
+| =examples=        | Print the self-documenting examples menu. Default when no =-i= is passed.  |                       |
 
 The =--noLink=<file>= option on =initiate= / =initiateSub= converts a
 would-be symlink into a safe-copy for the named file. See

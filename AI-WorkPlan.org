@@ -1036,6 +1036,26 @@ one paragraph:
 TOC entry added at the appropriate position between the two
 neighbouring sections.
 
+** DONE <<Add listClaudesPath Command>> :aiAndMe:
+CLOSED: [2026-08-03 Sun]
+SCHEDULED: <2026-08-03 Mon 16:22>
+Add a new Cmnd =listClaudesPath= that walks upward from cwd toward the git repo root
+(determined via =git rev-parse --show-toplevel=), collecting every directory that contains
+a =CLAUDE.md=. For each such directory, print the full path of =CLAUDE.md= and the full
+path of the =AI-Activity.org= symlink target (resolved) as a pair. cwd is printed
+flush-left; each ancestor level adds one indent step, so the repo root is the most
+indented entry. The purpose is to show the user which AI Activities are in effect across
+the =initiate= / =initiateSub= hierarchy.
+----- AI Results: ------
+Implemented =listClaudesPath= in =py3/bin/startAiActivity.cs=. The command walks upward
+from cwd to the git repo root (via =git rev-parse --show-toplevel=; falls back to
+filesystem root if not in a git repo), collecting every directory containing a =CLAUDE.md=.
+For each hit, prints =CLAUDE.md: <path>= and the resolved =AI-Activity.org= symlink target
+on the next line, both at the same indent level (cwd flush-left, each ancestor adds two
+spaces). Added a =listClaudesPath= chapter to the =examples= menu. Smoke-tested: in this
+repo, correctly finds the single =CLAUDE.md= at cwd and shows its =AI-Activity.org=
+pointing to =/bisos/apps/defaults/ai-templates/bisos-pip/AI-Activity.org=.
+
 ** -
 
 
