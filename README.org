@@ -94,7 +94,39 @@ harms that task-specific, workflow-integrated AI systems largely
 avoid. The *AI-Activity* is our move toward [[https://en.wikipedia.org/wiki/Tools_for_Conviviality][/convivial tools/]] ---
 shaped by their user rather than the reverse --- and away from the
 industrial default. What follows is the concrete mechanics of that
-inversion.
+inversion --- and the templates tree is where the accumulated result
+of that inversion lives.
+
+* The Templates as Collaborative, Cumulative Domain Knowledge
+
+=aiActivity.cs= is the delivery mechanism. The compounding value is in the
+templates tree.
+
+Each =AI-Activity.org= file encodes the conventions, constraints, and
+context for a specific kind of work --- Python packaging, LaTeX authorship,
+security analysis, site administration. A fresh Claude session in any
+directory that inherits that file immediately works within those conventions,
+without re-explanation.
+
+The symlink machinery is what makes this collaborative rather than
+individualistic. Installed projects symlink to the shared =AI-Activity.org=
+in the canonical templates tree. When anyone refines that file --- correcting
+a convention, adding a new constraint, capturing a hard-won lesson --- every
+project symlinked to it inherits the improvement automatically, at the next
+Claude session, with no per-project action required. Refinement is a shared
+act; the benefit is collective.
+
+The collection also grows across dimensions: new activities cover new domains;
+forks encode conventions for different organizations or contexts. The
+[[https://github.com/bxexamples/aiActivityTemplates][bxexamples/aiActivityTemplates]] repository is the public reference fork ---
+a starting point for those who want to contribute back or build their own
+canonical tree. But the default relationship is inheritance, not isolation:
+one canonical tree, many projects drawing from it, knowledge compounding
+in one place.
+
+The =AI-Activity.org= files are the primary artifact.
+=aiActivity.cs= installs them; Claude reads them; collaborators refine them.
+That cycle --- shared, cumulative, and version-controlled --- is the point.
 
 * Overview
 
@@ -129,6 +161,10 @@ which in turn imports (imports =AI-WORKFLOW.org= +
 directives). Nested subprojects installed with =initiateSub= use a slim
 =CLAUDE.md= that imports only the local trio; the invariants are
 inherited from an ancestor via the same walk-up, avoiding duplication.
+
+The lasting value is in the templates tree: each =AI-Activity.org= distils
+domain-specific conventions that any Claude session in that context inherits
+immediately. The commands below manage that inheritance.
 
 bisos.aiActivity is a python package that uses the [[https://github.com/bisos-pip/pycs][PyCS-Framework]].
 It provides the =aiActivity.cs= command with the following operations:
@@ -187,6 +223,7 @@ then the figure.
 - [[#the-concept-and-model-of-an-ai-activity][The Concept and Model of an AI-Activity]]
 - [[#collaboration-across-people-and-across-sessions][Collaboration Across People and Across Sessions]]
 - [[#why-ai-activity-not-chatbot][Why AI-Activity, Not Chatbot?]]
+- [[#the-templates-as-collaborative-cumulative-domain-knowledge][The Templates as Collaborative, Cumulative Domain Knowledge]]
 - [[#overview][Overview]]
   - [[#structure-at-a-glance][Structure at a Glance]]
 - [[#part-of-bisos--bystar-internet-services-operating-system][Part of BISOS — ByStar Internet Services Operating System]]

@@ -19,12 +19,41 @@ This file is maintained by Claude. Updates are typically triggered by the
 
 * Current State
 
-As of 2026-07-27, Stages 1–12 (TODO 4) are complete. Stage 12 adds
-documentation for AI-Activity topologies (Homogeneous/Heterogeneous,
-Hierarchical/Lateral), the =fps= path migration in =userConfig_csu=, and
-per-directory config override via =--cwd=.
+As of 2026-08-03, Stages 1–12 are complete plus post-Stage-12 refinements:
+rename from =startAiActivity= → =aiActivity= throughout, and README additions
+strengthening the collaborative/cumulative templates framing.
 
 Key changes since last status:
+
+- *Rename =startAiActivity= → =aiActivity=:* Executable renamed from
+  =startAiActivity.cs= to =aiActivity.cs=. Python package directory renamed
+  from =bisos/startAiActivity/= to =bisos/aiActivity/=. Panel directory
+  renamed from =bisos.startAiActivity/= to =bisos.aiActivity/=. =setup.py=
+  updated. All internal string references, engine docs (=README.org=,
+  =AI-DevStatus.org=, =AI-WorkPlan.org=), and all three templates trees
+  (BISOS canonical, bxexamples, rana-notes) updated. The git repo directory
+  (=startAiActivity/=) and PyPI package name (=bisos.startAiActivity=) are
+  renamed separately by the developer. Hard cut on the dotdir:
+  =.startAiActivity.cs/= → =.aiActivity.cs/=, with a one-time soft reminder
+  surfaced in the =examples= menu when the old dotdir exists but the new one
+  does not.
+- *New =listClaudesPath= command:* Walks upward from cwd to the git repo
+  root (via =git rev-parse --show-toplevel=; falls back to filesystem root),
+  collecting every directory containing a =CLAUDE.md=. For each hit prints
+  the =CLAUDE.md= path and the resolved =AI-Activity.org= symlink target,
+  cwd flush-left and each ancestor indented two spaces further. Last item in
+  the =examples= menu. Useful for visualising the =initiate= / =initiateSub=
+  hierarchy in a nested project.
+- *README additions — collaborative/cumulative templates framing:* New
+  section "The Templates as Collaborative, Cumulative Domain Knowledge"
+  (inserted between "Why AI-Activity, Not Chatbot?" and "Overview") makes
+  explicit that the symlink machinery is what makes the templates
+  collaborative rather than individualistic: refinements to a shared
+  =AI-Activity.org= propagate automatically to every symlinked project.
+  Touch-up to the closing sentence of "Why AI-Activity" and an opener
+  sentence in "Overview" reinforce the same thesis.
+
+Earlier key changes (still current):
 
 - *Root elimination + parPermanence-as-list + activity persistence
   (Stage 12 TODO 5):* Coordinated redesign following on TODO 4:
