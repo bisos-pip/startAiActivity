@@ -1056,6 +1056,23 @@ spaces). Added a =listClaudesPath= chapter to the =examples= menu. Smoke-tested:
 repo, correctly finds the single =CLAUDE.md= at cwd and shows its =AI-Activity.org=
 pointing to =/bisos/apps/defaults/ai-templates/bisos-pip/AI-Activity.org=.
 
+* TODO <<Fully rename startAiActivity to aiActivity.cs>> :me:
+SCHEDULED: <2026-08-03 Mon 16:22>
+----- MB Results: ------
+Renamed the bisos.startAiActivity repo to bisos.aiActivity.
+At PyPi pip installed bisos.aiActivty.
+Locally removed bisos.startAiActivity pip packages.
+Locally installed bisos.aiActivity.
+
+* TODO <<Emphasize Part 2 in Two-Part Arch>> :aiAndMe:
+SCHEDULED: <2026-08-03 Mon 16:22>
+----- AI Results: ------
+
+* TODO <<In Not Chatbot Mention Claude's Plan and Google's Gemini Notebook as industrial >> :aiAndMe:
+SCHEDULED: <2026-08-03 Mon 16:22>
+----- AI Results: ------
+
+
 ** -
 
 

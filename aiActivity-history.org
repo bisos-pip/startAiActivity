@@ -5,6 +5,9 @@
 
 * HISTORICAL NOTE
 
+On August 3, 2026; I decided to rename bisos.startAiActivity to bisos.aiActivity.
+Other than this history file, there should no longer be any references to startAiActivity.
+
 This document was the design spec for =bisos.startAiActivity= at the time it
 was being derived from an earlier =startAiAt.cs= reference implementation.
 That reference implementation lived at

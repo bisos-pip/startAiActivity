@@ -1,9 +1,9 @@
-#+title: bisos.startAiActivity: Install AI Collaborative Development Templates
+#+title: bisos.aiActivity: Install AI Collaborative Development Templates
 #+DATE: <2026-07-12 Sat>
 #+AUTHOR: Mohsen BANAN
 #+OPTIONS: toc:4
 
-#+BEGIN: b:org:pypi:readme/topControls :pkgName "startAiActivity" :comment "basic"
+#+BEGIN: b:org:pypi:readme/topControls :pkgName "aiActivity" :comment "basic"
 
 |----------------------+--------------------------------------------------------------------------------|
 | ~Blee Panel Controls~: | [[elisp:(show-all)][Show-All]] : [[elisp:(org-shifttab)][Overview]] : [[elisp:(progn (org-shifttab) (org-content))][Content]] : [[elisp:(delete-other-windows)][(1)]] : [[elisp:(progn (save-buffer) (kill-buffer))][S&Q]] : [[elisp:(save-buffer)][Save]]  : [[elisp:(kill-buffer)][Quit]]  : [[elisp:(bury-buffer)][Bury]] |
@@ -38,7 +38,7 @@ Two org-mode files encode the activity, playing distinct roles:
   =AI-DevStatus.org= which records where the effort stands right now.
 
 Activities are classes of work; WorkPlans are instances. The templates
-=/bisos.startAiActivity/= installs are what encode this distinction on
+=/bisos.aiActivity/= installs are what encode this distinction on
 disk --- shared invariants and activity conventions are symlinked from a
 templates repo (so improvements propagate); WorkPlan and DevStatus start
 as safe-copies (so each effort owns its own state).
@@ -57,7 +57,7 @@ can pick up cold.
 
 * Overview
 
-/bisos.startAiActivity/ installs the ByStar AI collaborative development
+/bisos.aiActivity/ installs the ByStar AI collaborative development
 template set --- =CLAUDE.md=, =AI-WORKFLOW.org=,
 =AI-Activity.org=, =AI-DevStatus.org=, =AI-WorkPlan.org=, plus a =.claude/=
 directory with =settings.json=, =commands/=, and optionally =skills/= ---
@@ -89,8 +89,8 @@ directives). Nested subprojects installed with =initiateSub= use a slim
 =CLAUDE.md= that imports only the local trio; the invariants are
 inherited from an ancestor via the same walk-up, avoiding duplication.
 
-bisos.startAiActivity is a python package that uses the [[https://github.com/bisos-pip/pycs][PyCS-Framework]].
-It provides the =startAiActivity.cs= command with the following operations:
+bisos.aiActivity is a python package that uses the [[https://github.com/bisos-pip/pycs][PyCS-Framework]].
+It provides the =aiActivity.cs= command with the following operations:
 =userConfig_set/get= (persistent config), =initiate= (base install), =initiateSub=
 (slim subproject overlay), =aiSuspend= / =aiResume= (reversible pause/restore),
 =deClaudify= (permanent removal), and =examples= (all invocations with the current
@@ -98,7 +98,7 @@ templates base).
 
 * Details at github
 
-See https://github.com/bisos-pip/startAiActivity
+See https://github.com/bisos-pip/aiActivity
 
 # Local Variables:
 # eval: (setq-local toc-org-max-depth 4)
