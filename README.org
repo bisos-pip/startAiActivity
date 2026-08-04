@@ -93,9 +93,32 @@ erodes user agency, deskills its users, and homogenizes knowledge ---
 harms that task-specific, workflow-integrated AI systems largely
 avoid. The *AI-Activity* is our move toward [[https://en.wikipedia.org/wiki/Tools_for_Conviviality][/convivial tools/]] ---
 shaped by their user rather than the reverse --- and away from the
-industrial default. What follows is the concrete mechanics of that
-inversion --- and the templates tree is where the accumulated result
-of that inversion lives.
+industrial default.
+
+The industrial default has concrete faces. Google's Gemini Notebook
+(formerly NotebookLM) is its most sympathetic form: you supply your
+documents, it grounds its answers in them, and your notebook persists
+across sessions. That solves the amnesia problem --- but within Google's
+platform, Google's structure, Google's UI. Claude's Plan mode is a
+subtler case: Claude reasons before acting, shows you a plan, and waits
+for approval. That is a better chatbot, not a different paradigm ---
+the plan is Claude's, the structure is Claude's, and the session ends
+with nothing durable on your filesystem. Both are improvements on the
+raw chatbot; neither transfers ownership of the workflow to the human.
+The AI-Activity model does: the plan lives in your =AI-WorkPlan.org=,
+the conventions live in your =AI-Activity.org=, everything is in your
+git repo, and the AI works within the structure you define.
+
+This requires choosing a foundation that supports it. AI belongs inside
+a cumulative, convivial, collaborative environment --- not on top of an
+industrial one. Unix is convivial; Windows is industrial. Git is
+inherently collaborative. Org-mode is a far richer collaborative
+substrate than Markdown. Build a base of Linux + Git + org-mode first
+--- then shape AI usage within it. Our own use is Emacs-based via
+[[https://github.com/bisos-pip/b][Blee]]; yours need not be.
+
+What follows is the concrete mechanics of that inversion --- and the
+templates tree is where the accumulated result of that inversion lives.
 
 * The Templates as Collaborative, Cumulative Domain Knowledge
 
@@ -328,20 +351,28 @@ lives in a separate repo:
 
 [[https://github.com/bxexamples/aiActivityTemplates]]
 
-This is an integral part of the package. Clone it (or fork it) somewhere
-on your filesystem, then point =aiActivity.cs= at it via user config
-(see *Post-Installation Setup* below).
+*This is where the value accumulates.* Each =AI-Activity.org= file in
+this repo encodes the conventions, constraints, and hard-won lessons for
+a specific domain of work. The engine (Part 1) is stable infrastructure;
+the templates tree is the living knowledge base that grows over time,
+across projects, and across collaborators.
+
+Clone it (or fork it) somewhere on your filesystem, then point
+=aiActivity.cs= at it via user config (see *Post-Installation Setup* below).
 
 Because the templates are versioned separately from the engine, you can:
 
-- *Customize for your own conventions* --- fork
-  =bxexamples/aiActivityTemplates=, edit the =mother/= invariants
-  (CLAUDE.md contents, AI-WORKFLOW.org) or add your own
-  activities, and point =aiActivity.cs= at your fork. Your changes
-  propagate to every project you =initiate= without touching the engine.
+- *Refine shared conventions* --- improve an =AI-Activity.org= once and
+  every project symlinked to it inherits the improvement at the next
+  Claude session, with no per-project action. Knowledge compounds in
+  one place.
+- *Customize for your own context* --- fork =bxexamples/aiActivityTemplates=,
+  add your own activities or adjust =mother/=, and point =aiActivity.cs=
+  at your fork. Your organization's conventions are encoded once and
+  available everywhere.
 - *Update engine and templates independently* --- =pipx upgrade
   bisos.aiActivity= and =git pull= on your templates clone are two
-  separate operations.
+  separate operations with separate cadences.
 
 ** Auto-detection: two canonical locations
 

@@ -1064,26 +1064,40 @@ At PyPi pip installed bisos.aiActivty.
 Locally removed bisos.startAiActivity pip packages.
 Locally installed bisos.aiActivity.
 
-* TODO <<Emphasize Part 2 in Two-Part Arch>> :aiAndMe:
+* DONE <<Emphasize Part 2 in Two-Part Arch>> :aiAndMe:
+CLOSED: [2026-08-04 Mon]
 SCHEDULED: <2026-08-03 Mon 16:22>
 ----- AI Results: ------
+Rewrote the "Part 2" subsection of Two-Part Architecture in =README.org=.
+Leads with "*This is where the value accumulates.*" to make the asymmetry
+explicit: Part 1 is stable infrastructure; Part 2 is the living knowledge
+base. Added a new "Refine shared conventions" bullet making the symlink-
+propagation point concrete in this section. Reframed "Customize" bullet
+to emphasize organizational conventions encoded once and available
+everywhere. Mechanics (clone, point, update) follow the value framing
+rather than leading it.
 
-* TODO <<In Not Chatbot Mention Claude's Plan and Google's Gemini Notebook as industrial >> :aiAndMe:
+* DONE <<In Not Chatbot Mention Claude's Plan and Google's Gemini Notebook as industrial >> :aiAndMe:
+CLOSED: [2026-08-04 Mon]
 SCHEDULED: <2026-08-03 Mon 16:22>
 ----- AI Results: ------
+Added a second paragraph to "Why AI-Activity, Not Chatbot?" naming both
+industrial examples: Google's Gemini Notebook (formerly NotebookLM) as
+the most sympathetic form --- solves amnesia but within Google's platform
+--- and Claude's Plan mode as a subtler case --- a better chatbot, not a
+different paradigm, ends with nothing durable on the filesystem. Closes
+with the AI-Activity contrast: plan in =AI-WorkPlan.org=, conventions in
+=AI-Activity.org=, AI works within the structure the human defines.
 
-* TODO <<Introduce our stack somewhere>> :aiAndMe:
+* DONE <<Introduce our stack somewhere>> :aiAndMe:
+CLOSED: [2026-08-04 Mon]
 SCHEDULED: <2026-08-03 Mon 16:22>
-
-Add the following somewhere
-AI belongs inside a cumulative, convivial,
-collaborative environment — not on top of an industrial one.
-
-Unix is convivial; Windows is industrial. Git is inherently collaborative.
-Org-mode is a far richer collaborative substrate than Markdown. Build a base of
-Linux + Git + org-mode first — then shape AI usage within it. Emacs is not
-required; our own use is Emacs-based, but this works with VS Code too.
 ----- AI Results: ------
+Added a third paragraph to "Why AI-Activity, Not Chatbot?": the Linux +
+Git + org-mode foundation framing, verbatim from the TODO with light
+editing. Closes with "Our own use is Emacs-based via Blee; yours need
+not be." — a reworded version of the existing line-79 disclaimer,
+serving a positioning role here rather than a reassurance role.
 
 ** -
 
