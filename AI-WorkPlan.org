@@ -1056,8 +1056,8 @@ spaces). Added a =listClaudesPath= chapter to the =examples= menu. Smoke-tested:
 repo, correctly finds the single =CLAUDE.md= at cwd and shows its =AI-Activity.org=
 pointing to =/bisos/apps/defaults/ai-templates/bisos-pip/AI-Activity.org=.
 
-* TODO <<Fully rename startAiActivity to aiActivity.cs>> :me:
-SCHEDULED: <2026-08-03 Mon 16:22>
+* DONE <<Fully rename startAiActivity to aiActivity.cs>> :me:
+CLOSED: [2026-08-03 Mon 21:33] SCHEDULED: <2026-08-03 Mon 16:22>
 ----- MB Results: ------
 Renamed the bisos.startAiActivity repo to bisos.aiActivity.
 At PyPi pip installed bisos.aiActivty.
@@ -1072,6 +1072,18 @@ SCHEDULED: <2026-08-03 Mon 16:22>
 SCHEDULED: <2026-08-03 Mon 16:22>
 ----- AI Results: ------
 
+* TODO <<Introduce our stack somewhere>> :aiAndMe:
+SCHEDULED: <2026-08-03 Mon 16:22>
+
+Add the following somewhere
+AI belongs inside a cumulative, convivial,
+collaborative environment — not on top of an industrial one.
+
+Unix is convivial; Windows is industrial. Git is inherently collaborative.
+Org-mode is a far richer collaborative substrate than Markdown. Build a base of
+Linux + Git + org-mode first — then shape AI usage within it. Emacs is not
+required; our own use is Emacs-based, but this works with VS Code too.
+----- AI Results: ------
 
 ** -
 
