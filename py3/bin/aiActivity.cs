@@ -1351,10 +1351,16 @@ git repo, stops at the filesystem root.
             current = current.parent
 
         # Print entries: dirs[0] = cwd (indent 0), dirs[1] = parent (indent 1), etc.
+        # cwd is always printed, even when it has no CLAUDE.md.
         found = 0
         for depth, directory in enumerate(dirs):
             claudeMd = directory / 'CLAUDE.md'
-            if not (claudeMd.exists() or claudeMd.is_symlink()):
+            hasClaude = claudeMd.exists() or claudeMd.is_symlink()
+            if not hasClaude:
+                if depth == 0:
+                    # cwd: always report, even when absent
+                    b_io.ann.note(f"CLAUDE.md: None at {directory}")
+                    b_io.ann.note(f"AI-Activity.org -> None")
                 continue
             found += 1
             indent = '  ' * depth
@@ -1367,12 +1373,9 @@ git repo, stops at the filesystem root.
             elif activityOrg.is_file():
                 activityLine = f"{indent}AI-Activity.org (file, no symlink target)"
             else:
-                activityLine = f"{indent}AI-Activity.org (not present)"
+                activityLine = f"{indent}AI-Activity.org -> None"
             b_io.ann.note(f"{indent}CLAUDE.md: {claudeMd}")
             b_io.ann.note(activityLine)
-
-        if found == 0:
-            b_io.ann.note("No CLAUDE.md found between cwd and repo root.")
 
         return cmndOutcome.set(
             opError=b.op.OpError.Success,

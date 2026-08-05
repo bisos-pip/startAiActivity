@@ -1099,6 +1099,20 @@ editing. Closes with "Our own use is Emacs-based via Blee; yours need
 not be." — a reworded version of the existing line-79 disclaimer,
 serving a positioning role here rather than a reassurance role.
 
+* DONE <<no CLAUDE.md listClaudesPath  behaviour>> :aiAndMe:
+CLOSED: [2026-08-04 Mon]
+SCHEDULED: <2026-08-03 Mon 16:22>
+When you run listClaudesPath in a directory that has no CLAUDE.md, it should say None at {fullPathOfCwd}
+The next line for AI-Activity.org should be -> None
+----- AI Results: ------
+In =listClaudesPath=, added a special case for depth==0 (cwd): when cwd has no
+=CLAUDE.md=, the loop now prints =CLAUDE.md: None at <fullPathOfCwd>= and
+=AI-Activity.org -> None= instead of silently skipping cwd. Also unified the
+"no AI-Activity.org" output for found CLAUDE.md entries to use =-> None= for
+consistency. Verified: running from =/tmp= (no CLAUDE.md) shows the None lines;
+running from the repo root (has CLAUDE.md) is unchanged.
+
+
 ** -
 
 
