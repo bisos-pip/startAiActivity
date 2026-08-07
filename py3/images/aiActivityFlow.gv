@@ -20,11 +20,11 @@ digraph {
 		par_userconfig [label="userConfig
 (~/.config/bisos/…)" fillcolor=lightsteelblue shape=cylinder style=filled]
 		par_cwdconfig [label="cwdConfig
-(./.startAiActivity.cs/…)" fillcolor=lightsteelblue shape=cylinder style=filled]
+(./.aiActivity.cs/…)" fillcolor=lightsteelblue shape=cylinder style=filled]
 	}
 	tpl_base -> par_templates [arrowhead=vee style=dashed]
 	tpl_base -> par_activity [arrowhead=vee style=dashed]
-	engine [label="startAiActivity.cs
+	engine [label="aiActivity.cs
 
 initiate  |  initiateSub
 refresh  |  aiSuspend  |  aiResume

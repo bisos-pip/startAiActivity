@@ -3,7 +3,7 @@
 ####+BEGIN: b:prog:file/particulars :authors ("./inserts/authors-mb.org")
 """ #+begin_org
 * *[[elisp:(org-cycle)][| Particulars |]]* :: Authors, version
-** This File: /bisos/git/bxRepos/bisos-pip/startAiActivity/py3/images/aiActivity-graphviz.pcs
+** This File: /bisos/git/bxRepos/bisos-pip/aiActivity/py3/images/aiActivity-graphviz.pcs
 ** Authors: Mohsen BANAN, http://mohsen.banan.1.byname.net/contact
 #+end_org """
 ####+END:
@@ -33,7 +33,7 @@ namedGraphsList = [
     ng("aiActivityFlow",
        func=lambda: aiActivityFlow(),
        title="AI-Activity Structure",
-       caption="Static structure of startAiActivity.cs showing "
+       caption="Static structure of aiActivity.cs showing "
                "templates, parameters, engine, generated files, "
                "and Claude Code as consumer. Yellow-filled nodes "
                "are symlinks to the templates base; pink-filled "
@@ -57,7 +57,7 @@ def aiActivityFlow(
 ####+END:
 ) -> graphviz.Digraph:
     """ #+begin_org
-** [[elisp:(org-cycle)][| *DocStr | ]  Four-layer static structure of startAiActivity.cs:
+** [[elisp:(org-cycle)][| *DocStr | ]  Four-layer static structure of aiActivity.cs:
     templates (top) --> parameters --> engine --> generated files (bottom).
     #+end_org """
 
@@ -100,7 +100,7 @@ def aiActivityFlow(
         s.node('par_nolink',    '--noLink',     shape='rectangle', style='filled', fillcolor='lightblue')
         s.node('par_userconfig','userConfig\n(~/.config/bisos/…)',
                                                 shape='cylinder',  style='filled', fillcolor='lightsteelblue')
-        s.node('par_cwdconfig', 'cwdConfig\n(./.startAiActivity.cs/…)',
+        s.node('par_cwdconfig', 'cwdConfig\n(./.aiActivity.cs/…)',
                                                 shape='cylinder',  style='filled', fillcolor='lightsteelblue')
 
     # Templates feed into parameters: --templates references the base itself;
@@ -112,7 +112,7 @@ def aiActivityFlow(
     # Layer 3: The engine
     # ------------------------------------------------------------------
     d.node('engine',
-           'startAiActivity.cs\n\ninitiate  |  initiateSub\nrefresh  |  aiSuspend  |  aiResume\ndeClaudify',
+           'aiActivity.cs\n\ninitiate  |  initiateSub\nrefresh  |  aiSuspend  |  aiResume\ndeClaudify',
            shape='rectangle', style='filled,bold', fillcolor='darkseagreen3', fontsize='14')
 
     d.edge('par_activity',   'engine')
